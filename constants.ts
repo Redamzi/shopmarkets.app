@@ -1,0 +1,131 @@
+import { Product, Connection, SyncLog, SyncStatus, ConnectionStatus, ChartData } from './types';
+
+export const MOCK_PRODUCTS: Product[] = [
+  {
+    id: 'prod_1',
+    sku: 'IC-001',
+    title: 'iPhone 15 Hülle - Mattschwarz',
+    price: 29.99,
+    stock: 45,
+    imageUrl: 'https://picsum.photos/100/100?random=1',
+    channels: ['shopify', 'woocommerce'],
+    lastSync: '2024-12-12T10:30:00',
+  },
+  {
+    id: 'prod_2',
+    sku: 'AP-002',
+    title: 'AirPods Pro Silikon Case',
+    price: 14.99,
+    stock: 120,
+    imageUrl: 'https://picsum.photos/100/100?random=2',
+    channels: ['shopify'],
+    lastSync: '2024-12-12T09:15:00',
+  },
+  {
+    id: 'prod_3',
+    sku: 'USB-C-2M',
+    title: 'USB-C Kabel Geflochten 2m',
+    price: 19.99,
+    stock: 8,
+    imageUrl: 'https://picsum.photos/100/100?random=3',
+    channels: ['shopify', 'woocommerce', 'amazon'],
+    lastSync: '2024-12-11T16:00:00',
+  },
+  {
+    id: 'prod_4',
+    sku: 'WL-CHG-05',
+    title: 'Wireless Charger Pad 15W',
+    price: 39.99,
+    stock: 0,
+    imageUrl: 'https://picsum.photos/100/100?random=4',
+    channels: ['woocommerce'],
+    lastSync: '2024-12-10T11:20:00',
+  },
+  {
+    id: 'prod_5',
+    sku: 'LT-STND-AL',
+    title: 'Laptop Ständer Aluminium',
+    price: 59.99,
+    stock: 25,
+    imageUrl: 'https://picsum.photos/100/100?random=5',
+    channels: ['shopify', 'amazon'],
+    lastSync: '2024-12-12T08:00:00',
+  },
+];
+
+export const MOCK_CONNECTIONS: Connection[] = [
+  {
+    id: 'conn_1',
+    platform: 'shopify',
+    name: 'Haupt Shopify Shop',
+    url: 'shop-markets-demo.myshopify.com',
+    status: ConnectionStatus.ACTIVE,
+    lastSyncAt: 'vor 10 Min',
+  },
+  {
+    id: 'conn_2',
+    platform: 'woocommerce',
+    name: 'EU Lager Woo',
+    url: 'shop-markets-eu.com',
+    status: ConnectionStatus.ACTIVE,
+    lastSyncAt: 'vor 15 Min',
+  },
+  {
+    id: 'conn_3',
+    platform: 'amazon',
+    name: 'Amazon DE Marketplace',
+    url: 'sellercentral.amazon.de',
+    status: ConnectionStatus.ERROR,
+    lastSyncAt: 'vor 4 Std',
+  },
+];
+
+export const MOCK_LOGS: SyncLog[] = [
+  {
+    id: 'log_1',
+    productName: 'iPhone 15 Hülle - Mattschwarz',
+    sku: 'IC-001',
+    source: 'shopify',
+    target: 'woocommerce',
+    status: SyncStatus.SUCCESS,
+    timestamp: 'Gerade eben',
+  },
+  {
+    id: 'log_2',
+    productName: 'USB-C Kabel Geflochten 2m',
+    sku: 'USB-C-2M',
+    source: 'shopify',
+    target: 'amazon',
+    status: SyncStatus.FAILED,
+    timestamp: 'vor 2 Min',
+    message: 'Ratenlimit überschritten (Amazon)',
+  },
+  {
+    id: 'log_3',
+    productName: 'AirPods Pro Silikon Case',
+    sku: 'AP-002',
+    source: 'shopify',
+    target: 'woocommerce',
+    status: SyncStatus.SUCCESS,
+    timestamp: 'vor 15 Min',
+  },
+  {
+    id: 'log_4',
+    productName: 'Wireless Charger Pad 15W',
+    sku: 'WL-CHG-05',
+    source: 'woocommerce',
+    target: 'shopify',
+    status: SyncStatus.SUCCESS,
+    timestamp: 'vor 1 Std',
+  },
+];
+
+export const ANALYTICS_DATA: ChartData[] = [
+  { name: 'Mo', syncs: 400, errors: 20 },
+  { name: 'Di', syncs: 300, errors: 12 },
+  { name: 'Mi', syncs: 550, errors: 35 },
+  { name: 'Do', syncs: 480, errors: 15 },
+  { name: 'Fr', syncs: 600, errors: 25 },
+  { name: 'Sa', syncs: 200, errors: 5 },
+  { name: 'So', syncs: 150, errors: 2 },
+];

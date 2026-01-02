@@ -1,0 +1,5 @@
+{
+  "name": "ShopMarkets.app",
+  "description": "A comprehensive SaaS platform for multi-channel e-commerce synchronization, focused on the DACH market. Manage products, sync inventory, and monitor connections across Shopify, WooCommerce, and more.",
+  "requestFramePermissions": []
+}
