@@ -59,6 +59,49 @@ app.get('/api/db-test', async (req, res) => {
     }
 });
 
+// --- PRODUCT ROUTES ---
+
+// GET /api/products - Hole alle Produkte des Users
+app.get('/api/products', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+
+    // TODO: Hier müssten wir eigentlich den User prüfen (JWT Token Middleware).
+    // Für jetzt holen wir einfach ALLE Produkte (da Demo).
+
+    try {
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch products' });
+    }
+});
+
+// POST /api/products - Produkt erstellen
+app.post('/api/products', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+
+    const productData = req.body; // { title, sku, price, ... }
+
+    try {
+        const { data, error } = await supabase
+            .from('products')
+            .insert([productData])
+            .select();
+
+        if (error) throw error;
+        res.status(201).json(data[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to create product' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
