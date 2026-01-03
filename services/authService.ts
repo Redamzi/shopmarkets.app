@@ -36,12 +36,12 @@ export const authService = {
         if (error) throw error;
 
         // Send verification email via Security Service
-        if (authData.user) {
-            await axios.post(`${SECURITY_SERVICE_URL}/api/auth/send-verification`, {
-                userId: authData.user.id,
-                email: data.email,
-            });
-        }
+        // if (authData.user) {
+        //     await axios.post(`${SECURITY_SERVICE_URL}/api/auth/send-verification`, {
+        //         userId: authData.user.id,
+        //         email: data.email,
+        //     });
+        // }
 
         return authData;
     },
