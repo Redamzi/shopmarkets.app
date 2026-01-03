@@ -1,96 +1,100 @@
-import React, { useState } from 'react';
-import { Plus, RefreshCw, ExternalLink, Settings, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
-import { ConnectionStatus, Connection } from '../types';
-import { AddChannelModal } from './AddChannelModal';
+import React, { useEffect, useState } from 'react';
+import { Share2, Plus, RefreshCw, Trash2, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { connectionService, Connection } from '../services/connectionService';
+import { useAuthStore } from '../store/authStore';
 
-interface ConnectionsProps {
-    connections: Connection[];
-    onAddConnection: (connection: Connection) => void;
-}
+export const Connections: React.FC = () => {
+    const [connections, setConnections] = useState<Connection[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { user } = useAuthStore();
 
-export const Connections: React.FC<ConnectionsProps> = ({ connections, onAddConnection }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+    const loadData = async () => {
+        setLoading(true);
+        const data = await connectionService.getConnections();
+        setConnections(data);
+        setLoading(false);
+    };
 
-  const handleConnect = (newConnection: Connection) => {
-    onAddConnection(newConnection);
-  };
+    useEffect(() => {
+        loadData();
+    }, []);
 
-  return (
-    <div className="space-y-6 lg:space-y-8">
-      <AddChannelModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onConnect={handleConnect}
-      />
+    const handleAddMock = async () => {
+        // Schnell-Funktion zum Testen
+        if (!user) return;
 
-      <div className="flex items-center justify-between">
-         <div>
-            <h2 className="text-2xl lg:text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Vertriebskanäle</h2>
-            <p className="text-sm lg:text-base text-slate-500 dark:text-slate-400 mt-1">Aktive Integrationen verwalten</p>
-         </div>
-         <button 
-            onClick={() => setIsModalOpen(true)}
-            className="w-10 h-10 lg:w-12 lg:h-12 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-slate-800 dark:hover:bg-indigo-700 transition-colors"
-         >
-            <Plus size={20} />
-         </button>
-      </div>
+        await connectionService.addConnection({
+            platform: 'shopify',
+            shop_url: 'my-demo-shop.myshopify.com',
+            status: 'active',
+            user_id: user.id
+        });
+        loadData();
+    };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {connections.map((conn, idx) => {
-            // Dynamic styling based on index for variety, adapted for dark mode
-            const cardColor = idx === 0 ? 'bg-[#ecfccb] dark:bg-lime-900/30' : idx === 1 ? 'bg-[#e0e7ff] dark:bg-indigo-900/30' : idx === 2 ? 'bg-[#ffedd5] dark:bg-orange-900/30' : 'bg-slate-50 dark:bg-slate-800/50';
-            const iconBg = idx === 0 ? 'bg-[#84cc16] text-white' : idx === 1 ? 'bg-[#6366f1] text-white' : idx === 2 ? 'bg-[#f97316] text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-200';
-            const textColor = 'text-slate-900 dark:text-white';
+    const handleDelete = async (id: string) => {
+        if (confirm('Verbindung wirklich löschen?')) {
+            await connectionService.deleteConnection(id);
+            loadData();
+        }
+    };
 
-            return (
-                <div key={conn.id} className={`${cardColor} rounded-[32px] lg:rounded-[40px] p-6 lg:p-8 relative overflow-hidden group hover:shadow-xl transition-all duration-300 animate-in fade-in zoom-in-95 border border-transparent dark:border-white/5`}>
-                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-
-                    <div className="relative z-10 flex flex-col h-full justify-between min-h-[180px] lg:min-h-[220px]">
-                        <div>
-                            <div className="flex justify-between items-start mb-6">
-                                <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl ${iconBg} flex items-center justify-center text-lg lg:text-xl font-bold shadow-lg uppercase`}>
-                                    {conn.platform.charAt(0)}
-                                </div>
-                                <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/60 dark:bg-black/30 backdrop-blur-sm ${
-                                    conn.status === ConnectionStatus.ACTIVE ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
-                                }`}>
-                                    {conn.status === 'active' ? 'Aktiv' : 'Fehler'}
-                                </div>
-                            </div>
-                            
-                            <h3 className={`text-lg lg:text-xl font-bold ${textColor} mb-1`}>{conn.name}</h3>
-                            <a href={conn.url.startsWith('http') ? conn.url : `https://${conn.url}`} target="_blank" rel="noreferrer" className="text-xs lg:text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 opacity-70 truncate max-w-[200px]">
-                                {conn.url} <ExternalLink size={12} />
-                            </a>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-6 lg:mt-8">
-                            <div>
-                                <p className="text-[10px] lg:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold opacity-60">Letzter Sync</p>
-                                <p className={`text-sm font-medium ${textColor}`}>{conn.lastSyncAt}</p>
-                            </div>
-                            <button className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-white dark:bg-slate-700 text-slate-900 dark:text-white flex items-center justify-center shadow-md hover:scale-110 transition-transform">
-                                <RefreshCw size={16} />
-                            </button>
-                        </div>
-                    </div>
+    return (
+        <div className="p-6 lg:p-10 space-y-8">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">Verbindungen</h1>
+                    <p className="text-slate-500 mt-1">Verwalte deine Verkaufskanäle (Shopify, eBay, Amazon).</p>
                 </div>
-            )
-        })}
-        
-        {/* Add New Card */}
-        <button 
-            onClick={() => setIsModalOpen(true)}
-            className="rounded-[32px] lg:rounded-[40px] border-2 border-dashed border-slate-200 dark:border-slate-800 p-8 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all min-h-[200px] lg:min-h-[280px]"
-        >
-            <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-slate-100 dark:bg-slate-800 mb-4 flex items-center justify-center group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/30 transition-colors">
-                <Plus size={24} />
+                <button
+                    onClick={handleAddMock}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg transition-all"
+                >
+                    <Plus size={18} />
+                    <span className="hidden md:inline">Kanal hinzufügen</span>
+                </button>
             </div>
-            <span className="font-bold text-lg">Kanal hinzufügen</span>
-        </button>
-      </div>
-    </div>
-  );
+
+            {loading ? (
+                <div className="py-20 text-center text-slate-400">Lade Verbindungen...</div>
+            ) : connections.length === 0 ? (
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-10 text-center border border-dashed border-slate-300 dark:border-slate-700">
+                    <Share2 className="mx-auto text-slate-400 mb-4" size={48} />
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Keine aktiven Verbindungen</h3>
+                    <p className="text-slate-500 mb-6">Verbinde deinen ersten Shop, um Produkte zu synchronisieren.</p>
+                    <button onClick={handleAddMock} className="text-indigo-600 font-medium hover:underline">Jetzt Demo-Verbindung erstellen</button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {connections.map((conn) => (
+                        <div key={conn.id} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                                    <Share2 className="text-indigo-600" size={24} />
+                                </div>
+                                <div className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${conn.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                    }`}>
+                                    {conn.status === 'active' ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                                    {conn.status}
+                                </div>
+                            </div>
+
+                            <h3 className="font-bold text-lg capitalize mb-1">{conn.platform}</h3>
+                            <p className="text-sm text-slate-500 mb-4 truncate">{conn.shop_url || 'Keine URL'}</p>
+
+                            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                                <span className="text-xs text-slate-400">Letzter Sync: {conn.last_sync_at ? new Date(conn.last_sync_at).toLocaleDateString() : 'Nie'}</span>
+                                <button
+                                    onClick={() => conn.id && handleDelete(conn.id)}
+                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 };
