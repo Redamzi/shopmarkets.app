@@ -1,21 +1,33 @@
 import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://api.shopmarkets.app';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export interface Connection {
     id?: string;
-    platform: string; // 'shopify', 'ebay', 'amazon'
-    shop_url?: string;
-    api_key?: string;
-    status: 'active' | 'error' | 'disconnected';
-    last_sync_at?: string;
     user_id?: string;
+    platform: string;
+    shop_url?: string;
+    name?: string;
+    url?: string;
+    status?: string;
+    api_key?: string;
+    created_at?: string;
+}
+
+async function getAuthHeaders() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+        return { Authorization: `Bearer ${session.access_token}` };
+    }
+    return {};
 }
 
 export const connectionService = {
     async getConnections(): Promise<Connection[]> {
         try {
-            const response = await axios.get(`${API_URL}/api/connections`);
+            const headers = await getAuthHeaders();
+            const response = await axios.get(`${API_URL}/api/connections`, { headers });
             return response.data;
         } catch (error) {
             console.error('Failed to fetch connections:', error);
@@ -24,11 +36,13 @@ export const connectionService = {
     },
 
     async addConnection(connection: Connection): Promise<Connection> {
-        const response = await axios.post(`${API_URL}/api/connections`, connection);
+        const headers = await getAuthHeaders();
+        const response = await axios.post(`${API_URL}/api/connections`, connection, { headers });
         return response.data;
     },
 
     async deleteConnection(id: string): Promise<void> {
-        await axios.delete(`${API_URL}/api/connections/${id}`);
+        const headers = await getAuthHeaders();
+        await axios.delete(`${API_URL}/api/connections/${id}`, { headers });
     }
 };

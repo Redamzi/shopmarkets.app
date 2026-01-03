@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('combined'));
 
-// Health Check Endpoint (wie gewünscht)
+// Health Check Endpoint
 app.get('/', (req, res) => {
     res.status(200).json({
         status: 'healthy',
@@ -28,11 +28,9 @@ app.get('/api/v1/test', (req, res) => {
     res.json({ message: 'API is working!' });
 });
 
-// Start Server
+// Supabase Setup
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase Setup
-// Supabase Setup
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
@@ -40,7 +38,7 @@ let supabase;
 
 console.log('--- STARTUP CHECK ---');
 console.log('SUPABASE_URL:', supabaseUrl ? 'Set ✅' : 'MISSING ❌');
-console.log('SUPABASE_KEY:', supabaseKey ? 'Set ✅' : 'MISSING ❌ (Check SUPABASE_SERVICE_ROLE_KEY)');
+console.log('SUPABASE_KEY:', supabaseKey ? 'Set ✅' : 'MISSING ❌');
 
 if (supabaseUrl && supabaseKey) {
     supabase = createClient(supabaseUrl, supabaseKey);
@@ -48,6 +46,42 @@ if (supabaseUrl && supabaseKey) {
 } else {
     console.warn('⚠️ Supabase credentials missing. DB features disabled.');
 }
+
+// ============================================
+// JWT AUTHENTICATION MIDDLEWARE
+// ============================================
+async function authenticateUser(req, res, next) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('⚠️ No auth token provided');
+        req.userId = null; // Allow request but mark as unauthenticated
+        return next();
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer '
+
+    try {
+        // Verify token with Supabase
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+
+        if (error || !user) {
+            console.log('❌ Invalid token:', error?.message);
+            req.userId = null;
+        } else {
+            console.log('✅ Authenticated user:', user.id);
+            req.userId = user.id;
+        }
+    } catch (err) {
+        console.error('Auth error:', err);
+        req.userId = null;
+    }
+
+    next();
+}
+
+// Apply auth middleware to all /api routes
+app.use('/api', authenticateUser);
 
 // DB Test Endpoint
 app.get('/api/db-test', async (req, res) => {
@@ -89,17 +123,23 @@ app.get('/api/products', async (req, res) => {
 app.post('/api/products', async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'DB not configured' });
 
+    // Check authentication
+    if (!req.userId) {
+        return res.status(401).json({ error: 'Authentication required. Please log in.' });
+    }
+
     const raw = req.body;
-    console.log('📝 POST /api/products BODY:', JSON.stringify(raw, null, 2)); // DEBUG LOG
+    console.log('📝 POST /api/products BODY:', JSON.stringify(raw, null, 2));
+    console.log('🔑 Authenticated User ID:', req.userId);
 
     // Map Frontend (camelCase) -> DB (snake_case)
     const productData = {
-        user_id: raw.user_id || raw.userId, // Falls Frontend userId sendet
+        user_id: req.userId, // ✅ Use authenticated user ID from JWT
         sku: raw.sku,
         title: raw.title,
         price: raw.price,
         stock: raw.stock,
-        image_url: raw.imageUrl || raw.image_url, // FIX: imageUrl -> image_url
+        image_url: raw.imageUrl || raw.image_url,
         channels: raw.channels || [],
         weight: raw.weight,
         shipping_profile: raw.shippingProfile || raw.shipping_profile,
@@ -115,7 +155,7 @@ app.post('/api/products', async (req, res) => {
         if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
-        console.error(err);
+        console.error('INSERT ERROR:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -136,14 +176,18 @@ app.get('/api/connections', async (req, res) => {
 
 app.post('/api/connections', async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+
+    if (!req.userId) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+
     try {
         const raw = req.body;
-        // Map Frontend -> DB
         const connectionData = {
-            user_id: raw.user_id || raw.userId,
+            user_id: req.userId, // ✅ Use authenticated user ID
             platform: raw.platform,
-            name: raw.name || raw.platform, // Fallback name
-            url: raw.shop_url || raw.shopUrl || raw.url, // Map shop_url -> url (DB Schema says 'url')
+            name: raw.name || raw.platform,
+            url: raw.shop_url || raw.shopUrl || raw.url,
             api_key: raw.api_key || raw.apiKey,
             status: raw.status || 'active'
         };
@@ -152,7 +196,7 @@ app.post('/api/connections', async (req, res) => {
         if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
-        console.error(err); // Logge Fehler für Debugging
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });
