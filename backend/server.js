@@ -86,7 +86,21 @@ app.get('/api/products', async (req, res) => {
 app.post('/api/products', async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'DB not configured' });
 
-    const productData = req.body; // { title, sku, price, ... }
+    const raw = req.body;
+
+    // Map Frontend (camelCase) -> DB (snake_case)
+    const productData = {
+        user_id: raw.user_id || raw.userId, // Falls Frontend userId sendet
+        sku: raw.sku,
+        title: raw.title,
+        price: raw.price,
+        stock: raw.stock,
+        image_url: raw.imageUrl || raw.image_url, // FIX: imageUrl -> image_url
+        channels: raw.channels || [],
+        weight: raw.weight,
+        shipping_profile: raw.shippingProfile || raw.shipping_profile,
+        category: raw.category
+    };
 
     try {
         const { data, error } = await supabase
@@ -98,7 +112,7 @@ app.post('/api/products', async (req, res) => {
         res.status(201).json(data[0]);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to create product' });
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -108,6 +122,8 @@ app.get('/api/connections', async (req, res) => {
     try {
         const { data, error } = await supabase.from('connections').select('*');
         if (error) throw error;
+
+        // Map DB -> Frontend (optional, falls Frontend camelCase erwartet, aber lassen wir erstmal raw)
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -117,10 +133,22 @@ app.get('/api/connections', async (req, res) => {
 app.post('/api/connections', async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'DB not configured' });
     try {
-        const { data, error } = await supabase.from('connections').insert([req.body]).select();
+        const raw = req.body;
+        // Map Frontend -> DB
+        const connectionData = {
+            user_id: raw.user_id || raw.userId,
+            platform: raw.platform,
+            name: raw.name || raw.platform, // Fallback name
+            url: raw.shop_url || raw.shopUrl || raw.url, // Map shop_url -> url (DB Schema says 'url')
+            api_key: raw.api_key || raw.apiKey,
+            status: raw.status || 'active'
+        };
+
+        const { data, error } = await supabase.from('connections').insert([connectionData]).select();
         if (error) throw error;
         res.status(201).json(data[0]);
     } catch (err) {
+        console.error(err); // Logge Fehler für Debugging
         res.status(500).json({ error: err.message });
     }
 });
