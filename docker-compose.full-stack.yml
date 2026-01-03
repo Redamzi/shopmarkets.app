@@ -143,6 +143,7 @@ services:
       args:
         VITE_SUPABASE_URL: http://localhost:8000
         VITE_SUPABASE_ANON_KEY: ${ANON_KEY:-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0}
+        VITE_SECURITY_SERVICE_URL: http://localhost:4000
         VITE_ENV: production
     container_name: shopmarkets-app
     restart: unless-stopped
@@ -150,8 +151,51 @@ services:
       - "3000:80"
     depends_on:
       - kong
+      - security-service
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+  # Security Service (2FA & Email Verification)
+  security-service:
+    build:
+      context: ./security-service
+      dockerfile: Dockerfile
+    container_name: shopmarkets-security
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-password}
+      DB_NAME: postgres
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-token-with-at-least-32-characters-long}
+      JWT_EXPIRY: 15m
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
+      MAILGUN_FROM: ${MAILGUN_FROM:-security@shopmarkets.app}
+      MAX_FAILED_ATTEMPTS: 3
+      LOCKOUT_DURATION_MINUTES: 15
+      CODE_EXPIRY_MINUTES: 10
+      CODE_LENGTH: 6
+      TOTP_WINDOW: 1
+      TOTP_STEP: 30
+      APP_NAME: ShopMarkets
+      APP_DOMAIN: ${APP_DOMAIN:-shopmarkets.app}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-support@shopmarkets.app}
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
       interval: 30s
       timeout: 3s
       retries: 3
