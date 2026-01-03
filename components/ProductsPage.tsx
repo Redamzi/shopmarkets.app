@@ -4,11 +4,15 @@ import { productService } from '../services/productService';
 import { connectionService, Connection } from '../services/connectionService';
 import { Product } from '../types';
 import { AddProductWizardModal } from './AddProductWizardModal';
+import { useAuthStore } from '../store/authStore';
 
 export const ProductsPage: React.FC = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Auth Store Access
+    const { user } = useAuthStore();
 
     // Wizard State
     const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -16,12 +20,16 @@ export const ProductsPage: React.FC = () => {
 
     const loadData = async () => {
         setLoading(true);
-        const [prodData, connData] = await Promise.all([
-            productService.getProducts(),
-            connectionService.getConnections()
-        ]);
-        setProducts(prodData);
-        setConnections(connData);
+        try {
+            const [prodData, connData] = await Promise.all([
+                productService.getProducts(),
+                connectionService.getConnections()
+            ]);
+            setProducts(prodData);
+            setConnections(connData);
+        } catch (err) {
+            console.error(err);
+        }
         setLoading(false);
     };
 
@@ -30,13 +38,26 @@ export const ProductsPage: React.FC = () => {
     }, []);
 
     const handleSaveProduct = async (newProduct: Product) => {
+        if (!user) {
+            alert('Fehler: Nicht eingeloggt!');
+            return;
+        }
+
         try {
-            await productService.createProduct(newProduct);
+            // User ID explizit hinzufügen
+            const productToSave = {
+                ...newProduct,
+                userId: user.id
+            };
+
+            await productService.createProduct(productToSave);
             await loadData(); // Reload list
             setIsWizardOpen(false);
-        } catch (error) {
+            alert('Produkt erfolgreich gespeichert!');
+        } catch (error: any) {
             console.error(error);
-            alert('Fehler beim Speichern');
+            const msg = error.response?.data?.error || error.message || 'Unbekannter Fehler';
+            alert(`Fehler beim Speichern: ${msg}`);
         }
     };
 
