@@ -102,6 +102,72 @@ app.post('/api/products', async (req, res) => {
     }
 });
 
+// --- CONNECTIONS ROUTES ---
+app.get('/api/connections', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+    try {
+        const { data, error } = await supabase.from('connections').select('*');
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/connections', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+    try {
+        const { data, error } = await supabase.from('connections').insert([req.body]).select();
+        if (error) throw error;
+        res.status(201).json(data[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/connections/:id', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+    try {
+        const { error } = await supabase.from('connections').delete().eq('id', req.params.id);
+        if (error) throw error;
+        res.status(204).send();
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- SYNC LOGS ROUTES ---
+app.get('/api/sync-logs', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+    try {
+        const { data, error } = await supabase.from('sync_logs').select('*').order('started_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- BILLING / CREDITS ROUTES ---
+app.get('/api/credits/:userId', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+    try {
+        // Hole Credits. Falls kein Eintrag existiert, nimm an 0 (oder erstelle einen).
+        let { data, error } = await supabase.from('user_credits').select('*').eq('user_id', req.params.userId).single();
+
+        if (error && error.code === 'PGRST116') {
+            // Kein Eintrag gefunden
+            res.json({ credits: 0 });
+        } else if (error) {
+            throw error;
+        } else {
+            res.json(data);
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
