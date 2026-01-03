@@ -45,10 +45,19 @@ export const ProductsPage: React.FC = () => {
 
         try {
             // User ID explizit hinzufügen
+            console.log('Current User:', user);
+            if (!user.id) {
+                alert('CRITICAL ERROR: User object has no ID!');
+                return;
+            }
+
             const productToSave = {
                 ...newProduct,
                 userId: user.id
             };
+
+            console.log('Sending Product:', productToSave);
+            // alert('Debug: User ID is ' + user.id); // Uncomment if needed
 
             await productService.createProduct(productToSave);
             await loadData(); // Reload list

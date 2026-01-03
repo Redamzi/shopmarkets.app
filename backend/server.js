@@ -90,6 +90,7 @@ app.post('/api/products', async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'DB not configured' });
 
     const raw = req.body;
+    console.log('📝 POST /api/products BODY:', JSON.stringify(raw, null, 2)); // DEBUG LOG
 
     // Map Frontend (camelCase) -> DB (snake_case)
     const productData = {
