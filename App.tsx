@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { DashboardLayout } from './components/DashboardLayout';
-import { Dashboard } from './components/Dashboard';
-import { ProductList } from './components/ProductList';
-import { Connections } from './components/Connections';
+import { ProductsPage } from './components/ProductsPage';
+// ... other imports
+
+// ... inside Routes
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="connections" element={<Connections />} />
 import { SyncHistory } from './components/SyncHistory';
 import { Billing } from './components/Billing';
 import { Settings } from './components/Settings';
@@ -30,7 +30,7 @@ const App: React.FC = () => {
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="products" element={<ProductList />} />
+          <Route path="products" element={<ProductsPage />} />
           <Route path="connections" element={<Connections />} />
           <Route path="sync-history" element={<SyncHistory />} />
           <Route path="billing" element={<Billing />} />
