@@ -168,6 +168,29 @@ app.get('/api/credits/:userId', async (req, res) => {
     }
 });
 
+// --- DASHBOARD ROUTES ---
+app.get('/api/dashboard/stats', async (req, res) => {
+    if (!supabase) return res.status(500).json({ error: 'DB not configured' });
+    try {
+        // Parallel Requests für Performance
+        const [products, connections, logs, recentLogs] = await Promise.all([
+            supabase.from('products').select('*', { count: 'exact', head: true }),
+            supabase.from('connections').select('*', { count: 'exact', head: true }),
+            supabase.from('sync_logs').select('*', { count: 'exact', head: true }),
+            supabase.from('sync_logs').select('*').order('started_at', { ascending: false }).limit(5)
+        ]);
+
+        res.json({
+            totalProducts: products.count || 0,
+            totalConnections: connections.count || 0,
+            totalSyncs: logs.count || 0,
+            recentLogs: recentLogs.data || []
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
