@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Share2, Plus, RefreshCw, Trash2, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
 import { connectionService, Connection } from '../services/connectionService';
 import { useAuthStore } from '../store/authStore';
+import { AddChannelModal } from './AddChannelModal';
 
 export const Connections: React.FC = () => {
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const { user } = useAuthStore();
 
     const loadData = async () => {
@@ -19,17 +21,27 @@ export const Connections: React.FC = () => {
         loadData();
     }, []);
 
-    const handleAddMock = async () => {
-        // Schnell-Funktion zum Testen
+    const handleAddChannel = async (channelData: any) => {
         if (!user) return;
 
-        await connectionService.addConnection({
-            platform: 'shopify',
-            shop_url: 'my-demo-shop.myshopify.com',
+        // Modal liefert Daten zurück. Wir senden sie ans Backend.
+        // channelData enthält platform, settings, etc.
+        const newConnection: Connection = {
+            platform: channelData.id, // Modal nutzt 'id' als platform key
+            shop_url: channelData.shopUrl || '',
+            api_key: 'connected', // Dummy or Real Token
             status: 'active',
             user_id: user.id
-        });
-        loadData();
+        };
+
+        try {
+            await connectionService.addConnection(newConnection);
+            loadData();
+            setIsModalOpen(false);
+        } catch (err) {
+            console.error(err);
+            alert('Fehler beim Verbinden');
+        }
     };
 
     const handleDelete = async (id: string) => {
@@ -47,7 +59,7 @@ export const Connections: React.FC = () => {
                     <p className="text-slate-500 mt-1">Verwalte deine Verkaufskanäle (Shopify, eBay, Amazon).</p>
                 </div>
                 <button
-                    onClick={handleAddMock}
+                    onClick={() => setIsModalOpen(true)}
                     className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg transition-all"
                 >
                     <Plus size={18} />
@@ -62,7 +74,7 @@ export const Connections: React.FC = () => {
                     <Share2 className="mx-auto text-slate-400 mb-4" size={48} />
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Keine aktiven Verbindungen</h3>
                     <p className="text-slate-500 mb-6">Verbinde deinen ersten Shop, um Produkte zu synchronisieren.</p>
-                    <button onClick={handleAddMock} className="text-indigo-600 font-medium hover:underline">Jetzt Demo-Verbindung erstellen</button>
+                    <button onClick={() => setIsModalOpen(true)} className="text-indigo-600 font-medium hover:underline">Jetzt Kanal verbinden</button>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -95,6 +107,12 @@ export const Connections: React.FC = () => {
                     ))}
                 </div>
             )}
+
+            <AddChannelModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConnect={handleAddChannel}
+            />
         </div>
     );
 };
