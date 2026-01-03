@@ -5,12 +5,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_ENV: production
     container_name: shopmarkets-app
     ports:
       - "3000:80"
     restart: unless-stopped
-    environment:
-      - NODE_ENV=production
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health" ]
       interval: 30s

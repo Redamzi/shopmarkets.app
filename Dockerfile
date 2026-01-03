@@ -5,6 +5,18 @@ FROM node:20-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Accept build arguments for environment variables
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_API_URL
+ARG VITE_ENV=production
+
+# Set environment variables for build
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_ENV=$VITE_ENV
+
 # Copy package files
 COPY package*.json ./
 
@@ -14,7 +26,7 @@ RUN npm ci --only=production=false
 # Copy source code
 COPY . .
 
-# Build the application
+# Build the application (Vite will embed env vars at build time)
 RUN npm run build
 
 # Stage 2: Serve with Nginx
@@ -31,7 +43,7 @@ EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
