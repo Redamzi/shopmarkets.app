@@ -38,9 +38,11 @@ export const Connections: React.FC = () => {
             await connectionService.addConnection(newConnection);
             loadData();
             setIsModalOpen(false);
-        } catch (err) {
+            alert('Verbindung erfolgreich gespeichert!');
+        } catch (err: any) {
             console.error(err);
-            alert('Fehler beim Verbinden');
+            const msg = err.response?.data?.error || err.message || 'Unbekannter Fehler';
+            alert(`Fehler beim Verbinden: ${msg}`);
         }
     };
 
