@@ -1,66 +1,58 @@
-const axios = require('axios');
+const nodemailer = require('nodemailer');
 const logger = require('../config/logger');
 
-class MailgunService {
-    constructor() {
-        this.apiKey = process.env.MAILGUN_API_KEY;
-        this.domain = process.env.MAILGUN_DOMAIN;
-        this.from = process.env.MAILGUN_FROM || `security@${process.env.MAILGUN_DOMAIN}`;
-        this.baseURL = `https://api.mailgun.net/v3/${this.domain}`;
+class MailService {
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    this.from = process.env.SMTP_FROM || `security@${process.env.APP_DOMAIN}`;
+  }
+
+  async sendEmail({ to, subject, text, html }) {
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject,
+        text,
+        html,
+      });
+
+      logger.info(`Email sent successfully to ${to}`, { messageId: info.messageId });
+      return { success: true, messageId: info.messageId };
+    } catch (error) {
+      logger.error('Failed to send email via SMTP', {
+        error: error.message,
+        to,
+        subject,
+      });
+      throw new Error('Email sending failed');
     }
+  }
 
-    async sendEmail({ to, subject, text, html }) {
-        try {
-            const formData = new URLSearchParams();
-            formData.append('from', this.from);
-            formData.append('to', to);
-            formData.append('subject', subject);
-            formData.append('text', text);
-            if (html) {
-                formData.append('html', html);
-            }
+  async sendVerificationCode(email, code, type = 'LOGIN') {
+    const appName = process.env.APP_NAME || 'ShopMarkets';
+    const domain = process.env.APP_DOMAIN || 'shopmarkets.app';
+    const supportEmail = process.env.SUPPORT_EMAIL || 'support@shopmarkets.app';
 
-            const response = await axios.post(
-                `${this.baseURL}/messages`,
-                formData,
-                {
-                    auth: {
-                        username: 'api',
-                        password: this.apiKey,
-                    },
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                }
-            );
+    const typeTexts = {
+      LOGIN: 'angemeldet',
+      REGISTRATION: 'registriert',
+      PASSWORD_RESET: 'ein Passwort-Reset angefordert',
+      EMAIL_CHANGE: 'eine E-Mail-Änderung angefordert',
+    };
 
-            logger.info(`Email sent successfully to ${to}`, { messageId: response.data.id });
-            return { success: true, messageId: response.data.id };
-        } catch (error) {
-            logger.error('Failed to send email via Mailgun', {
-                error: error.message,
-                to,
-                subject,
-            });
-            throw new Error('Email sending failed');
-        }
-    }
+    const subject = `Ihr Bestätigungscode für ${appName}`;
 
-    async sendVerificationCode(email, code, type = 'LOGIN') {
-        const appName = process.env.APP_NAME || 'ShopMarkets';
-        const domain = process.env.APP_DOMAIN || 'shopmarkets.app';
-        const supportEmail = process.env.SUPPORT_EMAIL || 'support@shopmarkets.app';
-
-        const typeTexts = {
-            LOGIN: 'angemeldet',
-            REGISTRATION: 'registriert',
-            PASSWORD_RESET: 'ein Passwort-Reset angefordert',
-            EMAIL_CHANGE: 'eine E-Mail-Änderung angefordert',
-        };
-
-        const subject = `Ihr Bestätigungscode für ${appName}`;
-
-        const text = `Guten Tag,
+    const text = `Guten Tag,
 
 Sie haben sich bei ${appName} ${typeTexts[type] || 'eine Aktion durchgeführt'}.
 Um fortzufahren, geben Sie bitte den folgenden Sicherheitscode ein:
@@ -77,7 +69,7 @@ Ihr Team von ${appName}
 
 Kontakt: ${supportEmail}`;
 
-        const html = `
+    const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Guten Tag,</h2>
         <p>Sie haben sich bei <strong>${appName}</strong> ${typeTexts[type] || 'eine Aktion durchgeführt'}.</p>
@@ -104,16 +96,16 @@ Kontakt: ${supportEmail}`;
       </div>
     `;
 
-        return this.sendEmail({ to: email, subject, text, html });
-    }
+    return this.sendEmail({ to: email, subject, text, html });
+  }
 
-    async send2FAActivationEmail(email, backupCodes) {
-        const appName = process.env.APP_NAME || 'ShopMarkets';
-        const supportEmail = process.env.SUPPORT_EMAIL || 'support@shopmarkets.app';
+  async send2FAActivationEmail(email, backupCodes) {
+    const appName = process.env.APP_NAME || 'ShopMarkets';
+    const supportEmail = process.env.SUPPORT_EMAIL || 'support@shopmarkets.app';
 
-        const subject = `Zwei-Faktor-Authentifizierung aktiviert - ${appName}`;
+    const subject = `Zwei-Faktor-Authentifizierung aktiviert - ${appName}`;
 
-        const text = `Guten Tag,
+    const text = `Guten Tag,
 
 Die Zwei-Faktor-Authentifizierung (2FA) wurde erfolgreich für Ihr Konto aktiviert.
 
@@ -127,7 +119,7 @@ Falls Sie diese Änderung nicht vorgenommen haben, kontaktieren Sie uns umgehend
 Mit freundlichen Grüßen
 Ihr Team von ${appName}`;
 
-        const html = `
+    const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h2 style="color: #333;">Zwei-Faktor-Authentifizierung aktiviert</h2>
         <p>Die Zwei-Faktor-Authentifizierung (2FA) wurde erfolgreich für Ihr Konto aktiviert.</p>
@@ -157,8 +149,8 @@ Ihr Team von ${appName}`;
       </div>
     `;
 
-        return this.sendEmail({ to: email, subject, text, html });
-    }
+    return this.sendEmail({ to: email, subject, text, html });
+  }
 }
 
-module.exports = new MailgunService();
+module.exports = new MailService();
