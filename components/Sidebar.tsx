@@ -1,105 +1,110 @@
 import React from 'react';
-import { LayoutDashboard, Package, Share2, Activity, Settings, CreditCard, Plus, Facebook, Twitter, Instagram, Globe, X } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Package, Share2, Activity, Settings, CreditCard, Plus, LogOut, X } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { authService } from '../services/authService';
 
 interface SidebarProps {
-  currentView: string;
-  onNavigate: (view: string) => void;
-  onAddProduct?: () => void;
   isOpen?: boolean;
-  onClose?: () => void;
+  onToggle?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onAddProduct, isOpen = false, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => {
+  const navigate = useNavigate();
+  const { logout, user } = useAuthStore();
+
   const navItems = [
-    { id: 'dashboard', label: 'Übersicht', icon: LayoutDashboard },
-    { id: 'products', label: 'Produkte', icon: Package },
-    { id: 'connections', label: 'Kanäle', icon: Share2 },
-    { id: 'history', label: 'Verlauf', icon: Activity },
-    { id: 'billing', label: 'Abrechnung', icon: CreditCard },
-    { id: 'settings', label: 'Einstellungen', icon: Settings },
+    { path: '/dashboard', label: 'Übersicht', icon: LayoutDashboard },
+    { path: '/products', label: 'Produkte', icon: Package },
+    { path: '/connections', label: 'Kanäle', icon: Share2 },
+    { path: '/sync-history', label: 'Verlauf', icon: Activity },
+    { path: '/billing', label: 'Abrechnung', icon: CreditCard },
+    { path: '/settings', label: 'Einstellungen', icon: Settings },
   ];
+
+  const handleLogout = async () => {
+    await authService.signOut();
+    logout();
+    navigate('/login');
+  };
 
   return (
     <>
-      {/* Mobile Overlay Background */}
-      <div 
-        className={`fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={onClose}
-      />
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+          onClick={onToggle}
+        />
+      )}
 
-      {/* Sidebar Container */}
+      {/* Sidebar */}
       <div className={`
         fixed lg:static inset-y-0 left-0 z-50
         w-72 lg:w-64 flex flex-col h-full 
-        bg-[#f3f4f6] dark:bg-slate-950 lg:bg-transparent
+        bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800
         transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0 lg:shadow-none'}
-        py-6 lg:py-8 pl-6 pr-4
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        py-6 px-4
       `}>
-        
-        <div className="mb-8 lg:mb-12 pl-2 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-slate-800 dark:text-slate-100">
-            <div className="w-10 h-10 bg-slate-900 dark:bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-slate-900/20 dark:shadow-indigo-500/20">
+
+        {/* Logo */}
+        <div className="mb-8 px-2 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center text-white">
               <Package size={20} />
             </div>
-            <span className="font-bold text-xl font-serif-display tracking-wide">ShopMarkets</span>
+            <span className="font-bold text-xl font-serif-display text-slate-900 dark:text-white">ShopMarkets</span>
           </div>
-          
-          {/* Mobile Close Button */}
-          <button 
-            onClick={onClose}
-            className="lg:hidden w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 hover:bg-slate-100"
+
+          <button
+            onClick={onToggle}
+            className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
-        <nav className="flex-1 space-y-3 lg:space-y-4 overflow-y-auto scrollbar-hide">
-          {navItems.map((item) => {
-            const isActive = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onNavigate(item.id);
-                  if (onClose) onClose();
-                }}
-                className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 group ${
-                  isActive
-                    ? 'bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/50 dark:shadow-black/20 text-slate-900 dark:text-white translate-x-2'
-                    : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:pl-6'
-                }`}
-              >
-                <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-indigo-600 dark:text-indigo-400' : ''} />
-                <span className={`font-medium ${isActive ? 'font-semibold' : ''}`}>{item.label}</span>
-              </button>
-            );
-          })}
+        {/* Navigation */}
+        <nav className="flex-1 space-y-2 overflow-y-auto">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `
+                flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                ${isActive
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-semibold'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }
+              `}
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                  <span>{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
 
-        <div className="mt-8 space-y-6 lg:space-y-8">
-          <button 
-            onClick={() => {
-                if (onAddProduct) onAddProduct();
-                if (onClose) onClose();
-            }}
-            className="w-full bg-indigo-600 dark:bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl py-4 px-4 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-transform active:scale-95"
-          >
-              <span className="font-medium">Produkt hinzufügen</span>
-              <Plus size={20} />
-          </button>
-
-          <div className="flex gap-3 justify-center justify-start px-2">
-              <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:hover:text-slate-300 transition-colors bg-transparent">
-                  <Facebook size={16} />
-              </button>
-               <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:hover:text-slate-300 transition-colors bg-transparent">
-                  <Twitter size={16} />
-              </button>
-               <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:border-slate-300 hover:text-slate-600 dark:hover:text-slate-300 transition-colors bg-transparent">
-                  <Globe size={16} />
-              </button>
+        {/* User Info & Logout */}
+        <div className="mt-6 space-y-4">
+          <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+            <p className="text-xs text-slate-500 dark:text-slate-400">Angemeldet als</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+              {user?.email || 'User'}
+            </p>
           </div>
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+          >
+            <LogOut size={20} />
+            <span>Abmelden</span>
+          </button>
         </div>
       </div>
     </>
