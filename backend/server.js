@@ -32,10 +32,15 @@ app.get('/api/v1/test', (req, res) => {
 const { createClient } = require('@supabase/supabase-js');
 
 // Supabase Setup
+// Supabase Setup
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 let supabase;
+
+console.log('--- STARTUP CHECK ---');
+console.log('SUPABASE_URL:', supabaseUrl ? 'Set ✅' : 'MISSING ❌');
+console.log('SUPABASE_KEY:', supabaseKey ? 'Set ✅' : 'MISSING ❌ (Check SUPABASE_SERVICE_ROLE_KEY)');
 
 if (supabaseUrl && supabaseKey) {
     supabase = createClient(supabaseUrl, supabaseKey);
@@ -47,7 +52,7 @@ if (supabaseUrl && supabaseKey) {
 // DB Test Endpoint
 app.get('/api/db-test', async (req, res) => {
     if (!supabase) {
-        return res.status(500).json({ error: 'Supabase not configured' });
+        return res.status(500).json({ error: 'Supabase not configured (Missing Env Vars)' });
     }
 
     try {
@@ -55,7 +60,7 @@ app.get('/api/db-test', async (req, res) => {
         if (error) throw error;
         res.json({ message: 'Database connection successful', data });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'DB Error: ' + err.message });
     }
 });
 
@@ -64,9 +69,6 @@ app.get('/api/db-test', async (req, res) => {
 // GET /api/products - Hole alle Produkte des Users
 app.get('/api/products', async (req, res) => {
     if (!supabase) return res.status(500).json({ error: 'DB not configured' });
-
-    // TODO: Hier müssten wir eigentlich den User prüfen (JWT Token Middleware).
-    // Für jetzt holen wir einfach ALLE Produkte (da Demo).
 
     try {
         const { data, error } = await supabase
@@ -77,8 +79,9 @@ app.get('/api/products', async (req, res) => {
         if (error) throw error;
         res.json(data);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch products' });
+        console.error('FETCH ERROR:', err);
+        // Gib den echten Fehler zurück!
+        res.status(500).json({ error: 'Fetch failed: ' + err.message });
     }
 });
 
