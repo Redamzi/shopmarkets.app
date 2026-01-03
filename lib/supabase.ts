@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Self-hosted Supabase Configuration
-const supabaseUrl = 'https://supabase.shopmarkets.app';
-const supabaseAnonKey = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NzM5OTMwMCwiZXhwIjo0OTIzMDcyOTAwLCJyb2xlIjoiYW5vbiJ9.N2M2vitcpgGAea69OXipNpZ1Zh4grCWG0ygSdroVK4g';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables. Check your .env file.');
+}
+
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
