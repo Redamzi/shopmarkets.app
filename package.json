@@ -10,10 +10,14 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
+    "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.13.2",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "recharts": "^3.6.0"
+    "react-router-dom": "^7.11.0",
+    "recharts": "^3.6.0",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
