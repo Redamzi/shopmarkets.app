@@ -10,3 +10,7 @@ dist
 .DS_Store
 coverage
 .cache
+
+# Supabase Secrets (NEVER COMMIT!)
+supabase/supabase-env-variables.md
+**/supabase-env-variables.md

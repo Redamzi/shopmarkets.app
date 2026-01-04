@@ -1,16 +1,16 @@
 
-export type Platform = 
-  | 'shopify' 
-  | 'woocommerce' 
-  | 'amazon' 
-  | 'ebay' 
-  | 'etsy' 
-  | 'prestashop' 
-  | 'oxid' 
-  | 'shopware' 
-  | 'magento' 
-  | 'fnac' 
-  | 'allegro' 
+export type Platform =
+  | 'shopify'
+  | 'woocommerce'
+  | 'amazon'
+  | 'ebay'
+  | 'etsy'
+  | 'prestashop'
+  | 'oxid'
+  | 'shopware'
+  | 'magento'
+  | 'fnac'
+  | 'allegro'
   | 'bol'
   | 'tiktok'
   | 'facebook'
@@ -34,6 +34,7 @@ export interface Product {
   id: string;
   sku: string;
   title: string;
+  description?: string;
   price: number;
   stock: number;
   imageUrl: string;

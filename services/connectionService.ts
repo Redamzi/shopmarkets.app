@@ -13,6 +13,7 @@ export interface Connection {
     status?: string;
     api_key?: string;
     created_at?: string;
+    last_sync_at?: string;
 }
 
 async function getAuthHeaders() {
