@@ -1,0 +1,209 @@
+# 🔧 KORRIGIERTE SUPABASE ENV-VARIABLEN
+**Erstellt:** 2026-01-04 21:26
+**Problem:** JWSError JWSInvalidSignature - JWT Secrets waren inkonsistent
+**Lösung:** Alle JWT Secrets vereinheitlicht
+
+---
+
+## ⚠️ WICHTIG: JWT Secrets Problem behoben!
+
+**Das Problem war:**
+- `SERVICE_PASSWORD_JWT` hatte einen anderen Wert
+- Dadurch stimmten die JWT Token-Signaturen nicht überein
+- Fehler: "JWSInvalidSignature"
+
+**Die Lösung:**
+- ALLE JWT Secrets sind jetzt identisch
+- Neue ANON_KEY und SERVICE_ROLE_KEY generiert mit dem korrekten Secret
+
+---
+
+## 📋 KOMPLETTE ENV-LISTE (COPY-PASTE)
+
+```bash
+SERVICE_FQDN_SUPABASE_KONG=supabase.shopmarkets.app
+SERVICE_PASSWORD_ADMIN=nh3OJiy9J2c7okSEqu3m0xApueEtvVyc
+SERVICE_PASSWORD_JWT=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+SERVICE_PASSWORD_LOGFLARE=fgiG8SuC5312J4h1LRsXb6uf2ElNy2z3
+SERVICE_PASSWORD_MINIO=7FVDIR4en5I4XmVUDKQbhXAu9NfEagKU
+SERVICE_PASSWORD_POSTGRES=YznnfqonEMUmxLAukDsikm2AEyGPitbe
+SERVICE_PASSWORD_SUPAVISORSECRET=3kI4ZEUhcQ26I2GNekayT4GS4SiwdO1G
+SERVICE_PASSWORD_VAULTENC=gkHIxd4PcFVjyLZpEi4WwdXfLo9MhOwp
+SERVICE_SUPABASEANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NzQ3MTc4MCwiZXhwIjo0OTIzMTQ1MzgwLCJyb2xlIjoiYW5vbiJ9.T--SDP5DDOS6zte-z01WT9otGUWeoYLns3E-HPVwstM
+SERVICE_SUPABASESERVICE_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2NzQ3MTc4MCwiZXhwIjo0OTIzMTQ1MzgwLCJyb2xlIjoic2VydmljZV9yb2xlIn0.fy-FbYQp5cbpDPcpAVW6K6DGCVLurMTQQuuupo6gxS8
+SERVICE_URL_SUPABASE_KONG=https://supabase.shopmarkets.app
+SERVICE_URL_SUPABASEKONG=http://supabasekong-q0wow0g488k8g8cscowooogw.91.99.53.147.sslip.io
+SERVICE_URL_SUPABASEKONG_8000=https://supabase.shopmarkets.app:8000
+SERVICE_USER_ADMIN=D3218rDksJqWHVUY
+SERVICE_USER_MINIO=GipezdVK3gRbzVAL
+ADDITIONAL_REDIRECT_URLS=
+API_EXTERNAL_URL=https://supabase.shopmarkets.app
+API_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+AUTH_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+AWS_ACCESS_KEY_ID=supabase-storage-admin
+AWS_SECRET_ACCESS_KEY=SckFljuk2RUeZpvTfJx/+hnMgAfBjRip
+DASHBOARD_PASSWORD=${SERVICE_PASSWORD_ADMIN}
+DASHBOARD_USERNAME=${SERVICE_USER_ADMIN}
+DATABASE_URL=postgresql://postgres:MfBn1LWRfb6/m1IkXQU3bw5WmgZM3uSw@supabase-db:5432/postgres
+DB_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+DISABLE_SIGNUP=false
+ENABLE_ANONYMOUS_USERS=false
+ENABLE_EMAIL_AUTOCONFIRM=false
+ENABLE_EMAIL_SIGNUP=true
+ENABLE_PHONE_AUTOCONFIRM=true
+ENABLE_PHONE_SIGNUP=false
+FUNCTIONS_VERIFY_JWT=false
+GOTRUE_DISABLE_SIGNUP=false
+GOTRUE_EXTERNAL_EMAIL_ENABLED=true
+GOTRUE_EXTERNAL_PHONE_ENABLED=false
+GOTRUE_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+GOTRUE_MAILER_AUTOCONFIRM=false
+GOTRUE_SITE_URL=https://start.shopmarkets.app
+GOTRUE_SMTP_ADMIN_EMAIL=support@shopmarkets.app
+GOTRUE_SMTP_HOST=smtp.gmail.com
+GOTRUE_SMTP_PASS=HIER-DEIN-GMAIL-APP-PASSWORT-EINFÜGEN
+GOTRUE_SMTP_PORT=587
+GOTRUE_SMTP_USER=support@shopmarkets.app
+GOTRUE_URI_ALLOW_LIST=https://start.shopmarkets.app,https://supabase.shopmarkets.app,https://shopmarkets.app
+IMGPROXY_ENABLE_WEBP_DETECTION=true
+INTERNAL_SUPABASE_URL=http://supabase-kong:8000
+JWT_EXPIRY=3600
+JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+LOGFLARE_API_KEY=${SERVICE_PASSWORD_LOGFLARE}
+MAILER_SUBJECTS_CONFIRMATION=
+MAILER_SUBJECTS_EMAIL_CHANGE=
+MAILER_SUBJECTS_INVITE=
+MAILER_SUBJECTS_MAGIC_LINK=
+MAILER_SUBJECTS_RECOVERY=
+MAILER_TEMPLATES_CONFIRMATION=
+MAILER_TEMPLATES_EMAIL_CHANGE=
+MAILER_TEMPLATES_INVITE=
+MAILER_TEMPLATES_MAGIC_LINK=
+MAILER_TEMPLATES_RECOVERY=
+MAILER_URLPATHS_CONFIRMATION=/auth/v1/verify
+MAILER_URLPATHS_EMAIL_CHANGE=/auth/v1/verify
+MAILER_URLPATHS_INVITE=/auth/v1/verify
+MAILER_URLPATHS_RECOVERY=/auth/v1/verify
+METRICS_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+MINIO_ROOT_PASSWORD=SckFljuk2RUeZpvTfJx/+hnMgAfBjRip
+MINIO_ROOT_USER=supabase-storage-admin
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNob3BtYXJrZXRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1NTU0NjUsImV4cCI6MjA4MjkxNTQ2NX0._K8oQUJQudU053iUkf3m7og-pfIAdJMlL3CFTHAdJBo
+NEXT_PUBLIC_SUPABASE_URL=https://supabase.shopmarkets.app
+OPENAI_API_KEY=
+PG_META_DB_HOST=supabase-db
+PG_META_DB_NAME=postgres
+PG_META_DB_PASSWORD=MfBn1LWRfb6/m1IkXQU3bw5WmgZM3uSw
+PG_META_DB_PORT=5432
+PG_META_DB_USER=postgres
+PG_META_PORT=8080
+PGPASSWORD=MfBn1LWRfb6/m1IkXQU3bw5WmgZM3uSw
+PGRST_APP_SETTINGS_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+PGRST_DB_ANON_ROLE=anon
+PGRST_DB_SCHEMA=public,storage,graphql_public
+PGRST_DB_SCHEMAS=public,storage,graphql_public
+PGRST_DB_URI=postgresql://postgres:MfBn1LWRfb6/m1IkXQU3bw5WmgZM3uSw@supabase-db:5432/postgres
+PGRST_DB_USE_LEGACY_GUCS=false
+PGRST_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+POOLER_DEFAULT_POOL_SIZE=20
+POOLER_MAX_CLIENT_CONN=100
+POSTGRES_DB=postgres
+POSTGRES_HOST=supabase-db
+POSTGRES_HOSTNAME=supabase-db
+POSTGRES_PASSWORD=MfBn1LWRfb6/m1IkXQU3bw5WmgZM3uSw
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+PUBLIC_SUPABASE_URL=https://supabase.shopmarkets.app
+REALTIME_DB_URL=postgresql://postgres:MfBn1LWRfb6/m1IkXQU3bw5WmgZM3uSw@supabase-db:5432/postgres
+SECRET_KEY_BASE=${SERVICE_PASSWORD_SUPAVISORSECRET}
+SECRET_PASSWORD_REALTIME=
+SMTP_ADMIN_EMAIL=
+SMTP_HOST=
+SMTP_PASS=
+SMTP_PORT=587
+SMTP_SENDER_NAME=
+SMTP_USER=
+STORAGE_BACKEND=s3
+STORAGE_S3_BUCKET=supabase-storage
+STORAGE_S3_ENDPOINT=http://supabase-minio:9000
+STUDIO_DEFAULT_ORGANIZATION=Default Organization
+STUDIO_DEFAULT_PROJECT=Default Project
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNob3BtYXJrZXRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc1NTU0NjUsImV4cCI6MjA4MjkxNTQ2NX0._K8oQUJQudU053iUkf3m7og-pfIAdJMlL3CFTHAdJBo
+SUPABASE_PUBLIC_API=${SERVICE_URL_SUPABASEKONG}
+SUPABASE_PUBLIC_URL=https://supabase.shopmarkets.app
+SUPABASE_SERVICE_KEY=${SERVICE_SUPABASESERVICE_KEY}
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNob3BtYXJrZXRzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NzU1NTQ2NSwiZXhwIjoyMDgyOTE1NDY1fQ.vLCLrXjTNHtclOtPsRwONDww_3NMLMKCpXp9WxMTFJo
+SUPABASE_URL=https://supabase.shopmarkets.app
+VAULT_ENC_KEY=${SERVICE_PASSWORD_VAULTENC}
+```
+
+---
+
+## ✅ WAS WURDE GEFIXT:
+
+### Alle JWT Secrets sind jetzt IDENTISCH:
+
+```bash
+SERVICE_PASSWORD_JWT=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+GOTRUE_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+PGRST_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+API_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+AUTH_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+METRICS_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+PGRST_APP_SETTINGS_JWT_SECRET=Ik3hm3bJQip+QVf9sxZFvcv5QgS0yNM3K/rBHowOEC0=
+```
+
+**ALLE 8 haben denselben Wert!** ✅
+
+---
+
+## 🚀 IN COOLIFY EINFÜGEN:
+
+### Schritt 1: Alte ENV-Variablen löschen
+```
+1. Gehe zu: Coolify → Supabase → Environment Variables
+2. Klicke: "Delete All" oder lösche alle manuell
+```
+
+### Schritt 2: Neue ENV-Variablen einfügen
+```
+1. Klicke: "+ Add Multiple" oder "Bulk Import"
+2. Kopiere die KOMPLETTE Liste oben
+3. Füge ein
+4. WICHTIG: Ersetze GOTRUE_SMTP_PASS mit deinem Gmail App-Passwort!
+5. Klicke: "Save"
+```
+
+### Schritt 3: Services neu starten
+```
+1. Restart: supabase-auth
+2. Restart: supabase-rest
+3. Restart: supabase-realtime
+4. Warte bis alle "running (healthy)"
+```
+
+---
+
+## 🧪 TESTEN:
+
+Nach dem Neustart:
+
+```
+1. Gehe zu: https://start.shopmarkets.app
+2. Versuche dich zu registrieren/einloggen
+3. Erwartung: KEIN "JWSInvalidSignature" Fehler mehr! ✅
+```
+
+---
+
+## 📝 WICHTIG:
+
+**Vergiss nicht:**
+- [ ] GOTRUE_SMTP_PASS mit echtem Gmail App-Passwort ersetzen
+- [ ] Alle Services neu starten
+- [ ] Testen ob Login funktioniert
+
+---
+
+**Erstellt:** 2026-01-04 21:26
+**Status:** Bereit zum Einfügen in Coolify
