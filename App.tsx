@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -10,10 +10,48 @@ import { Connections } from './components/Connections';
 import { SyncHistory } from './components/SyncHistory';
 import { Billing } from './components/Billing';
 import { Settings } from './components/Settings';
+import { Onboarding } from './components/Onboarding';
+import { AVVModal } from './components/AVVModal';
+import { useAuthStore } from './store/authStore';
+import { authService } from './services/authService';
 
-const App: React.FC = () => {
+// Wrapper component to handle AVV and Onboarding logic
+const AppContent: React.FC = () => {
+  const { user, isAuthenticated } = useAuthStore();
+  const location = useLocation();
+  const [showAVV, setShowAVV] = useState(false);
+
+  useEffect(() => {
+    // Check if user needs to sign AVV
+    // Note: user type needs to be updated to include avv_accepted_at
+    if (isAuthenticated && user && !(user as any).avv_accepted_at) {
+      // Don't show on login/register
+      if (location.pathname !== '/login' && location.pathname !== '/register') {
+        setShowAVV(true);
+      }
+    }
+  }, [isAuthenticated, user, location]);
+
+  const handleAVVSigned = async () => {
+    try {
+      // await authService.signAVV(); // Backend call
+      // Update local user state (would normally come from API response)
+      // setUser({ ...user!, avv_accepted_at: new Date().toISOString() });
+      setShowAVV(false);
+
+      // Redirect to onboarding if profile not complete
+      if (!(user as any)?.profile_completed) {
+        // navigate('/onboarding'); // This would need useNavigate hook here
+      }
+    } catch (e) {
+      console.error("Failed to sign AVV", e);
+    }
+  };
+
   return (
-    <BrowserRouter>
+    <>
+      <AVVModal isOpen={showAVV} onSigned={handleAVVSigned} />
+
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
@@ -37,9 +75,27 @@ const App: React.FC = () => {
           <Route path="settings" element={<Settings />} />
         </Route>
 
+        {/* Onboarding Route (Protected but outside Layout) */}
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+    </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 };

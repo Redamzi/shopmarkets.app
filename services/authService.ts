@@ -1,146 +1,104 @@
-import { supabase } from '../lib/supabase';
 import axios from 'axios';
 
-const SECURITY_SERVICE_URL = import.meta.env.VITE_SECURITY_SERVICE_URL || 'https://security.shopmarkets.app';
+// URL zum neuen Auth-Microservice
+const AUTH_URL = 'https://auth.shopmarkets.app/api/auth';
 
-export interface SignUpData {
+export interface User {
+    id: string;
     email: string;
-    password: string;
-    fullName: string;
+    fullName?: string;
+    isVerified?: boolean;
 }
 
-export interface SignInData {
-    email: string;
-    password: string;
+export interface AuthResponse {
+    message: string;
+    token?: string;
+    user?: User;
+    userId?: string;
+    requires2FA?: boolean;
 }
 
-export interface TwoFactorSetupResponse {
-    secret: string;
-    qrCode: string;
-    backupCodes: string[];
-}
+// Token Handling Helper
+const setToken = (token: string) => localStorage.setItem('auth_token', token);
+const getToken = () => localStorage.getItem('auth_token');
+const removeToken = () => localStorage.removeItem('auth_token');
 
 export const authService = {
-    // Sign Up
-    async signUp(data: SignUpData) {
-        const { data: authData, error } = await supabase.auth.signUp({
+    // 1. Register
+    async register(data: any) {
+        const response = await axios.post(`${AUTH_URL}/register`, {
             email: data.email,
             password: data.password,
-            options: {
-                data: {
-                    full_name: data.fullName,
-                },
-            },
+            fullName: data.fullName
         });
-
-        if (error) throw error;
-
-        // Send verification email via Security Service
-        // if (authData.user) {
-        //     await axios.post(`${SECURITY_SERVICE_URL}/api/auth/send-verification`, {
-        //         userId: authData.user.id,
-        //         email: data.email,
-        //     });
-        // }
-
-        return authData;
+        return response.data;
     },
 
-    // Sign In
-    async signIn(data: SignInData) {
-        const { data: authData, error } = await supabase.auth.signInWithPassword({
-            email: data.email,
-            password: data.password,
-        });
-
-        if (error) throw error;
-        return authData;
-    },
-
-    // Sign Out
-    async signOut() {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-    },
-
-    // Verify Email
+    // 2. Verify Email (nach Register)
     async verifyEmail(userId: string, code: string) {
-        const response = await axios.post(`${SECURITY_SERVICE_URL}/api/auth/verify-email`, {
+        const response = await axios.post(`${AUTH_URL}/verify-email`, {
             userId,
-            code,
+            code
         });
         return response.data;
     },
 
-    // Resend Verification
-    async resendVerification(userId: string, email: string) {
-        const response = await axios.post(`${SECURITY_SERVICE_URL}/api/auth/resend-verification`, {
-            userId,
+    // 3. Login Step 1 (Credentials) -> Sendet 2FA Code
+    async loginStep1(email: string, password: string) {
+        const response = await axios.post(`${AUTH_URL}/login`, {
             email,
+            password
         });
-        return response.data;
+        return response.data; // Returns { userId, requires2FA: true }
     },
 
-    // 2FA Setup
-    async setup2FA(userId: string): Promise<TwoFactorSetupResponse> {
-        const response = await axios.post(`${SECURITY_SERVICE_URL}/api/2fa/setup`, {
+    // 4. Login Step 2 (Verifies Code) -> Gibt Token zurück
+    async loginStep2(userId: string, code: string) {
+        const response = await axios.post(`${AUTH_URL}/verify-2fa`, {
             userId,
+            code
         });
+
+        if (response.data.token) {
+            setToken(response.data.token);
+            // Default User Object für den Store
+            return {
+                user: response.data.user,
+                session: { access_token: response.data.token }
+            };
+        }
         return response.data;
     },
 
-    // Enable 2FA
-    async enable2FA(userId: string, code: string) {
-        const response = await axios.post(`${SECURITY_SERVICE_URL}/api/2fa/enable`, {
-            userId,
-            code,
-        });
-        return response.data;
+    // 5. Logout
+    async logout() {
+        removeToken();
+        window.location.href = '/login';
     },
 
-    // Verify 2FA
-    async verify2FA(userId: string, code: string) {
-        const response = await axios.post(`${SECURITY_SERVICE_URL}/api/2fa/verify`, {
-            userId,
-            code,
-        });
-        return response.data;
-    },
-
-    // Disable 2FA
-    async disable2FA(userId: string, password: string) {
-        const response = await axios.post(`${SECURITY_SERVICE_URL}/api/2fa/disable`, {
-            userId,
-            password,
-        });
-        return response.data;
-    },
-
-    // Get Current User
+    // 6. Get Current User (aus Token oder API)
     async getCurrentUser() {
-        const { data: { user } } = await supabase.auth.getUser();
-        return user;
+        const token = getToken();
+        if (!token) return null;
+
+        // Hier könnten wir einen /me Endpoint aufrufen
+        // Simuliert User aus Token/Storage für Performance
+        try {
+            // Decodiere Token Payload (Base64)
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return {
+                id: payload.userId,
+                email: payload.email,
+                // fullName müsste vom /me endpoint kommen, wir nehmen placeholder oder session storage
+            };
+        } catch (e) {
+            return null;
+        }
     },
 
-    // Get Session
+    // Session Check
     async getSession() {
-        const { data: { session } } = await supabase.auth.getSession();
-        return session;
-    },
-
-    // Reset Password
-    async resetPassword(email: string) {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password`,
-        });
-        if (error) throw error;
-    },
-
-    // Update Password
-    async updatePassword(newPassword: string) {
-        const { error } = await supabase.auth.updateUser({
-            password: newPassword,
-        });
-        if (error) throw error;
-    },
+        const token = getToken();
+        return token ? { access_token: token } : null;
+    }
 };
