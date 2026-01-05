@@ -14,3 +14,7 @@ coverage
 # Supabase Secrets (NEVER COMMIT!)
 supabase/supabase-env-variables.md
 **/supabase-env-variables.md
+
+# Database credentials (NEVER COMMIT!)
+.env.db
+.migration-log
