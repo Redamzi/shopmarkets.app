@@ -79,6 +79,11 @@ export const authService = {
         window.location.href = '/login';
     },
 
+    // Alias für Kompatibilität
+    async signOut() {
+        return this.logout();
+    },
+
     // 6. Get Current User (aus Token oder API)
     async getCurrentUser() {
         const token = getToken();
