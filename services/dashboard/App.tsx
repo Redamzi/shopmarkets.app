@@ -17,7 +17,7 @@ import { authService } from './services/authService';
 
 // Wrapper component to handle AVV and Onboarding logic
 const AppContent: React.FC = () => {
-  const { user, isAuthenticated, setUser } = useAuthStore();
+  const { user, isAuthenticated, setUser, session } = useAuthStore();
   const location = useLocation();
   const [showAVV, setShowAVV] = useState(false);
 
@@ -36,7 +36,7 @@ const AppContent: React.FC = () => {
   const handleAVVSigned = async () => {
     try {
       // Reload user from backend to get updated is_avv_signed flag
-      const token = localStorage.getItem('auth_token');
+      const token = session?.access_token;
       if (token) {
         const response = await fetch('https://security.shopmarkets.app/api/auth/verify-token', {
           headers: {

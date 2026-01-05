@@ -8,7 +8,7 @@ interface AVVModalProps {
 }
 
 export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
-    const { user } = useAuthStore();
+    const { user, session } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
     const [accepted, setAccepted] = useState(false);
@@ -42,8 +42,8 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
         setLoading(true);
 
         try {
-            // Get token using our central helper key
-            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+            // Get token from session (Zustand Store)
+            const token = session?.access_token;
 
             if (!token) {
                 throw new Error('Kein Authentifizierungs-Token gefunden. Bitte loggen Sie sich neu ein.');
