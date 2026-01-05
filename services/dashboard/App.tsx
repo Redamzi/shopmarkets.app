@@ -23,7 +23,8 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     // Check if user needs to sign AVV
-    if (isAuthenticated && user && !(user as any).is_avv_signed) {
+    // Check if user needs to sign AVV
+    if (isAuthenticated && user && !user.is_avv_signed) {
       // Don't show on login/register
       if (location.pathname !== '/login' && location.pathname !== '/register') {
         setShowAVV(true);

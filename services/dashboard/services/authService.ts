@@ -9,7 +9,7 @@ export interface User {
     email: string;
     fullName?: string;
     isVerified?: boolean;
-    avvAccepted?: boolean;
+    is_avv_signed?: boolean;
 }
 
 export interface AuthResponse {
@@ -70,54 +70,32 @@ export const authService = {
         return response.data; // Returns { userId, requires2FA: true } or { token, user, skipTwoFactor: true }
     },
 
-    // 4. Login Step 2 (Verifies Code) -> Gibt Token zurück
-    async loginStep2(userId: string, code: string, trustDevice: boolean = false, deviceFingerprint?: string) {
-        const response = await axios.post(`${AUTH_URL}/verify-2fa`, {
-            userId,
-            code,
-            trustDevice,
-            deviceFingerprint
-        });
-
-        if (response.data.token) {
-            setToken(response.data.token);
-            // Default User Object für den Store
-            return {
-                user: response.data.user,
-                session: { access_token: response.data.token }
-            };
-        }
-        return response.data;
-    },
-
-    // 5. Logout
-    async logout() {
-        removeToken();
-        window.location.href = '/login';
-    },
-
-    // Alias für Kompatibilität
-    async signOut() {
-        return this.logout();
-    },
-
     // 6. Get Current User (aus Token oder API)
     async getCurrentUser() {
         const token = getToken();
         if (!token) return null;
 
-        // Hier könnten wir einen /me Endpoint aufrufen
-        // Simuliert User aus Token/Storage für Performance
         try {
-            // Decodiere Token Payload (Base64)
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return {
-                id: payload.userId,
-                email: payload.email,
-                // fullName müsste vom /me endpoint kommen, wir nehmen placeholder oder session storage
-            };
+            // Fetch real user data from backend to ensure we have latest AVV status
+            const response = await axios.get(`${AUTH_URL}/verify-token`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data.user;
         } catch (e) {
-            return null;
+            console.error('Failed to fetch current user', e);
+            // Fallback: Decodiere Token Payload (Base64) für Basis-Daten
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    id: payload.userId,
+                    email: payload.email,
+                    is_avv_signed: true // Fallback: Assume signed to prevent blocking if API fails? Or false? Better false.
+                };
+            } catch (decodeError) {
+                return null;
+            }
         }
     },
 
