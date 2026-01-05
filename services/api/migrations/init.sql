@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
+    user_id TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
     price DECIMAL(10, 2) DEFAULT 0,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS products (
 
 CREATE TABLE IF NOT EXISTS connections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL,
+    user_id TEXT NOT NULL,
     platform TEXT NOT NULL,
     name TEXT,
     api_key TEXT,
