@@ -16,6 +16,7 @@ export const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [code, setCode] = useState('');
+    const [trustDevice, setTrustDevice] = useState(false);
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -32,8 +33,15 @@ export const Login: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const data = await authService.loginStep1(email, password);
-            if (data.requires2FA && data.userId) {
+            const deviceFingerprint = await generateDeviceFingerprint();
+            const data = await authService.loginStep1(email, password, deviceFingerprint);
+
+            // Check if 2FA was skipped (trusted device)
+            if (data.skipTwoFactor && data.token && data.user) {
+                setUser(data.user);
+                setSession({ access_token: data.token });
+                navigate('/dashboard');
+            } else if (data.requires2FA && data.userId) {
                 setUserId(data.userId);
                 setStep(2); // Weiter zu Step 2
             }
@@ -51,7 +59,10 @@ export const Login: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const { user, session } = await authService.loginStep2(userId, code);
+            // Generate device fingerprint (simple version - can be enhanced)
+            const deviceFingerprint = await generateDeviceFingerprint();
+
+            const { user, session } = await authService.loginStep2(userId, code, trustDevice, deviceFingerprint);
             if (user && session) {
                 setUser(user);
                 setSession(session);
@@ -62,6 +73,37 @@ export const Login: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    // Generate device fingerprint
+    const generateDeviceFingerprint = async (): Promise<string> => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const txt = 'fingerprint';
+        if (ctx) {
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText(txt, 2, 2);
+        }
+
+        const fingerprint = {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            platform: navigator.platform,
+            screenResolution: `${screen.width}x${screen.height}`,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            canvas: canvas.toDataURL()
+        };
+
+        // Simple hash function
+        const str = JSON.stringify(fingerprint);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return Math.abs(hash).toString(16);
     };
 
     return (
@@ -173,6 +215,24 @@ export const Login: React.FC = () => {
                                     required
                                 />
                                 <p className="text-xs text-center text-slate-500 mt-2">Bitte prüfe deinen Spam-Ordner</p>
+                            </div>
+
+                            {/* Trust Device Checkbox */}
+                            <div className="flex items-start gap-3 pt-2">
+                                <div className="pt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        id="trustDevice"
+                                        checked={trustDevice}
+                                        onChange={(e) => setTrustDevice(e.target.checked)}
+                                        className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                </div>
+                                <label htmlFor="trustDevice" className="text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+                                    <span className="font-medium text-slate-900 dark:text-white">Diesem Gerät vertrauen</span>
+                                    <br />
+                                    <span className="text-xs text-slate-500">Du wirst auf diesem Gerät 30 Tage lang nicht nach einem Code gefragt.</span>
+                                </label>
                             </div>
 
                             <button

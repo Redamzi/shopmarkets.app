@@ -57,11 +57,11 @@ export const register = async (req, res, next) => {
 // Login (Step 1 - Email/Password)
 export const login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, deviceFingerprint } = req.body;
 
         // Get user
         const result = await pool.query(
-            'SELECT id, email, password_hash, is_verified, is_active, full_name FROM public.users WHERE email = $1',
+            'SELECT id, email, password_hash, is_verified, is_active, full_name, avv_accepted_at FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -79,6 +79,44 @@ export const login = async (req, res, next) => {
         const validPassword = await bcrypt.compare(password, user.password_hash);
         if (!validPassword) {
             return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        // Check if device is trusted
+        if (deviceFingerprint) {
+            const trustedDeviceResult = await pool.query(
+                `SELECT id FROM public.trusted_devices 
+                WHERE user_id = $1 AND device_fingerprint = $2 
+                AND is_active = true AND expires_at > NOW()`,
+                [user.id, deviceFingerprint]
+            );
+
+            if (trustedDeviceResult.rows.length > 0) {
+                // Device is trusted - skip 2FA
+                // Update last_used_at
+                await pool.query(
+                    'UPDATE public.trusted_devices SET last_used_at = NOW() WHERE id = $1',
+                    [trustedDeviceResult.rows[0].id]
+                );
+
+                // Generate JWT directly
+                const token = jwt.sign(
+                    { userId: user.id, email: user.email },
+                    JWT_SECRET,
+                    { expiresIn: JWT_EXPIRES_IN }
+                );
+
+                return res.json({
+                    message: 'Login successful (trusted device)',
+                    token,
+                    skipTwoFactor: true,
+                    user: {
+                        id: user.id,
+                        email: user.email,
+                        fullName: user.full_name,
+                        avvAccepted: !!user.avv_accepted_at
+                    }
+                });
+            }
         }
 
         // Generate 2FA code
@@ -106,7 +144,7 @@ export const login = async (req, res, next) => {
 // Login (Step 2 - Verify 2FA Code)
 export const verify2FA = async (req, res, next) => {
     try {
-        const { userId, code } = req.body;
+        const { userId, code, trustDevice, deviceFingerprint } = req.body;
 
         // Get verification code
         const result = await pool.query(
@@ -141,6 +179,22 @@ export const verify2FA = async (req, res, next) => {
 
         const user = userResult.rows[0];
 
+        // If user wants to trust this device, save it
+        if (trustDevice && deviceFingerprint) {
+            const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            const userAgent = req.headers['user-agent'];
+            const deviceName = getUserAgentDeviceName(userAgent);
+
+            await pool.query(
+                `INSERT INTO public.trusted_devices 
+                (user_id, device_fingerprint, device_name, ip_address, user_agent, expires_at)
+                VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days')
+                ON CONFLICT (user_id, device_fingerprint) 
+                DO UPDATE SET last_used_at = NOW(), expires_at = NOW() + INTERVAL '30 days', is_active = true`,
+                [user.id, deviceFingerprint, deviceName, ip, userAgent]
+            );
+        }
+
         // Generate JWT
         const token = jwt.sign(
             { userId: user.id, email: user.email },
@@ -161,6 +215,20 @@ export const verify2FA = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+};
+
+// Helper function to extract device name from user agent
+const getUserAgentDeviceName = (userAgent) => {
+    if (!userAgent) return 'Unknown Device';
+
+    if (userAgent.includes('iPhone')) return 'iPhone';
+    if (userAgent.includes('iPad')) return 'iPad';
+    if (userAgent.includes('Android')) return 'Android Device';
+    if (userAgent.includes('Macintosh')) return 'Mac';
+    if (userAgent.includes('Windows')) return 'Windows PC';
+    if (userAgent.includes('Linux')) return 'Linux PC';
+
+    return 'Unknown Device';
 };
 
 // Verify Email
