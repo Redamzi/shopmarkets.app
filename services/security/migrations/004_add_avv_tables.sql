@@ -1,7 +1,7 @@
 -- AVV Logs Table: Stores all AVV signatures with full audit trail
 CREATE TABLE IF NOT EXISTS public.avv_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id TEXT NOT NULL,
+    user_id UUID NOT NULL,
     signature_data TEXT NOT NULL,  -- Base64-encoded PNG
     ip_address TEXT,
     contract_version TEXT DEFAULT '1.0',
