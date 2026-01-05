@@ -276,9 +276,13 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
         }
     };
 
-    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (!file) return;
+
+        // Create local preview immediately
+        const previewUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, imageUrl: previewUrl }));
 
         if (credits < 1) { alert("Nicht genügend Credits!"); return; }
 
@@ -449,9 +453,9 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
             case 'ai':
                 return (
                     <div className="flex flex-col items-center justify-center h-full py-4 sm:py-8 text-center space-y-6 sm:space-y-8 animate-in zoom-in-95 duration-300 -mt-[30px] sm:mt-0">
-                        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
-                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                        <div className="relative group cursor-pointer" onClick={() => { console.log('Upload clicked'); fileInputRef.current?.click(); }}>
+                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} style={{ display: 'none' }} accept="image/*" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity pointer-events-none"></div>
                             <div className="relative w-32 h-32 rounded-[2rem] bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-900 border-2 border-dashed border-indigo-200 dark:border-indigo-800 flex flex-col items-center justify-center hover:border-indigo-500 transition-colors">
                                 <Upload className="text-indigo-400 mb-2" size={32} />
                                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Bild hier ablegen</span>
@@ -563,12 +567,12 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                 <p className="text-[10px] mt-1 opacity-70">PNG, JPG (max. 5MB)</p>
                             </div>
                             <div className="grid grid-cols-4 gap-3 mt-4">
-                                {[1, 2].map((i) => (
-                                    <div key={i} className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                                        <img src={`https://picsum.photos/200?random=${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                        <button className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
+                                {formData.imageUrl && !formData.imageUrl.includes('picsum') && (
+                                    <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
+                                        <img src={formData.imageUrl} className="w-full h-full object-cover" />
+                                        <button onClick={() => setFormData({ ...formData, imageUrl: '' })} className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
                                     </div>
-                                ))}
+                                )}
                                 <div className="aspect-square bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700 border-dashed">
                                     <Plus size={20} />
                                 </div>
