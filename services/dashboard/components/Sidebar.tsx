@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Share2, Activity, Settings, CreditCard, Plus, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Package, Share2, Activity, Settings, CreditCard, Plus, LogOut, X, Facebook, Twitter, Globe } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
 
@@ -65,8 +65,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => 
           </button>
         </div>
 
+
+
+
         {/* Navigation */}
-        <nav className="flex-1 space-y-2 overflow-y-auto">
+        <nav className="flex-1 space-y-2 overflow-y-auto mb-6">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -89,8 +92,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => 
           ))}
         </nav>
 
+        {/* CTA & Socials */}
+        <div className="px-2 mb-6 space-y-6">
+          {/* CTA Button */}
+          <button
+            onClick={() => navigate('/products')}
+            className="w-full bg-[#5245e5] hover:bg-[#4338ca] text-white py-3.5 px-4 rounded-2xl shadow-[0_8px_20px_-6px_rgba(82,69,229,0.4)] flex items-center justify-center gap-2 transition-all transform active:scale-95 group"
+          >
+            <span className="font-bold text-[15px]">Produkt hinzufügen</span>
+            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+          </button>
+
+          {/* Social Icons */}
+          <div className="flex justify-center items-center gap-4">
+            <a href="#" className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
+              <Facebook size={18} />
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
+              <Twitter size={18} />
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 transition-all">
+              <Globe size={18} />
+            </a>
+          </div>
+        </div>
+
         {/* User Info & Logout */}
-        <div className="mt-6 space-y-4">
+        <div className="space-y-4">
           <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
             <p className="text-xs text-slate-500 dark:text-slate-400">Angemeldet als</p>
             <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
