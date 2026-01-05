@@ -1,4 +1,8 @@
-CREATE TABLE IF NOT EXISTS products (
+-- Force clean schema on startup
+DROP TABLE IF EXISTS public.products CASCADE;
+DROP TABLE IF EXISTS public.connections CASCADE;
+
+CREATE TABLE public.products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id TEXT NOT NULL,
     title TEXT NOT NULL,
@@ -12,7 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS connections (
+CREATE TABLE public.connections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id TEXT NOT NULL,
     platform TEXT NOT NULL,
