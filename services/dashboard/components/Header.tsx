@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, User, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { Bell, Search, Menu, User, LogOut, Settings as SettingsIcon, Plus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
@@ -44,6 +44,14 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
                 {/* Right: Actions & Profile */}
                 <div className="flex items-center gap-3 md:gap-4">
+                    <button
+                        onClick={() => navigate('/products')}
+                        className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#5245e5] hover:bg-[#4338ca] text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95"
+                    >
+                        <span className="font-bold text-sm">Produkt hinzufügen</span>
+                        <Plus size={18} strokeWidth={2.5} />
+                    </button>
+
                     <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl relative">
                         <Bell size={20} />
                         <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
