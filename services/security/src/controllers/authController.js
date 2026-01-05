@@ -295,10 +295,24 @@ export const signAVV = async (req, res, next) => {
     try {
         const userId = req.user.userId; // From authMiddleware
 
+        const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+        const userAgent = req.headers['user-agent'];
+
+        await pool.query('BEGIN');
+
+        // Update User
         await pool.query(
             'UPDATE public.users SET avv_accepted_at = NOW() WHERE id = $1',
             [userId]
         );
+
+        // Create Audit Log
+        await pool.query(
+            'INSERT INTO public.legal_consents (user_id, document_type, version, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)',
+            [userId, 'AVV', '1.0', ip, userAgent]
+        );
+
+        await pool.query('COMMIT');
 
         res.json({ message: 'AVV signed successfully' });
     } catch (error) {
