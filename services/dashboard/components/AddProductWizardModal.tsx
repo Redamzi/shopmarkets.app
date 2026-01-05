@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Upload, Check, Globe, ShoppingBag, Store, Tag, DollarSign, Barcode, Layers, Image as ImageIcon, Box, Truck, Plus, Trash2, SlidersHorizontal, ChevronRight, Info, X, Wrench, Package, Maximize2, ShoppingCart, Sparkles, Wand2, Loader2, Zap, ArrowRightLeft, Database, Link, RefreshCw, Facebook, Instagram, Twitter, Video, Film, PlayCircle, Calculator, Percent, Ruler, Scale, Coins, TrendingDown, Clock, Search, ChevronLeft, ShieldCheck, AlertCircle, Eye, Smartphone, Music, Hash, MessageCircle, Share2, ThumbsUp, Heart, ChevronDown } from 'lucide-react';
+import axios from 'axios';
+import { authService } from '../services/authService';
 import { Product, Platform } from '../types';
 import { Connection } from '../services/connectionService';
+
+const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:5005';
+
+
 
 interface AddProductWizardModalProps {
     isOpen: boolean;
@@ -116,6 +122,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
     const [autoCalcFees, setAutoCalcFees] = useState(false);
     const [isPriceMonitorActive, setIsPriceMonitorActive] = useState(false);
     const navRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -269,44 +276,81 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
         }
     };
 
-    const handleAIGenerate = () => {
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
         if (credits < 1) { alert("Nicht genügend Credits!"); return; }
+
         setIsGenerating(true);
+        // Optimistisch Credits abziehen
         setCredits(prev => prev - 1);
 
-        setTimeout(() => {
-            setFormData({
-                ...formData,
-                title: 'Premium Vintage Leder Weekender',
-                description: 'Handgefertigte Reisetasche aus echtem Leder. Perfekt für Wochenendtrips.',
-                price: '249.00',
-                comparePrice: '329.00',
-                costPerItem: '85.00',
-                sku: 'BAG-LTHR-WKND-01',
-                barcode: '4006381333931',
-                stock: '15',
-                weight: '1.8',
-                length: '55',
-                width: '30',
-                height: '25',
-                shippingProfile: 'standard',
-                category: 'Reisegepäck',
-                manufacturer: 'Heritage Goods',
-                tags: 'Leder, Reise, Premium',
-                channels: ['shopify', 'amazon', 'tiktok']
+        const formDataPayload = new FormData();
+        formDataPayload.append('image', file);
+
+        try {
+            const session = await authService.getSession();
+            const token = session?.access_token;
+
+            const response = await axios.post(`${AI_SERVICE_URL}/generate`, formDataPayload, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    // Authorization header not strictly needed if service is public, but keeping for future
+                    'Authorization': `Bearer ${token}`
+                }
             });
-            setTiktokParams({
-                sound: 'Relaxed Travel Vibes - Original',
-                caption: 'Bereit für das nächste Abenteuer? ✈️ Unser Vintage Weekender ist der perfekte Begleiter. #travel #vintage #leather',
-                hashtags: '#travel #vintage #leather #fashion #style',
-                allowDuet: true,
-                allowStitch: true
-            });
-            setHasVariants(true);
-            setOptions([{ id: 'opt_gen_1', name: 'Farbe', values: ['Cognac', 'Schwarz'], currentInput: '' }]);
-            setIsGenerating(false);
+
+            const data = response.data.data;
+
+            setFormData(prev => ({
+                ...prev,
+                title: data.title || prev.title,
+                description: data.description || prev.description,
+                category: data.category || prev.category,
+                manufacturer: data.manufacturer || prev.manufacturer,
+                tags: data.tags || prev.tags,
+                price: data.price ? data.price.replace(',', '.') : prev.price, // Normalize price
+                sku: data.sku || prev.sku,
+            }));
+
+            // Smart Attribute Mapping
+            if (data.attributes) {
+                // Try to extract weight/dimensions keys if standard
+                if (data.attributes.weight) setFormData(prev => ({ ...prev, weight: data.attributes.weight.toString().replace(/[^0-9.]/g, '') }));
+            }
+
+            // Variants Mapping
+            if (data.variants && Array.isArray(data.variants) && data.variants.length > 0) {
+                setHasVariants(true);
+                const newOptions = data.variants.map((v: any, idx: number) => ({
+                    id: `opt_gen_${idx}`,
+                    name: v.name,
+                    values: v.values,
+                    currentInput: ''
+                }));
+                setOptions(newOptions);
+            }
+
+            // TikTok Mapping
+            if (data.tiktok) {
+                setTiktokParams(prev => ({
+                    ...prev,
+                    caption: data.tiktok.caption || prev.caption,
+                    hashtags: data.tiktok.hashtags || prev.hashtags
+                }));
+            }
+
             handleNextStep();
-        }, 2000);
+
+        } catch (error) {
+            console.error("Magic Generation Failed", error);
+            alert("Fehler bei der Generierung. Versuche es erneut.");
+            setCredits(prev => prev + 1); // Refund
+        } finally {
+            setIsGenerating(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     const addOption = () => setOptions([...options, { id: `opt_${Date.now()}`, name: '', values: [], currentInput: '' }]);
@@ -405,7 +449,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
             case 'ai':
                 return (
                     <div className="flex flex-col items-center justify-center h-full py-4 sm:py-8 text-center space-y-6 sm:space-y-8 animate-in zoom-in-95 duration-300 -mt-[30px] sm:mt-0">
-                        <div className="relative group cursor-pointer">
+                        <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
                             <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
                             <div className="relative w-32 h-32 rounded-[2rem] bg-gradient-to-br from-indigo-50 to-white dark:from-slate-800 dark:to-slate-900 border-2 border-dashed border-indigo-200 dark:border-indigo-800 flex flex-col items-center justify-center hover:border-indigo-500 transition-colors">
                                 <Upload className="text-indigo-400 mb-2" size={32} />
@@ -422,9 +467,9 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                     </button>
                                 ))}
                             </div>
-                            <button onClick={handleAIGenerate} disabled={isGenerating} className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base sm:text-lg">
+                            <button onClick={() => fileInputRef.current?.click()} disabled={isGenerating} className="w-full py-3.5 sm:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-base sm:text-lg">
                                 {isGenerating ? <Loader2 className="animate-spin" /> : <Wand2 />}
-                                <span>Generieren (1 Credit)</span>
+                                <span>{isGenerating ? 'Analysiere Produkt...' : 'Foto hochladen & Generieren (1 Credit)'}</span>
                             </button>
                         </div>
                     </div>
