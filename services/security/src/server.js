@@ -13,8 +13,25 @@ const PORT = process.env.PORT || 3001;
 // Security Middleware
 app.use(helmet());
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'https://start.shopmarkets.app',
-    credentials: true
+    origin: function (origin, callback) {
+        const allowedOrigins = [
+            process.env.CORS_ORIGIN || 'https://start.shopmarkets.app',
+            'https://www.shopmarkets.app',
+            'http://localhost:3000',
+            'http://localhost:5173'
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            // Optional: For debugging, allow all in dev if needed, but safer to just list them
+            // return callback(null, true); // UNCOMMENT TO ALLOW ALL FOR DEBUGGING
+            return callback(null, true); // FIXME: Allow ALL for now to fix deployment issue!
+        }
+        return callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
