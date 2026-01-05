@@ -1,14 +1,14 @@
 import axios from 'axios';
 
 // URL zum neuen Auth-Microservice
-// WICHTIG: Nutze VITE_SECURITY_URL wenn vorhanden, sonst Fallback
-const AUTH_URL = (import.meta.env.VITE_SECURITY_URL || 'https://security.shopmarkets.app') + '/api/auth';
+const AUTH_URL = 'https://auth.shopmarkets.app/api/auth';
 
 export interface User {
     id: string;
     email: string;
     fullName?: string;
     isVerified?: boolean;
+    avvAccepted?: boolean;
 }
 
 export interface AuthResponse {
@@ -45,19 +45,22 @@ export const authService = {
     },
 
     // 3. Login Step 1 (Credentials) -> Sendet 2FA Code
-    async loginStep1(email: string, password: string) {
+    async loginStep1(email: string, password: string, deviceFingerprint?: string) {
         const response = await axios.post(`${AUTH_URL}/login`, {
             email,
-            password
+            password,
+            deviceFingerprint
         });
-        return response.data; // Returns { userId, requires2FA: true }
+        return response.data; // Returns { userId, requires2FA: true } or { token, user, skipTwoFactor: true }
     },
 
     // 4. Login Step 2 (Verifies Code) -> Gibt Token zurück
-    async loginStep2(userId: string, code: string) {
+    async loginStep2(userId: string, code: string, trustDevice: boolean = false, deviceFingerprint?: string) {
         const response = await axios.post(`${AUTH_URL}/verify-2fa`, {
             userId,
-            code
+            code,
+            trustDevice,
+            deviceFingerprint
         });
 
         if (response.data.token) {
@@ -74,7 +77,6 @@ export const authService = {
     // 5. Logout
     async logout() {
         removeToken();
-        const api_url = (import.meta.env.VITE_API_URL || 'https://api.shopmarkets.app');
         window.location.href = '/login';
     },
 
@@ -91,7 +93,7 @@ export const authService = {
             return {
                 id: payload.userId,
                 email: payload.email,
-                fullName: payload.fullName || 'User'
+                // fullName müsste vom /me endpoint kommen, wir nehmen placeholder oder session storage
             };
         } catch (e) {
             return null;
@@ -104,23 +106,20 @@ export const authService = {
         return token ? { access_token: token } : null;
     },
 
-    // --- Compatibility Methods ---
-    async signOut() {
-        return this.logout();
-    },
-
-    async updatePassword(password: string) {
-        console.warn("updatePassword not implemented in frontend yet");
-        // TODO: Call API endpoint
-        return Promise.resolve();
-    },
-
+    // Sign AVV Contract
     async signAVV() {
         const token = getToken();
-        await axios.post(`${AUTH_URL}/sign-avv`, {}, {
-            headers: {
-                Authorization: `Bearer ${token}`
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await axios.post(
+            `${AUTH_URL}/sign-avv`,
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             }
-        });
+        );
+        return response.data;
     }
 };
