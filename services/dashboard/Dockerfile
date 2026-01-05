@@ -21,7 +21,7 @@ ENV VITE_ENV=$VITE_ENV
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production=false
+RUN npm install
 
 # Copy source code
 COPY . .
