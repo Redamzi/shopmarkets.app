@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/authStore';
 
 // URL zum neuen Auth-Microservice
 const AUTH_URL = 'https://security.shopmarkets.app/api/auth';
@@ -20,9 +21,24 @@ export interface AuthResponse {
 }
 
 // Token Handling Helper
-const setToken = (token: string) => localStorage.setItem('auth_token', token);
-const getToken = () => localStorage.getItem('auth_token');
-const removeToken = () => localStorage.removeItem('auth_token');
+const setToken = (token: string) => {
+    localStorage.setItem('auth_token', token);
+    useAuthStore.getState().setSession({ access_token: token });
+};
+
+const getToken = () => {
+    // Check Zustand Store first (primary source)
+    const session = useAuthStore.getState().session;
+    if (session?.access_token) return session.access_token;
+
+    // Check Legacy/Direct Storage
+    return localStorage.getItem('auth_token');
+};
+
+const removeToken = () => {
+    localStorage.removeItem('auth_token');
+    useAuthStore.getState().logout();
+};
 
 export const authService = {
     // 1. Register
