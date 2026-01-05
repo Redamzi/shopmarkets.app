@@ -26,6 +26,7 @@ RUN npm ci --only=production=false
 # Copy source code
 COPY . .
 
+# Force rebuild - Updated 2026-01-05 13:26
 # Build the application (Vite will embed env vars at build time)
 RUN npm run build
 
