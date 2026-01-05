@@ -15,7 +15,10 @@ export interface SyncLog {
 export const syncService = {
     async getLogs(): Promise<SyncLog[]> {
         try {
-            const response = await axios.get(`${API_URL}/api/sync-logs`);
+            const token = localStorage.getItem('auth_token');
+            const response = await axios.get(`${API_URL}/api/sync/logs`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             console.error('Failed to fetch sync logs:', error);

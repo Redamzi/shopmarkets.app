@@ -12,7 +12,10 @@ export interface UserCredits {
 export const billingService = {
     async getCredits(userId: string): Promise<UserCredits> {
         try {
-            const response = await axios.get(`${API_URL}/api/credits/${userId}`);
+            const token = localStorage.getItem('auth_token');
+            const response = await axios.get(`${API_URL}/api/billing/credits/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return response.data;
         } catch (error) {
             console.error('Failed to fetch credits:', error);
