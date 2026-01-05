@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
+// FALLBACK SECRET for Debugging (Matches User Log)
+const FALLBACK_SECRET = 'ShopMarkets_JWT_Secret_2026_a8f3e9d2c1b4f7a6e5d8c3b2a1f9e7d6c5b4a3f2e1d9c8b7a6f5e4d3c2b1a0';
+const JWT_SECRET = process.env.JWT_SECRET || FALLBACK_SECRET;
 
 export const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
