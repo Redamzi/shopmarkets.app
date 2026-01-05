@@ -4,7 +4,15 @@ export const getProducts = async (req, res) => {
     try {
         const userId = req.user.userId;
         const result = await pool.query('SELECT * FROM products WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
-        res.json(result.rows);
+
+        // Convert price and stock to numbers for frontend
+        const products = result.rows.map(p => ({
+            ...p,
+            price: parseFloat(p.price) || 0,
+            stock: parseInt(p.stock) || 0
+        }));
+
+        res.json(products);
     } catch (err) {
         console.error('getProducts error:', err);
         res.status(500).json({ error: 'Failed to fetch products' });
@@ -36,7 +44,12 @@ export const addProduct = async (req, res) => {
         ];
 
         const result = await pool.query(query, values);
-        res.json(result.rows[0]);
+        const product = {
+            ...result.rows[0],
+            price: parseFloat(result.rows[0].price) || 0,
+            stock: parseInt(result.rows[0].stock) || 0
+        };
+        res.json(product);
     } catch (err) {
         console.error('addProduct error:', err);
         res.status(500).json({ error: 'Failed to create product' });
