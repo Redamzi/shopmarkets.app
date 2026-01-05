@@ -8,7 +8,8 @@ const registerSchema = Joi.object({
 
 const loginSchema = Joi.object({
     email: Joi.string().email().required(),
-    password: Joi.string().required()
+    password: Joi.string().required(),
+    deviceFingerprint: Joi.string().optional()
 });
 
 const verify2FASchema = Joi.object({
