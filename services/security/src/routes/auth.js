@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, verify2FA, verifyEmail, requestPasswordReset, resetPassword, signAVV } from '../controllers/authController.js';
+import { register, login, verify2FA, verifyEmail, requestPasswordReset, resetPassword, signAVV, getAVVStatus, getAVVSignature } from '../controllers/authController.js';
 import { validateRegister, validateLogin, validate2FA, validatePasswordReset } from '../middleware/validation.js';
 import { rateLimiter } from '../middleware/rateLimiter.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
@@ -16,5 +16,7 @@ router.post('/reset-password', rateLimiter, validatePasswordReset, resetPassword
 
 // Protected routes
 router.post('/sign-avv', authenticateToken, signAVV);
+router.get('/avv/status/:userId', getAVVStatus);
+router.get('/avv/signature/:userId', getAVVSignature);
 
 export default router;

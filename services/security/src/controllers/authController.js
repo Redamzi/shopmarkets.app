@@ -61,7 +61,7 @@ export const login = async (req, res, next) => {
 
         // Get user
         const result = await pool.query(
-            'SELECT id, email, password_hash, is_verified, is_active, full_name, avv_accepted_at FROM public.users WHERE email = $1',
+            'SELECT id, email, password_hash, is_verified, is_active, full_name, avv_accepted_at, is_avv_signed FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -113,7 +113,8 @@ export const login = async (req, res, next) => {
                         id: user.id,
                         email: user.email,
                         fullName: user.full_name,
-                        avv_accepted_at: user.avv_accepted_at
+                        avv_accepted_at: user.avv_accepted_at,
+                        is_avv_signed: user.is_avv_signed || false
                     }
                 });
             }
@@ -173,7 +174,7 @@ export const verify2FA = async (req, res, next) => {
 
         // Get user
         const userResult = await pool.query(
-            'SELECT id, email, full_name, avv_accepted_at FROM public.users WHERE id = $1',
+            'SELECT id, email, full_name, avv_accepted_at, is_avv_signed FROM public.users WHERE id = $1',
             [userId]
         );
 
@@ -223,7 +224,8 @@ export const verify2FA = async (req, res, next) => {
                 id: user.id,
                 email: user.email,
                 fullName: user.full_name,
-                avv_accepted_at: user.avv_accepted_at
+                avv_accepted_at: user.avv_accepted_at,
+                is_avv_signed: user.is_avv_signed || false
             }
         });
     } catch (error) {
@@ -375,33 +377,126 @@ export const resetPassword = async (req, res, next) => {
     }
 };
 
-// Sign AVV
+// Sign AVV with signature data
 export const signAVV = async (req, res, next) => {
     try {
         const userId = req.user.userId; // From authMiddleware
+        const { signature_data } = req.body;
+
+        if (!signature_data) {
+            return res.status(400).json({ error: 'Signature data is required' });
+        }
 
         const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-        const userAgent = req.headers['user-agent'];
 
         await pool.query('BEGIN');
 
-        // Update User
-        await pool.query(
-            'UPDATE public.users SET avv_accepted_at = NOW() WHERE id = $1',
+        // 1. Check if user already signed (upsert logic)
+        const existing = await pool.query(
+            'SELECT id FROM public.avv_logs WHERE user_id = $1',
             [userId]
         );
 
-        // Create Audit Log
+        if (existing.rows.length > 0) {
+            // Update existing signature
+            await pool.query(
+                `UPDATE public.avv_logs 
+                SET signature_data = $1, ip_address = $2, signed_at = NOW() 
+                WHERE user_id = $3`,
+                [signature_data, ip, userId]
+            );
+        } else {
+            // Insert new signature
+            await pool.query(
+                `INSERT INTO public.avv_logs 
+                (user_id, signature_data, ip_address, contract_version, signed_at) 
+                VALUES ($1, $2, $3, $4, NOW())`,
+                [userId, signature_data, ip, '1.0']
+            );
+        }
+
+        // 2. Update user flag
         await pool.query(
-            'INSERT INTO public.legal_consents (user_id, document_type, version, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)',
-            [userId, 'AVV', '1.0', ip, userAgent]
+            'UPDATE public.users SET is_avv_signed = TRUE, avv_accepted_at = NOW() WHERE id = $1',
+            [userId]
         );
 
         await pool.query('COMMIT');
 
-        res.json({ message: 'AVV signed successfully' });
+        res.json({
+            success: true,
+            message: 'AVV signed successfully'
+        });
     } catch (error) {
+        await pool.query('ROLLBACK');
+        console.error('Sign AVV Error:', error);
         next(error);
+    }
+};
+
+// Get AVV signature status
+export const getAVVStatus = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        const result = await pool.query(
+            'SELECT is_avv_signed FROM public.users WHERE id = $1',
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.json({ is_signed: false });
+        }
+
+        res.json({ is_signed: result.rows[0].is_avv_signed || false });
+    } catch (error) {
+        console.error('Get AVV Status Error:', error);
+        res.json({ is_signed: false });
+    }
+};
+
+// Get AVV signature data (with self-healing)
+export const getAVVSignature = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+
+        const result = await pool.query(
+            'SELECT signature_data, signed_at FROM public.avv_logs WHERE user_id = $1 ORDER BY signed_at DESC LIMIT 1',
+            [userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.json({
+                is_signed: false,
+                signature_data: null,
+                signed_at: null
+            });
+        }
+
+        const signature = result.rows[0];
+
+        // SELF-HEALING: Ensure user flag is set
+        try {
+            await pool.query(
+                'UPDATE public.users SET is_avv_signed = TRUE WHERE id = $1 AND is_avv_signed = FALSE',
+                [userId]
+            );
+        } catch (healError) {
+            console.warn('Self-healing failed:', healError);
+        }
+
+        res.json({
+            is_signed: true,
+            signature_data: signature.signature_data,
+            signed_at: signature.signed_at
+        });
+    } catch (error) {
+        console.error('Get AVV Signature Error:', error);
+        res.json({
+            is_signed: false,
+            signature_data: null,
+            signed_at: null
+        });
     }
 };
 
