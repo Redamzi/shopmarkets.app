@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // URL zum neuen Auth-Microservice
-const AUTH_URL = 'https://auth.shopmarkets.app/api/auth';
+// WICHTIG: Nutze VITE_SECURITY_URL wenn vorhanden, sonst Fallback
+const AUTH_URL = (import.meta.env.VITE_SECURITY_URL || 'https://security.shopmarkets.app') + '/api/auth';
 
 export interface User {
     id: string;
@@ -73,6 +74,7 @@ export const authService = {
     // 5. Logout
     async logout() {
         removeToken();
+        const api_url = (import.meta.env.VITE_API_URL || 'https://api.shopmarkets.app');
         window.location.href = '/login';
     },
 
@@ -89,7 +91,7 @@ export const authService = {
             return {
                 id: payload.userId,
                 email: payload.email,
-                // fullName müsste vom /me endpoint kommen, wir nehmen placeholder oder session storage
+                fullName: payload.fullName || 'User'
             };
         } catch (e) {
             return null;
@@ -100,5 +102,16 @@ export const authService = {
     async getSession() {
         const token = getToken();
         return token ? { access_token: token } : null;
+    },
+
+    // --- Compatibility Methods ---
+    async signOut() {
+        return this.logout();
+    },
+
+    async updatePassword(password: string) {
+        console.warn("updatePassword not implemented in frontend yet");
+        // TODO: Call API endpoint
+        return Promise.resolve();
     }
 };
