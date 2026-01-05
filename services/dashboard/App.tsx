@@ -17,14 +17,13 @@ import { authService } from './services/authService';
 
 // Wrapper component to handle AVV and Onboarding logic
 const AppContent: React.FC = () => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, setUser } = useAuthStore();
   const location = useLocation();
   const [showAVV, setShowAVV] = useState(false);
 
   useEffect(() => {
     // Check if user needs to sign AVV
-    // Note: user type needs to be updated to include avv_accepted_at
-    if (isAuthenticated && user && !(user as any).avv_accepted_at) {
+    if (isAuthenticated && user && !(user as any).avvAccepted) {
       // Don't show on login/register
       if (location.pathname !== '/login' && location.pathname !== '/register') {
         setShowAVV(true);
@@ -34,15 +33,15 @@ const AppContent: React.FC = () => {
 
   const handleAVVSigned = async () => {
     try {
-      // await authService.signAVV(); // Backend call
-      // Update local user state (would normally come from API response)
-      // setUser({ ...user!, avv_accepted_at: new Date().toISOString() });
-      setShowAVV(false);
+      await authService.signAVV();
 
-      // Redirect to onboarding if profile not complete
-      if (!(user as any)?.profile_completed) {
-        // navigate('/onboarding'); // This would need useNavigate hook here
-      }
+      // Update local user state to prevent modal from showing again
+      setUser({
+        ...user!,
+        avvAccepted: true
+      } as any);
+
+      setShowAVV(false);
     } catch (e) {
       console.error("Failed to sign AVV", e);
     }
