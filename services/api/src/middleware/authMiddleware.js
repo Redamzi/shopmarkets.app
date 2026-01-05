@@ -13,8 +13,12 @@ export const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
-            console.log('Auth Middleware: Token verification failed:', err.message);
-            return res.status(403).json({ error: 'Invalid token' });
+            console.error('API Auth: Token verification failed!');
+            console.error('Error:', err.message);
+            // Show first 5 chars of secret to verify consistency with Security Service
+            const secretHint = JWT_SECRET ? JWT_SECRET.substring(0, 5) + '...' : 'undefined';
+            console.error('API Secret Hint:', secretHint);
+            return res.status(403).json({ error: 'Invalid or expired token', details: err.message });
         }
         req.user = user;
         next();
