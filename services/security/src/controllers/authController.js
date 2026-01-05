@@ -113,7 +113,7 @@ export const login = async (req, res, next) => {
                         id: user.id,
                         email: user.email,
                         fullName: user.full_name,
-                        avvAccepted: !!user.avv_accepted_at
+                        avv_accepted_at: user.avv_accepted_at
                     }
                 });
             }
@@ -223,7 +223,7 @@ export const verify2FA = async (req, res, next) => {
                 id: user.id,
                 email: user.email,
                 fullName: user.full_name,
-                avvAccepted: !!user.avv_accepted_at
+                avv_accepted_at: user.avv_accepted_at
             }
         });
     } catch (error) {
