@@ -120,5 +120,12 @@ export const authService = {
             }
         );
         return response.data;
+    },
+
+    // Update Password - Placeholder for now
+    async updatePassword(password: string) {
+        // Implement backend call here later
+        console.log('Update password not implemented yet', password);
+        return true;
     }
 };

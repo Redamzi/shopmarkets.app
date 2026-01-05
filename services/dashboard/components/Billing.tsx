@@ -14,7 +14,7 @@ export const Billing: React.FC = () => {
     }, [user]);
 
     return (
-        <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-10">
+        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto space-y-10">
             <div className="text-center md:text-left">
                 <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Abrechnung & Plan</h1>
                 <p className="text-slate-500 mt-2 text-lg">Verwalte dein Guthaben und wähle den passenden Plan.</p>
