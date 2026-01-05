@@ -46,7 +46,7 @@ export const Dashboard: React.FC = () => {
     if (loading) return <div className="p-10 text-center">Lade Dashboard...</div>;
 
     return (
-        <div className="space-y-6 lg:space-y-8 animate-fade-in-up">
+        <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-fade-in-up">
 
             {/* Hero Banner */}
             <div className="relative w-full bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2.5rem] p-8 lg:p-12 flex flex-col md:flex-row items-center justify-between overflow-hidden shadow-2xl text-white">
