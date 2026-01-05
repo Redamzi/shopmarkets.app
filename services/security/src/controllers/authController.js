@@ -181,21 +181,32 @@ export const verify2FA = async (req, res, next) => {
 
         // If user wants to trust this device, save it
         if (trustDevice && deviceFingerprint) {
-            let ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-            if (ip && typeof ip === 'string' && ip.includes(',')) {
-                ip = ip.split(',')[0].trim();
-            }
-            const userAgent = req.headers['user-agent'];
-            const deviceName = getUserAgentDeviceName(userAgent);
+            try {
+                let ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+                if (ip && typeof ip === 'string' && ip.includes(',')) {
+                    ip = ip.split(',')[0].trim();
+                }
+                const userAgent = req.headers['user-agent'];
+                const deviceName = getUserAgentDeviceName(userAgent);
 
-            await pool.query(
-                `INSERT INTO public.trusted_devices 
-                (user_id, device_fingerprint, device_name, ip_address, user_agent, expires_at)
-                VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days')
-                ON CONFLICT (user_id, device_fingerprint) 
-                DO UPDATE SET last_used_at = NOW(), expires_at = NOW() + INTERVAL '30 days', is_active = true`,
-                [user.id, deviceFingerprint, deviceName, ip, userAgent]
-            );
+                // Ensure IP is valid or null (INET type is strict)
+                // Basic check if it looks like an IP, otherwise null
+                if (ip && !ip.match(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/) && !ip.includes(':')) {
+                    ip = null;
+                }
+
+                await pool.query(
+                    `INSERT INTO public.trusted_devices 
+                    (user_id, device_fingerprint, device_name, ip_address, user_agent, expires_at)
+                    VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days')
+                    ON CONFLICT (user_id, device_fingerprint) 
+                    DO UPDATE SET last_used_at = NOW(), expires_at = NOW() + INTERVAL '30 days', is_active = true`,
+                    [user.id, deviceFingerprint, deviceName, ip, userAgent]
+                );
+            } catch (deviceError) {
+                console.error('Failed to save trusted device:', deviceError);
+                // Continue login even if saving device fails!
+            }
         }
 
         // Generate JWT
