@@ -80,7 +80,7 @@ export const ProductsPage: React.FC = () => {
     }
 
     return (
-        <div className="p-6 lg:p-10">
+        <div className="p-6 lg:p-10 max-w-7xl mx-auto">
             <h1 className="text-2xl font-bold font-serif-display mb-6">Meine Produkte</h1>
 
             {products.length === 0 ? (

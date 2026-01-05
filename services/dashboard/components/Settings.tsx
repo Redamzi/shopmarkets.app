@@ -213,7 +213,7 @@ export const Settings: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 lg:space-y-8">
+        <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-6 lg:space-y-8">
             <div>
                 <h2 className="text-2xl lg:text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Einstellungen</h2>
                 <p className="text-sm lg:text-base text-slate-500 dark:text-slate-400 mt-1">Verwalten Sie Ihre Kontopräferenzen</p>
