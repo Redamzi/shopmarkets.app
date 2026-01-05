@@ -23,10 +23,10 @@ export const getStats = async (req, res) => {
         const totalSales = 0;
 
         res.json({
-            totalSales: totalSales,
-            activeProducts: parseInt(productsCount.rows[0].count),
-            connectedChannels: parseInt(connectionsCount.rows[0].count),
-            recentActivity: [] // Empty for now
+            totalProducts: parseInt(productsCount.rows[0].count),
+            totalConnections: parseInt(connectionsCount.rows[0].count),
+            totalSyncs: 0, // Mock for now
+            recentLogs: [] // Empty for now
         });
     } catch (error) {
         console.error(error);
