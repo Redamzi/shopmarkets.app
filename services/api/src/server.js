@@ -9,6 +9,7 @@ import dashboardRoutes from './routes/dashboard.js';
 import { authenticateToken } from './middleware/authMiddleware.js';
 import productRoutes from './routes/products.js';
 import connectionRoutes from './routes/connections.js';
+import uploadRoutes from './routes/upload.js';
 import pool from './utils/db.js';
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.use(express.json());
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/products', authenticateToken, productRoutes);
 app.use('/api/connections', authenticateToken, connectionRoutes);
+app.use('/api/upload', authenticateToken, uploadRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
