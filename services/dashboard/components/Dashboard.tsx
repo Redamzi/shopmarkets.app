@@ -21,7 +21,12 @@ export const Dashboard: React.FC = () => {
     useEffect(() => {
         const loadStats = async () => {
             try {
-                const response = await axios.get(`${API_URL}/api/dashboard/stats`);
+                const token = localStorage.getItem('auth_token');
+                const response = await axios.get(`${API_URL}/api/dashboard/stats`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
                 setStats(response.data);
             } catch (e) {
                 console.error(e);
