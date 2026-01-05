@@ -42,7 +42,13 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('auth_token');
+            // Get token using our central helper key
+            const token = localStorage.getItem('auth_token') || localStorage.getItem('token');
+
+            if (!token) {
+                throw new Error('Kein Authentifizierungs-Token gefunden. Bitte loggen Sie sich neu ein.');
+            }
+
             const response = await fetch(`${AUTH_URL}/sign-avv`, {
                 method: 'POST',
                 headers: {
@@ -50,22 +56,26 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    signature_data: 'accepted' // Simple acceptance flag
+                    signature_data: 'accepted'
                 }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Fehler beim Speichern');
+                // If token is invalid, force a specific message
+                if (response.status === 403) {
+                    throw new Error('Ihre Sitzung ist abgelaufen oder ungültig. Bitte loggen Sie sich neu ein.');
+                }
+                throw new Error(data.error || 'Fehler beim Speichern der Zustimmung');
             }
 
-            // Call parent callback
+            // Success!
             onSigned();
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Sign error:', error);
-            alert('Fehler beim Speichern der Zustimmung.');
+            alert(error.message || 'Fehler beim Speichern der Zustimmung.');
         } finally {
             setLoading(false);
         }
