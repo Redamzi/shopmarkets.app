@@ -289,3 +289,20 @@ export const resetPassword = async (req, res, next) => {
         next(error);
     }
 };
+
+// Sign AVV
+export const signAVV = async (req, res, next) => {
+    try {
+        const userId = req.user.userId; // From authMiddleware
+
+        await pool.query(
+            'UPDATE public.users SET avv_accepted_at = NOW() WHERE id = $1',
+            [userId]
+        );
+
+        res.json({ message: 'AVV signed successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+

@@ -113,5 +113,14 @@ export const authService = {
         console.warn("updatePassword not implemented in frontend yet");
         // TODO: Call API endpoint
         return Promise.resolve();
+    },
+
+    async signAVV() {
+        const token = getToken();
+        await axios.post(`${AUTH_URL}/sign-avv`, {}, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     }
 };

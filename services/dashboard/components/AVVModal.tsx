@@ -23,7 +23,8 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
         setIsLoading(true);
         try {
             // API Call um Timestamp zu speichern
-            // await authService.signAVV(); // TODO: Implement in Backend
+            // API Call um Timestamp zu speichern
+            await authService.signAVV();
 
             // Simuliert
             setTimeout(() => {
