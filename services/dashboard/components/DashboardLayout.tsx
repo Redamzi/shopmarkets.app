@@ -24,7 +24,13 @@ export const DashboardLayout: React.FC = () => {
             {/* AVV Modal for viewing/signing via Footer */}
             <AVVModal
                 isOpen={isAVVModalOpen}
-                onSigned={() => setIsAVVModalOpen(false)}
+                onSigned={() => {
+                    // Update user state if not already signed
+                    // This is technically optional here since App.tsx handles the main "gate",
+                    // but good for consistency if user signs via Footer first.
+                    setIsAVVModalOpen(false);
+                    window.location.reload(); // Hard reload to force sync everything
+                }}
             />
         </div>
     );

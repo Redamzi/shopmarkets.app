@@ -35,7 +35,14 @@ const AppContent: React.FC = () => {
 
   const handleAVVSigned = async () => {
     try {
-      // Reload user from backend to get updated is_avv_signed flag
+      // 1. Sofort lokal schließen und Status setzen (optimistic UI)
+      setShowAVV(false);
+
+      if (user) {
+        setUser({ ...user, is_avv_signed: true } as any);
+      }
+
+      // 2. Im Hintergrund vom Backend nachladen
       const token = session?.access_token;
       if (token) {
         const response = await fetch('https://security.shopmarkets.app/api/auth/verify-token', {
@@ -46,6 +53,7 @@ const AppContent: React.FC = () => {
 
         if (response.ok) {
           const data = await response.json();
+          // Nur updaten, wenn immer noch der gleiche User
           setUser(data.user);
         }
       }
