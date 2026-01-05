@@ -8,7 +8,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables. Check your .env file.');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+// Fallback to dummy values if not configured, to prevent app crash on startup
+// since we are moving to custom authService.
+const url = supabaseUrl || 'https://placeholder.url';
+const key = supabaseAnonKey || 'placeholder-key';
+
+export const supabase = createClient(url, key, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
