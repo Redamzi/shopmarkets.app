@@ -216,6 +216,8 @@ export const verify2FA = async (req, res, next) => {
             }
         });
     } catch (error) {
+        console.error('Verify 2FA Error:', error);
+        console.error('Stack:', error.stack);
         next(error);
     }
 };
