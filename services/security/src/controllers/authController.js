@@ -181,7 +181,10 @@ export const verify2FA = async (req, res, next) => {
 
         // If user wants to trust this device, save it
         if (trustDevice && deviceFingerprint) {
-            const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            let ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+            if (ip && typeof ip === 'string' && ip.includes(',')) {
+                ip = ip.split(',')[0].trim();
+            }
             const userAgent = req.headers['user-agent'];
             const deviceName = getUserAgentDeviceName(userAgent);
 
