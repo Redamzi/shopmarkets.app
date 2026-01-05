@@ -23,7 +23,7 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     // Check if user needs to sign AVV
-    if (isAuthenticated && user && !(user as any).avv_accepted_at) {
+    if (isAuthenticated && user && !(user as any).is_avv_signed) {
       // Don't show on login/register
       if (location.pathname !== '/login' && location.pathname !== '/register') {
         setShowAVV(true);
@@ -35,17 +35,30 @@ const AppContent: React.FC = () => {
 
   const handleAVVSigned = async () => {
     try {
-      await authService.signAVV();
+      // Reload user from backend to get updated is_avv_signed flag
+      const token = localStorage.getItem('token');
+      if (token) {
+        const response = await fetch('https://security.shopmarkets.app/api/auth/verify-token', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-      // Update local user state to prevent modal from showing again
-      setUser({
-        ...user!,
-        avv_accepted_at: new Date().toISOString()
-      } as any);
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      }
 
       setShowAVV(false);
     } catch (e) {
-      console.error("Failed to sign AVV", e);
+      console.error("Failed to reload user after AVV", e);
+      // Fallback: just close modal and set flag locally
+      setUser({
+        ...user!,
+        is_avv_signed: true
+      } as any);
+      setShowAVV(false);
     }
   };
 
