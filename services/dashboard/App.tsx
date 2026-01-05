@@ -12,6 +12,7 @@ import { Billing } from './components/Billing';
 import { Settings } from './components/Settings';
 import { Onboarding } from './components/Onboarding';
 import { AVVModal } from './components/AVVModal';
+import { DebugOverlay } from './components/DebugOverlay';
 import { useAuthStore } from './store/authStore';
 import { authService } from './services/authService';
 
@@ -112,28 +113,8 @@ const AppContent: React.FC = () => {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
 
-      {/* DEBUG OVERLAY - REMOVE LATER */}
-      {process.env.NODE_ENV === 'production' && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          zIndex: 9999,
-          background: 'red',
-          color: 'white',
-          padding: '10px',
-          fontSize: '12px',
-          maxWidth: '300px',
-          pointerEvents: 'none',
-          opacity: 0.8
-        }}>
-          <div><strong>DEBUG INFO:</strong></div>
-          <div>User ID: {user?.id}</div>
-          <div>AVV Signed (Store): {String((user as any)?.is_avv_signed)}</div>
-        </div>
-      )}
-
-
+      {/* DEBUG OVERLAY - Developer HUD */}
+      <DebugOverlay />
 
     </>
   );
