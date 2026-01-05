@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import dashboardRoutes from './routes/dashboard.js';
 import { authenticateToken } from './middleware/authMiddleware.js';
+import productRoutes from './routes/products.js';
+import connectionRoutes from './routes/connections.js';
 
 dotenv.config();
 
@@ -26,6 +28,8 @@ app.use(express.json());
 
 // Routes
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
+app.use('/api/products', authenticateToken, productRoutes);
+app.use('/api/connections', authenticateToken, connectionRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
