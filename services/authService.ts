@@ -8,6 +8,7 @@ export interface User {
     email: string;
     fullName?: string;
     isVerified?: boolean;
+    avvAccepted?: boolean;
 }
 
 export interface AuthResponse {
@@ -100,5 +101,22 @@ export const authService = {
     async getSession() {
         const token = getToken();
         return token ? { access_token: token } : null;
+    },
+
+    // Sign AVV Contract
+    async signAVV() {
+        const token = getToken();
+        if (!token) throw new Error('Not authenticated');
+
+        const response = await axios.post(
+            `${AUTH_URL}/sign-avv`,
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+        return response.data;
     }
 };

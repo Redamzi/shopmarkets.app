@@ -17,34 +17,45 @@ import { authService } from './services/authService';
 
 // Wrapper component to handle AVV and Onboarding logic
 const AppContent: React.FC = () => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, setUser } = useAuthStore();
   const location = useLocation();
   const [showAVV, setShowAVV] = useState(false);
 
   useEffect(() => {
     // Check if user needs to sign AVV
-    // Note: user type needs to be updated to include avv_accepted_at
-    if (isAuthenticated && user && !(user as any).avv_accepted_at) {
+    console.log('🔍 AVV Check:', {
+      isAuthenticated,
+      hasUser: !!user,
+      avvAccepted: (user as any)?.avvAccepted,
+      pathname: location.pathname
+    });
+
+    if (isAuthenticated && user && !(user as any).avvAccepted) {
       // Don't show on login/register
       if (location.pathname !== '/login' && location.pathname !== '/register') {
+        console.log('⚠️ Showing AVV Modal - User has not accepted AVV');
         setShowAVV(true);
       }
+    } else if (isAuthenticated && user && (user as any).avvAccepted) {
+      console.log('✅ AVV already accepted - Modal will NOT show');
+      setShowAVV(false);
     }
   }, [isAuthenticated, user, location]);
 
   const handleAVVSigned = async () => {
     try {
-      // await authService.signAVV(); // Backend call
-      // Update local user state (would normally come from API response)
-      // setUser({ ...user!, avv_accepted_at: new Date().toISOString() });
+      // Update local user state to reflect AVV acceptance
+      if (user) {
+        setUser({ ...user, avvAccepted: true } as any);
+      }
       setShowAVV(false);
 
       // Redirect to onboarding if profile not complete
-      if (!(user as any)?.profile_completed) {
-        // navigate('/onboarding'); // This would need useNavigate hook here
-      }
+      // if (!(user as any)?.profile_completed) {
+      //   navigate('/onboarding');
+      // }
     } catch (e) {
-      console.error("Failed to sign AVV", e);
+      console.error("Failed to update user state after AVV signing", e);
     }
   };
 

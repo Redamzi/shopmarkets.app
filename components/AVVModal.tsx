@@ -22,16 +22,13 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
     const handleSign = async () => {
         setIsLoading(true);
         try {
-            // API Call um Timestamp zu speichern
-            // await authService.signAVV(); // TODO: Implement in Backend
-
-            // Simuliert
-            setTimeout(() => {
-                setIsLoading(false);
-                onSigned();
-            }, 1000);
+            // API Call to save AVV acceptance timestamp
+            await authService.signAVV();
+            onSigned();
         } catch (error) {
-            console.error(error);
+            console.error('Failed to sign AVV:', error);
+            alert('Fehler beim Unterzeichnen des AVV-Vertrags. Bitte versuchen Sie es erneut.');
+        } finally {
             setIsLoading(false);
         }
     };
