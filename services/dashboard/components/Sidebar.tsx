@@ -23,7 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => 
   ];
 
   const handleLogout = async () => {
-    await authService.signOut();
+    await authService.logout();
     logout();
     navigate('/login');
   };

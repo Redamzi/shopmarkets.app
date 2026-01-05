@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     const [showProfileMenu, setShowProfileMenu] = useState(false);
 
     const handleLogout = async () => {
-        await authService.signOut();
+        await authService.logout();
         logout();
         navigate('/login');
     };
