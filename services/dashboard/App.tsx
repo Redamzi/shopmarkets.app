@@ -23,11 +23,13 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     // Check if user needs to sign AVV
-    if (isAuthenticated && user && !(user as any).avvAccepted) {
+    if (isAuthenticated && user && !(user as any).avv_accepted_at) {
       // Don't show on login/register
       if (location.pathname !== '/login' && location.pathname !== '/register') {
         setShowAVV(true);
       }
+    } else {
+      setShowAVV(false);
     }
   }, [isAuthenticated, user, location]);
 
@@ -38,7 +40,7 @@ const AppContent: React.FC = () => {
       // Update local user state to prevent modal from showing again
       setUser({
         ...user!,
-        avvAccepted: true
+        avv_accepted_at: new Date().toISOString()
       } as any);
 
       setShowAVV(false);
