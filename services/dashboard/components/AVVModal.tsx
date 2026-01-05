@@ -14,7 +14,23 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
     const [accepted, setAccepted] = useState(false);
     const contentRef = useRef<HTMLDivElement>(null);
 
+    // Check if user has already signed (from user object)
+    const isAlreadySigned = !!(user as any)?.is_avv_signed;
+
     const AUTH_URL = 'https://security.shopmarkets.app/api/auth';
+
+    // Set initial state based on signed status
+    useEffect(() => {
+        if (isOpen) {
+            if (isAlreadySigned) {
+                setAccepted(true);
+                setIsScrolledToBottom(true);
+            } else {
+                setAccepted(false);
+                setIsScrolledToBottom(false);
+            }
+        }
+    }, [isOpen, isAlreadySigned]);
 
     // Check if content is scrolled to bottom
     useEffect(() => {
