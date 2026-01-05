@@ -44,18 +44,18 @@ interface ConfigGroup {
     options: ConfigOption[];
 }
 
-// Wizard Steps Definition - TikTok is now a standalone step
+// Wizard Steps Definition - Optimierte Reihenfolge
 const WIZARD_STEPS = [
     { id: 'ai', label: 'AI Start', icon: Sparkles },
-    { id: 'price_check', label: 'Preis Radar', icon: TrendingDown },
-    { id: 'general', label: 'Basis', icon: Layers },
-    { id: 'media', label: 'Medien', icon: ImageIcon },
-    { id: 'tiktok', label: 'TikTok', icon: Video }, // Standalone Step
-    { id: 'organization', label: 'Org', icon: Tag },
-    { id: 'pricing', label: 'Preise', icon: DollarSign },
-    { id: 'inventory', label: 'Lager', icon: Box },
-    { id: 'variants', label: 'Varianten', icon: SlidersHorizontal },
-    { id: 'shipping', label: 'Versand', icon: Truck },
+    { id: 'general', label: 'Basis', icon: Layers }, // Identity First
+    { id: 'media', label: 'Medien', icon: ImageIcon }, // Visuals Second
+    { id: 'variants', label: 'Varianten', icon: SlidersHorizontal }, // Scope
+    { id: 'price_check', label: 'Preis Radar', icon: TrendingDown }, // Market Context
+    { id: 'pricing', label: 'Preise', icon: DollarSign }, // Decision
+    { id: 'inventory', label: 'Lager', icon: Box }, // Logistics
+    { id: 'shipping', label: 'Versand', icon: Truck }, // Logistics
+    { id: 'tiktok', label: 'TikTok', icon: Video }, // Hype/Marketing
+    { id: 'organization', label: 'Org', icon: Tag }, // Admin
     { id: 'configurator', label: 'Extras', icon: Wrench },
     { id: 'organization_channels', label: 'Kanäle', icon: Globe },
     { id: 'check', label: 'Prüfung', icon: ShieldCheck },
@@ -463,8 +463,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                             </div>
                             <button
                                 className={`w-full mt-6 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 relative z-10 ${isPriceMonitorActive
-                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500/50 shadow-none'
-                                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5'
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500/50 shadow-none'
+                                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5'
                                     }`}
                                 onClick={() => {
                                     if (isPriceMonitorActive) {
@@ -1068,8 +1068,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                 key={step.id}
                                 onClick={() => setCurrentStepIndex(idx)}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap border ${currentStepIndex === idx
-                                        ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 shadow-sm'
-                                        : 'bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 shadow-sm'
+                                    : 'bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
                                     }`}
                             >
                                 {React.createElement(step.icon, { size: 16, className: currentStepIndex === idx ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400' })}
@@ -1104,8 +1104,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                         key={step.id}
                                         onClick={() => setCurrentStepIndex(idx)}
                                         className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border transition-all ${currentStepIndex === idx
-                                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                                : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                                            ? 'bg-indigo-600 text-white border-indigo-600'
+                                            : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
                                             }`}
                                     >
                                         <step.icon size={18} />
