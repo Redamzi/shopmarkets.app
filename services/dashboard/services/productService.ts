@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { Product } from '../types';
-import { supabase } from '../lib/supabase';
+import { authService } from './authService';
 
 // Nutze die Backend-API (die du gerade deployt hast)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 // Helper to get auth headers
 async function getAuthHeaders() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const session = await authService.getSession();
     if (session?.access_token) {
         return { Authorization: `Bearer ${session.access_token}` };
     }

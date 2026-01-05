@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { supabase } from '../lib/supabase';
+import { authService } from './authService';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -17,7 +17,7 @@ export interface Connection {
 }
 
 async function getAuthHeaders() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const session = await authService.getSession();
     if (session?.access_token) {
         return { Authorization: `Bearer ${session.access_token}` };
     }
