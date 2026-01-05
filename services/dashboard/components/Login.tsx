@@ -33,8 +33,7 @@ export const Login: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const deviceFingerprint = await generateDeviceFingerprint();
-            const data = await authService.loginStep1(email, password, deviceFingerprint);
+            const data = await authService.loginStep1(email, password);
 
             // Check if 2FA was skipped (trusted device)
             if (data.skipTwoFactor && data.token && data.user) {

@@ -45,11 +45,10 @@ export const authService = {
     },
 
     // 3. Login Step 1 (Credentials) -> Sendet 2FA Code
-    async loginStep1(email: string, password: string, deviceFingerprint?: string) {
+    async loginStep1(email: string, password: string) {
         const response = await axios.post(`${AUTH_URL}/login`, {
             email,
-            password,
-            deviceFingerprint
+            password
         });
         return response.data; // Returns { userId, requires2FA: true } or { token, user, skipTwoFactor: true }
     },
