@@ -42,7 +42,7 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('auth_token');
             const response = await fetch(`${AUTH_URL}/sign-avv`, {
                 method: 'POST',
                 headers: {

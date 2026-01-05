@@ -36,7 +36,7 @@ const AppContent: React.FC = () => {
   const handleAVVSigned = async () => {
     try {
       // Reload user from backend to get updated is_avv_signed flag
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       if (token) {
         const response = await fetch('https://security.shopmarkets.app/api/auth/verify-token', {
           headers: {
