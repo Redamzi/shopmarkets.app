@@ -652,7 +652,34 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                             <div><label className="text-sm font-bold ml-1">Vergleich (€)</label><input type="number" className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-none text-slate-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="0.00" value={formData.comparePrice} onChange={e => setFormData({ ...formData, comparePrice: e.target.value })} /></div>
                         </div>
                         <div><label className="text-sm font-bold ml-1">Kosten pro Artikel (€)</label><input type="number" className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-none text-slate-900 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" placeholder="0.00" value={formData.costPerItem} onChange={e => setFormData({ ...formData, costPerItem: e.target.value })} /></div>
-                        <div className="flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl"><div className="flex items-center gap-2"><Calculator size={18} className="text-indigo-600" /><span className="text-sm font-bold text-indigo-900 dark:text-indigo-300">Gebühren-Auto-Calc</span></div><button onClick={() => setAutoCalcFees(!autoCalcFees)} className={`w-10 h-6 rounded-full transition-colors ${autoCalcFees ? 'bg-indigo-600' : 'bg-slate-300'}`}><div className={`w-4 h-4 bg-white rounded-full transition-transform transform ml-1 mt-1 ${autoCalcFees ? 'translate-x-4' : ''}`} /></button></div>
+                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl space-y-3 transition-all">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                        <Calculator size={16} />
+                                    </div>
+                                    <div>
+                                        <span className="text-sm font-bold text-indigo-900 dark:text-indigo-300 block">Gebühren-Auto-Calc</span>
+                                        <span className="text-xs text-indigo-600/70 dark:text-indigo-400/70">Automatische Preisanpassung</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => setAutoCalcFees(!autoCalcFees)} className={`w-12 h-7 rounded-full transition-colors flex items-center p-1 ${autoCalcFees ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${autoCalcFees ? 'translate-x-5' : ''}`} />
+                                </button>
+                            </div>
+
+                            {autoCalcFees && (
+                                <div className="text-xs text-indigo-800 dark:text-indigo-200 bg-white/60 dark:bg-black/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800/50 animate-in fade-in slide-in-from-top-2">
+                                    <p className="font-bold mb-1 flex items-center gap-1"><Info size={12} /> So funktioniert es:</p>
+                                    <p className="leading-relaxed opacity-90">
+                                        Wir schlagen die spezifischen Verkaufsgebühren jeder Plattform (z.B. <span className="font-bold border-b border-indigo-300">15% bei Amazon</span>, <span className="font-bold border-b border-indigo-300">10% bei eBay</span>) automatisch auf Ihren Basispreis auf.
+                                    </p>
+                                    <p className="mt-2 font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                                        <Check size={12} /> Ihr Nettogewinn bleibt überall gleich.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 );
             case 'inventory':
