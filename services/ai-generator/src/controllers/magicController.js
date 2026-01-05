@@ -60,7 +60,7 @@ Struktur:
 `;
 
     const message = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-3-opus-20240229",
       max_tokens: 4000,
       temperature: 0.7,
       messages: [
