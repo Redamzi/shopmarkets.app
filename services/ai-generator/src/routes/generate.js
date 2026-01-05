@@ -2,14 +2,12 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { generateProductFromImage } from '../controllers/magicController.js';
 
 const router = express.Router();
 
-const uploadDir = 'uploads';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
+const uploadDir = os.tmpdir();
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
