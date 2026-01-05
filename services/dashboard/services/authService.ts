@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL zum neuen Auth-Microservice
-const AUTH_URL = (import.meta.env.VITE_SECURITY_URL || 'https://security.shopmarkets.app') + '/api/auth';
+const AUTH_URL = 'https://auth.shopmarkets.app/api/auth';
 
 export interface User {
     id: string;
@@ -100,15 +100,5 @@ export const authService = {
     async getSession() {
         const token = getToken();
         return token ? { access_token: token } : null;
-    },
-
-    // Aliases & Missing Methods for Component Compatibility
-    async signOut() {
-        return this.logout();
-    },
-
-    async updatePassword(password: string) {
-        console.warn("updatePassword not implemented yet");
-        return Promise.resolve();
     }
 };
