@@ -13,7 +13,9 @@ const loginSchema = Joi.object({
 
 const verify2FASchema = Joi.object({
     userId: Joi.string().uuid().required(),
-    code: Joi.string().length(6).required()
+    code: Joi.string().length(6).required(),
+    trustDevice: Joi.boolean().optional(),
+    deviceFingerprint: Joi.string().optional()
 });
 
 const passwordResetSchema = Joi.object({
