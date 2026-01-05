@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL zum neuen Auth-Microservice
-const AUTH_URL = 'https://auth.shopmarkets.app/api/auth';
+const AUTH_URL = 'https://security.shopmarkets.app/api/auth';
 
 export interface User {
     id: string;
