@@ -135,7 +135,7 @@ export const verify2FA = async (req, res, next) => {
 
         // Get user
         const userResult = await pool.query(
-            'SELECT id, email, full_name FROM public.users WHERE id = $1',
+            'SELECT id, email, full_name, avv_accepted_at FROM public.users WHERE id = $1',
             [userId]
         );
 
@@ -154,7 +154,8 @@ export const verify2FA = async (req, res, next) => {
             user: {
                 id: user.id,
                 email: user.email,
-                fullName: user.full_name
+                fullName: user.full_name,
+                avvAccepted: !!user.avv_accepted_at
             }
         });
     } catch (error) {
