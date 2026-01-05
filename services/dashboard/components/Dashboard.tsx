@@ -162,7 +162,7 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Chart */}
-                    <div className="h-64 w-full">
+                    <div className="h-64 w-full" style={{ minWidth: 0 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={ANALYTICS_DATA} barSize={20}>
                                 <XAxis
@@ -199,8 +199,8 @@ export const Dashboard: React.FC = () => {
                         {stats?.recentLogs.map((log: any, i) => (
                             <div key={log.id || i} className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${log.status === 'success'
-                                        ? 'bg-orange-50 text-orange-500' // Using orange icon like in screenshot example
-                                        : 'bg-red-50 text-red-500'
+                                    ? 'bg-orange-50 text-orange-500' // Using orange icon like in screenshot example
+                                    : 'bg-red-50 text-red-500'
                                     }`}>
                                     <Zap size={20} fill="currentColor" />
                                 </div>

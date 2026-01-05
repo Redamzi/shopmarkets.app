@@ -10,6 +10,8 @@ import { authenticateToken } from './middleware/authMiddleware.js';
 import productRoutes from './routes/products.js';
 import connectionRoutes from './routes/connections.js';
 import uploadRoutes from './routes/upload.js';
+import billingRoutes from './routes/billing.js';
+import syncRoutes from './routes/sync.js';
 import pool from './utils/db.js';
 
 dotenv.config();
@@ -36,6 +38,8 @@ app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/products', authenticateToken, productRoutes);
 app.use('/api/connections', authenticateToken, connectionRoutes);
 app.use('/api/upload', authenticateToken, uploadRoutes);
+app.use('/api/billing', authenticateToken, billingRoutes);
+app.use('/api/sync', authenticateToken, syncRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
