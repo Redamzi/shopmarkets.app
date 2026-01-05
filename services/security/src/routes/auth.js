@@ -1,3 +1,4 @@
+import express from 'express';
 import { register, login, verify2FA, verifyEmail, requestPasswordReset, resetPassword, signAVV } from '../controllers/authController.js';
 import { validateRegister, validateLogin, validate2FA, validatePasswordReset } from '../middleware/validation.js';
 import { rateLimiter } from '../middleware/rateLimiter.js';
