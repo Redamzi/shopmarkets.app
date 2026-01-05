@@ -10,7 +10,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Security Middleware
+// Enable trust proxy for Coolify/Traefik
+app.set('trust proxy', 1);
 app.set('trust proxy', 1); // Trust first proxy (Coolify/Traefik) (Fixes Rate Limit Error)
 app.use(helmet());
 app.use(cors({

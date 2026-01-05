@@ -14,7 +14,7 @@ export const register = async (req, res, next) => {
 
         // Check if user exists
         const existingUser = await pool.query(
-            'SELECT id FROM users WHERE email = $1',
+            'SELECT id FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -27,7 +27,7 @@ export const register = async (req, res, next) => {
 
         // Create user
         const result = await pool.query(
-            'INSERT INTO users (email, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id, email, full_name, created_at',
+            'INSERT INTO public.users (email, password_hash, full_name) VALUES ($1, $2, $3) RETURNING id, email, full_name, created_at',
             [email, passwordHash, fullName]
         );
 
@@ -38,7 +38,7 @@ export const register = async (req, res, next) => {
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
 
         await pool.query(
-            'INSERT INTO verification_codes (user_id, code, type, expires_at) VALUES ($1, $2, $3, $4)',
+            'INSERT INTO public.verification_codes (user_id, code, type, expires_at) VALUES ($1, $2, $3, $4)',
             [user.id, code, 'email_verification', expiresAt]
         );
 
@@ -61,7 +61,7 @@ export const login = async (req, res, next) => {
 
         // Get user
         const result = await pool.query(
-            'SELECT id, email, password_hash, is_verified, is_active, full_name FROM users WHERE email = $1',
+            'SELECT id, email, password_hash, is_verified, is_active, full_name FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -86,7 +86,7 @@ export const login = async (req, res, next) => {
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 min
 
         await pool.query(
-            'INSERT INTO verification_codes (user_id, code, type, expires_at) VALUES ($1, $2, $3, $4)',
+            'INSERT INTO public.verification_codes (user_id, code, type, expires_at) VALUES ($1, $2, $3, $4)',
             [user.id, code, '2fa_login', expiresAt]
         );
 
@@ -110,7 +110,7 @@ export const verify2FA = async (req, res, next) => {
 
         // Get verification code
         const result = await pool.query(
-            `SELECT id, expires_at FROM verification_codes 
+            `SELECT id, expires_at FROM public.verification_codes 
        WHERE user_id = $1 AND code = $2 AND type = '2fa_login' AND used_at IS NULL
        ORDER BY created_at DESC LIMIT 1`,
             [userId, code]
@@ -129,13 +129,13 @@ export const verify2FA = async (req, res, next) => {
 
         // Mark code as used
         await pool.query(
-            'UPDATE verification_codes SET used_at = NOW() WHERE id = $1',
+            'UPDATE public.verification_codes SET used_at = NOW() WHERE id = $1',
             [verificationCode.id]
         );
 
         // Get user
         const userResult = await pool.query(
-            'SELECT id, email, full_name FROM users WHERE id = $1',
+            'SELECT id, email, full_name FROM public.users WHERE id = $1',
             [userId]
         );
 
@@ -168,7 +168,7 @@ export const verifyEmail = async (req, res, next) => {
         const { userId, code } = req.body;
 
         const result = await pool.query(
-            `SELECT id, expires_at FROM verification_codes 
+            `SELECT id, expires_at FROM public.verification_codes 
        WHERE user_id = $1 AND code = $2 AND type = 'email_verification' AND used_at IS NULL
        ORDER BY created_at DESC LIMIT 1`,
             [userId, code]
@@ -187,11 +187,11 @@ export const verifyEmail = async (req, res, next) => {
         // Mark code as used and verify user
         await pool.query('BEGIN');
         await pool.query(
-            'UPDATE verification_codes SET used_at = NOW() WHERE id = $1',
+            'UPDATE public.verification_codes SET used_at = NOW() WHERE id = $1',
             [verificationCode.id]
         );
         await pool.query(
-            'UPDATE users SET is_verified = TRUE WHERE id = $1',
+            'UPDATE public.users SET is_verified = TRUE WHERE id = $1',
             [userId]
         );
         await pool.query('COMMIT');
@@ -209,7 +209,7 @@ export const requestPasswordReset = async (req, res, next) => {
         const { email } = req.body;
 
         const result = await pool.query(
-            'SELECT id FROM users WHERE email = $1',
+            'SELECT id FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -223,7 +223,7 @@ export const requestPasswordReset = async (req, res, next) => {
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
         await pool.query(
-            'INSERT INTO verification_codes (user_id, code, type, expires_at) VALUES ($1, $2, $3, $4)',
+            'INSERT INTO public.verification_codes (user_id, code, type, expires_at) VALUES ($1, $2, $3, $4)',
             [user.id, code, 'password_reset', expiresAt]
         );
 
@@ -241,7 +241,7 @@ export const resetPassword = async (req, res, next) => {
         const { email, code, newPassword } = req.body;
 
         const userResult = await pool.query(
-            'SELECT id FROM users WHERE email = $1',
+            'SELECT id FROM public.users WHERE email = $1',
             [email]
         );
 
@@ -252,7 +252,7 @@ export const resetPassword = async (req, res, next) => {
         const user = userResult.rows[0];
 
         const codeResult = await pool.query(
-            `SELECT id, expires_at FROM verification_codes 
+            `SELECT id, expires_at FROM public.verification_codes 
        WHERE user_id = $1 AND code = $2 AND type = 'password_reset' AND used_at IS NULL
        ORDER BY created_at DESC LIMIT 1`,
             [user.id, code]
@@ -274,11 +274,11 @@ export const resetPassword = async (req, res, next) => {
         // Update password and mark code as used
         await pool.query('BEGIN');
         await pool.query(
-            'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+            'UPDATE public.users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
             [passwordHash, user.id]
         );
         await pool.query(
-            'UPDATE verification_codes SET used_at = NOW() WHERE id = $1',
+            'UPDATE public.verification_codes SET used_at = NOW() WHERE id = $1',
             [verificationCode.id]
         );
         await pool.query('COMMIT');
