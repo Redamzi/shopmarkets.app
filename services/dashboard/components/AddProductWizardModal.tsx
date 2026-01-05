@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Upload, Check, Globe, ShoppingBag, Store, Tag, DollarSign, Barcode, Layers, Image as ImageIcon, Box, Truck, Plus, Trash2, SlidersHorizontal, ChevronRight, Info, X, Wrench, Package, Maximize2, ShoppingCart, Sparkles, Wand2, Loader2, Zap, ArrowRightLeft, Database, Link, RefreshCw, Facebook, Instagram, Twitter, Video, Film, PlayCircle, Calculator, Percent, Ruler, Scale, Coins, TrendingDown, Clock, Search, ChevronLeft, ShieldCheck, AlertCircle, Eye, Smartphone, Music, Hash, MessageCircle, Share2, ThumbsUp, Heart } from 'lucide-react';
+import { ArrowLeft, Upload, Check, Globe, ShoppingBag, Store, Tag, DollarSign, Barcode, Layers, Image as ImageIcon, Box, Truck, Plus, Trash2, SlidersHorizontal, ChevronRight, Info, X, Wrench, Package, Maximize2, ShoppingCart, Sparkles, Wand2, Loader2, Zap, ArrowRightLeft, Database, Link, RefreshCw, Facebook, Instagram, Twitter, Video, Film, PlayCircle, Calculator, Percent, Ruler, Scale, Coins, TrendingDown, Clock, Search, ChevronLeft, ShieldCheck, AlertCircle, Eye, Smartphone, Music, Hash, MessageCircle, Share2, ThumbsUp, Heart, ChevronDown } from 'lucide-react';
 import { Product, Platform } from '../types';
 import { Connection } from '../services/connectionService';
 
@@ -638,7 +638,23 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                 return (
                     <div className="space-y-5 animate-in slide-in-from-right-8 duration-300">
                         <div className="grid grid-cols-2 gap-4">
-                            <div><label className="text-sm font-bold ml-1">Kategorie</label><select className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-none text-slate-900 dark:text-white" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}><option>Möbel</option><option>Mode</option><option>Elektronik</option></select></div>
+                            <div>
+                                <label className="text-sm font-bold ml-1">Kategorie</label>
+                                <div className="relative">
+                                    <select
+                                        className="w-full px-4 py-3 pr-10 rounded-xl bg-white dark:bg-slate-900 border-none text-slate-900 dark:text-white appearance-none cursor-pointer focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                                        value={formData.category}
+                                        onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                    >
+                                        <option>Möbel</option>
+                                        <option>Mode</option>
+                                        <option>Elektronik</option>
+                                    </select>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                        <ChevronDown size={16} />
+                                    </span>
+                                </div>
+                            </div>
                             <div><label className="text-sm font-bold ml-1">Hersteller</label><input type="text" className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-none text-slate-900 dark:text-white" placeholder="Brand" value={formData.manufacturer} onChange={e => setFormData({ ...formData, manufacturer: e.target.value })} /></div>
                         </div>
                         <div><label className="text-sm font-bold ml-1">Tags</label><input type="text" className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-none text-slate-900 dark:text-white" placeholder="Komma getrennt..." value={formData.tags} onChange={e => setFormData({ ...formData, tags: e.target.value })} /></div>
@@ -728,16 +744,21 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 ml-1">Versandprofil</label>
-                                <select
-                                    className="w-full px-5 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 dark:text-white appearance-none"
-                                    value={formData.shippingProfile}
-                                    onChange={(e) => setFormData({ ...formData, shippingProfile: e.target.value })}
-                                >
-                                    <option value="standard">Standard Versand (DHL Paket)</option>
-                                    <option value="express">Express Versand</option>
-                                    <option value="bulky">Sperrgut / Spedition</option>
-                                    <option value="letter">Warensendung / Brief</option>
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        className="w-full px-5 py-3 pr-10 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-slate-900 dark:text-white appearance-none cursor-pointer"
+                                        value={formData.shippingProfile}
+                                        onChange={(e) => setFormData({ ...formData, shippingProfile: e.target.value })}
+                                    >
+                                        <option value="standard">Standard Versand (DHL Paket)</option>
+                                        <option value="express">Express Versand</option>
+                                        <option value="bulky">Sperrgut / Spedition</option>
+                                        <option value="letter">Warensendung / Brief</option>
+                                    </select>
+                                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                        <ChevronDown size={16} />
+                                    </span>
+                                </div>
                             </div>
 
                             <div>
