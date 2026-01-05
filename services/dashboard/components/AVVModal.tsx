@@ -11,6 +11,17 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
     const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
     const [accepted, setAccepted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const contentRef = React.useRef<HTMLDivElement>(null);
+
+    // Check if content is already fully visible (no scrolling needed)
+    React.useEffect(() => {
+        if (contentRef.current) {
+            const { scrollHeight, clientHeight } = contentRef.current;
+            if (scrollHeight <= clientHeight) {
+                setIsScrolledToBottom(true);
+            }
+        }
+    }, [isOpen]);
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -56,6 +67,7 @@ export const AVVModal: React.FC<AVVModalProps> = ({ isOpen, onSigned }) => {
 
                 {/* Content */}
                 <div
+                    ref={contentRef}
                     className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900 mx-2 my-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 leading-relaxed"
                     onScroll={handleScroll}
                 >
