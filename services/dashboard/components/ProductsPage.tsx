@@ -16,6 +16,7 @@ export const ProductsPage: React.FC = () => {
 
     // Wizard State
     const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [mockCredits, setMockCredits] = useState(100); // TODO: Fetch real credits via billingService
 
     const loadData = async () => {
@@ -37,14 +38,13 @@ export const ProductsPage: React.FC = () => {
         loadData();
     }, []);
 
-    const handleSaveProduct = async (newProduct: Product) => {
+    const handleSaveProduct = async (productData: Product) => {
         if (!user) {
             alert('Fehler: Nicht eingeloggt!');
             return;
         }
 
         try {
-            // User ID explizit hinzufügen
             console.log('Current User:', user);
             if (!user.id) {
                 alert('CRITICAL ERROR: User object has no ID!');
@@ -52,17 +52,25 @@ export const ProductsPage: React.FC = () => {
             }
 
             const productToSave = {
-                ...newProduct,
+                ...productData,
                 userId: user.id
             };
 
             console.log('Sending Product:', productToSave);
-            // alert('Debug: User ID is ' + user.id); // Uncomment if needed
 
-            await productService.createProduct(productToSave);
+            if (editingProduct) {
+                // UPDATE existing product
+                await productService.updateProduct(editingProduct.id, productToSave);
+                alert('Produkt erfolgreich aktualisiert!');
+            } else {
+                // CREATE new product
+                await productService.createProduct(productToSave);
+                alert('Produkt erfolgreich angelegt!');
+            }
+
             await loadData(); // Reload list
             setIsWizardOpen(false);
-            alert('Produkt erfolgreich gespeichert!');
+            setEditingProduct(null);
         } catch (error: any) {
             console.error(error);
             const msg = error.response?.data?.error || error.message || 'Unbekannter Fehler';
@@ -87,7 +95,10 @@ export const ProductsPage: React.FC = () => {
                 <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
                     <p className="text-slate-500 mb-4">Noch keine Produkte vorhanden.</p>
                     <button
-                        onClick={() => setIsWizardOpen(true)}
+                        onClick={() => {
+                            setEditingProduct(null);
+                            setIsWizardOpen(true);
+                        }}
                         className="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700"
                     >
                         Erstes Produkt anlegen
@@ -96,8 +107,14 @@ export const ProductsPage: React.FC = () => {
             ) : (
                 <ProductList
                     products={products}
-                    onAddProduct={() => setIsWizardOpen(true)}
-                    onEditProduct={(p) => console.log('Edit', p)} // TODO: Open Wizard with edit mode
+                    onAddProduct={() => {
+                        setEditingProduct(null);
+                        setIsWizardOpen(true);
+                    }}
+                    onEditProduct={(p) => {
+                        setEditingProduct(p);
+                        setIsWizardOpen(true);
+                    }}
                     onDeleteProduct={async (id) => {
                         try {
                             await productService.deleteProduct(id);
@@ -132,10 +149,14 @@ export const ProductsPage: React.FC = () => {
             {isWizardOpen && (
                 <AddProductWizardModal
                     isOpen={isWizardOpen}
-                    onClose={() => setIsWizardOpen(false)}
+                    onClose={() => {
+                        setIsWizardOpen(false);
+                        setEditingProduct(null);
+                    }}
                     onSave={handleSaveProduct}
                     credits={mockCredits}
                     setCredits={setMockCredits}
+                    initialProduct={editingProduct}
                     connections={connections}
                 />
             )}
