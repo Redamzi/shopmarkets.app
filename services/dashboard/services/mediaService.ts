@@ -25,8 +25,7 @@ export const mediaService = {
         const token = localStorage.getItem('auth_token');
         const response = await axios.post(`${API_URL}/api/media/upload`, formData, {
             headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data'
+                Authorization: `Bearer ${token}`
             }
         });
         return response.data;
