@@ -41,9 +41,39 @@ export const MediaLibrary: React.FC = () => {
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
     const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
+    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
     // File Input Ref
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const toggleSelection = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        const newSelected = new Set(selectedItems);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedItems(newSelected);
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Möchten Sie ${selectedItems.size} Dateien wirklich löschen?`)) return;
+
+        try {
+            // Delete sequentially or parallel
+            setLoading(true);
+            const promises = Array.from(selectedItems).map(id => mediaService.delete(id));
+            await Promise.all(promises);
+            setSelectedItems(new Set());
+            await loadData();
+        } catch (error) {
+            console.error('Bulk delete failed:', error);
+            alert('Fehler beim Löschen einiger Dateien.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const loadData = async () => {
         try {
@@ -360,11 +390,33 @@ export const MediaLibrary: React.FC = () => {
                     {/* Toolbar */}
                     <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
                         <div className="flex items-center gap-2 text-sm text-slate-500">
-                            <span className="font-medium text-slate-900 dark:text-white">
-                                {showInactive ? 'Inaktive Dateien' : currentFolderName}
-                            </span>
-                            <span>•</span>
-                            <span>{filteredFiles.length} Elemente</span>
+                            {selectedItems.size > 0 ? (
+                                <div className="flex items-center gap-4">
+                                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                        {selectedItems.size} ausgewählt
+                                    </span>
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="text-red-500 hover:text-red-700 flex items-center gap-1.5 px-3 py-1 bg-red-50 dark:bg-red-900/20 rounded-md transition-colors"
+                                    >
+                                        <Trash2 size={16} /> Löschen
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedItems(new Set())}
+                                        className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                                    >
+                                        Abbrechen
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <span className="font-medium text-slate-900 dark:text-white">
+                                        {showInactive ? 'Inaktive Dateien' : currentFolderName}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{filteredFiles.length} Elemente</span>
+                                </>
+                            )}
                         </div>
                         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                             <button
@@ -391,8 +443,17 @@ export const MediaLibrary: React.FC = () => {
                         ) : viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                                 {filteredFiles.map(file => (
-                                    <div key={file.id} className="group relative" onClick={() => setPreviewFile(file)}>
-                                        <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative">
+                                    <div key={file.id} className="group relative">
+                                        <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative" onClick={() => setPreviewFile(file)}>
+
+                                            {/* Selection Checkbox */}
+                                            <div
+                                                onClick={(e) => toggleSelection(e, file.id)}
+                                                className={`absolute top-2 left-2 p-1 rounded-full cursor-pointer z-10 transition-all ${selectedItems.has(file.id) ? 'bg-indigo-600' : 'bg-black/30 hover:bg-black/50 opacity-0 group-hover:opacity-100'}`}
+                                            >
+                                                {selectedItems.has(file.id) ? <CheckCircle size={14} className="text-white" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-white" />}
+                                            </div>
+
                                             {(file.type || '').startsWith('video') ? (
                                                 <div className="w-full h-full flex items-center justify-center bg-slate-900">
                                                     <Film size={32} className="text-white opacity-50" />
