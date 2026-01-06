@@ -214,7 +214,17 @@ export const Login: React.FC = () => {
                                     autoFocus
                                     required
                                 />
-                                <p className="text-xs text-center text-slate-500 mt-2">Bitte prüfe deinen Spam-Ordner</p>
+                                <div className="flex flex-col gap-2 mt-2">
+                                    <p className="text-xs text-center text-slate-500">Bitte prüfe deinen Spam-Ordner</p>
+                                    <button
+                                        type="button"
+                                        onClick={handleCredentials} // Re-triggers login step 1 which sends new code
+                                        className="text-xs text-center text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
+                                        disabled={isLoading}
+                                    >
+                                        Code erneut senden
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Trust Device Checkbox */}
