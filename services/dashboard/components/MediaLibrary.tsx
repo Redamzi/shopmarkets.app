@@ -45,6 +45,9 @@ export const MediaLibrary: React.FC = () => {
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [selectionMode, setSelectionMode] = useState(false);
 
+    // Drag state
+    const [isDragging, setIsDragging] = useState(false);
+
     // File Input Ref
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,6 +84,13 @@ export const MediaLibrary: React.FC = () => {
     const handleDragStart = (e: React.DragEvent, fileId: string) => {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('fileId', fileId);
+        setIsDragging(true);
+        console.log('🎯 Drag started:', fileId);
+    };
+
+    const handleDragEnd = () => {
+        setIsDragging(false);
+        console.log('🏁 Drag ended');
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -94,6 +104,7 @@ export const MediaLibrary: React.FC = () => {
 
         if (!fileId) {
             console.warn('No fileId in drop event');
+            setIsDragging(false);
             return;
         }
 
@@ -109,6 +120,7 @@ export const MediaLibrary: React.FC = () => {
             alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message || 'Unbekannter Fehler'}`);
         } finally {
             setLoading(false);
+            setIsDragging(false);
         }
     };
 
@@ -687,10 +699,11 @@ export const MediaLibrary: React.FC = () => {
                         ) : viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                                 {filteredFiles.map(file => (
-                                    <div key={file.id} className="group relative" draggable onDragStart={(e) => handleDragStart(e, file.id)}>
+                                    <div key={file.id} className="group relative" draggable onDragStart={(e) => handleDragStart(e, file.id)} onDragEnd={handleDragEnd}>
                                         <div
                                             className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative"
                                             onClick={(e) => {
+                                                if (isDragging) return; // Prevent click during drag
                                                 if (selectionMode) {
                                                     toggleSelection(e, file.id);
                                                 } else {
@@ -729,7 +742,7 @@ export const MediaLibrary: React.FC = () => {
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {filteredFiles.map(file => (
-                                    <div key={file.id} draggable onDragStart={(e) => handleDragStart(e, file.id)} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
+                                    <div key={file.id} draggable onDragStart={(e) => handleDragStart(e, file.id)} onDragEnd={handleDragEnd} onClick={() => !isDragging && setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
                                         <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
                                             {renderFileThumbnail(file, 'small')}
                                         </div>
