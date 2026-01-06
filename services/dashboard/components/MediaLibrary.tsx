@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
-    CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight
+    CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight, BookOpen, FileText
 } from 'lucide-react';
 import { mediaService } from '../services/mediaService';
 
@@ -179,6 +179,48 @@ export const MediaLibrary: React.FC = () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    // Helper to render file thumbnail
+    const renderFileThumbnail = (file: MediaFile, size: 'small' | 'large' = 'large') => {
+        const iconSize = size === 'small' ? 16 : 32;
+
+        if (!file.type || file.type.startsWith('image')) {
+            return <img src={file.url} alt={file.filename} className="w-full h-full object-cover transition-transform group-hover:scale-105" />;
+        }
+
+        if (file.type === 'application/pdf') {
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
+                    <FileText size={iconSize} className="text-red-600 dark:text-red-400 mb-1" />
+                    {size === 'large' && <span className="text-[10px] font-medium text-red-600 dark:text-red-400">PDF</span>}
+                </div>
+            );
+        }
+
+        if (file.type === 'application/epub+zip') {
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+                    <BookOpen size={iconSize} className="text-green-600 dark:text-green-400 mb-1" />
+                    {size === 'large' && <span className="text-[10px] font-medium text-green-600 dark:text-green-400">EPUB</span>}
+                </div>
+            );
+        }
+
+        if (file.type?.startsWith('video')) {
+            return (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                    <Film size={iconSize} className="text-white opacity-70 mb-1" />
+                    {size === 'large' && <span className="text-[10px] font-medium text-white opacity-70">VIDEO</span>}
+                </div>
+            );
+        }
+
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                <File size={iconSize} className="text-slate-400" />
+            </div>
+        );
+    };
+
     const currentFolderName = selectedFolderId
         ? folders.find(f => f.id === selectedFolderId)?.name || 'Unbekannter Ordner'
         : 'Alle Medien';
@@ -255,6 +297,20 @@ export const MediaLibrary: React.FC = () => {
                                 className="w-full h-[80vh] rounded-lg border border-slate-200 dark:border-slate-700"
                                 title="PDF Vorschau"
                             />
+                        ) : previewFile.type === 'application/epub+zip' ? (
+                            <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
+                                <BookOpen size={64} className="text-green-600 dark:text-green-400 mb-4" />
+                                <p className="text-green-700 dark:text-green-300 font-medium mb-2">EPUB E-Book</p>
+                                <p className="text-sm text-green-600 dark:text-green-400 mb-4">Vorschau nicht verfügbar</p>
+                                <a
+                                    href={previewFile.url}
+                                    download
+                                    className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 font-medium"
+                                >
+                                    <Download size={18} />
+                                    Herunterladen & Öffnen
+                                </a>
+                            </div>
                         ) : previewFile.type?.startsWith('video') ? (
                             <video
                                 src={previewFile.url}
@@ -319,7 +375,7 @@ export const MediaLibrary: React.FC = () => {
                         ref={fileInputRef}
                         className="hidden"
                         onChange={handleFileChange}
-                        accept="image/*,video/*,application/pdf"
+                        accept="image/*,video/*,application/pdf,application/epub+zip"
                     />
                     <button
                         onClick={handleUploadClick}
@@ -489,17 +545,7 @@ export const MediaLibrary: React.FC = () => {
                                             </div>
 
 
-                                            {file.type === 'application/pdf' ? (
-                                                <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20">
-                                                    <File size={32} className="text-red-500" />
-                                                </div>
-                                            ) : (file.type || '').startsWith('video') ? (
-                                                <div className="w-full h-full flex items-center justify-center bg-slate-900">
-                                                    <Film size={32} className="text-white opacity-50" />
-                                                </div>
-                                            ) : (
-                                                <img src={file.url} alt={file.filename} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                                            )}
+                                            {renderFileThumbnail(file, 'large')}
 
                                             {/* Trash Icon (Stop Propagation to prevent preview) */}
                                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -522,17 +568,7 @@ export const MediaLibrary: React.FC = () => {
                                 {filteredFiles.map(file => (
                                     <div key={file.id} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
                                         <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                                            {file.type === 'application/pdf' ? (
-                                                <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20">
-                                                    <File size={16} className="text-red-500" />
-                                                </div>
-                                            ) : (file.type || '').startsWith('image') ? (
-                                                <img src={file.url} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <Film size={16} />
-                                                </div>
-                                            )}
+                                            {renderFileThumbnail(file, 'small')}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.filename}</div>
