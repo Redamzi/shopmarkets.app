@@ -134,22 +134,16 @@ export const MediaLibrary: React.FC = () => {
 
         console.log('📦 Moving file:', fileId, 'to folder:', targetFolderId);
 
-        // Optimistic Update
-        const previousFiles = [...files];
-        setFiles(prev => prev.map(f =>
-            f.id === fileId ? { ...f, folder_id: targetFolderId } : f
-        ));
-
         try {
-            // Background update
-            await mediaService.moveFile(fileId, targetFolderId);
-            // No need to reload all data if successful, optimistic state is correct.
+            setLoading(true);
+            const result = await mediaService.moveFile(fileId, targetFolderId);
+            console.log('✅ Move successful:', result);
+            await loadData();
         } catch (error: any) {
             console.error('❌ Move failed:', error);
-            // Revert on failure
-            setFiles(previousFiles);
             alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message}`);
         } finally {
+            setLoading(false);
             setIsDragging(false);
         }
     };
