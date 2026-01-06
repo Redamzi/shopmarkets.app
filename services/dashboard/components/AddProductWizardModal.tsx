@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { MediaLibrary } from './MediaLibrary';
 import { ArrowLeft, Upload, Check, Globe, ShoppingBag, Store, Tag, DollarSign, Barcode, Layers, Image as ImageIcon, Box, Truck, Plus, Trash2, SlidersHorizontal, ChevronRight, Info, X, Wrench, Package, Maximize2, ShoppingCart, Sparkles, Wand2, Loader2, Zap, ArrowRightLeft, Database, Link, RefreshCw, Facebook, Instagram, Twitter, Video, Film, PlayCircle, Calculator, Percent, Ruler, Scale, Coins, TrendingDown, Clock, Search, ChevronLeft, ShieldCheck, AlertCircle, Eye, Smartphone, Music, Hash, MessageCircle, Share2, ThumbsUp, Heart, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import { authService } from '../services/authService';
@@ -121,6 +122,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
     const [loadingChannelId, setLoadingChannelId] = useState<string | null>(null);
     const [autoCalcFees, setAutoCalcFees] = useState(false);
     const [isPriceMonitorActive, setIsPriceMonitorActive] = useState(false);
+    const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
     const navRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -142,7 +144,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
         channels: ['shopify'] as Platform[],
         category: 'Möbel',
         manufacturer: '',
-        tags: ''
+        tags: '',
+        imageUrl: ''
     });
 
     const [tiktokParams, setTiktokParams] = useState({
@@ -559,12 +562,21 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                             <label className="block text-sm font-bold text-slate-900 dark:text-white mb-3 ml-1 flex items-center gap-2">
                                 <ImageIcon size={16} /> Produktbilder
                             </label>
-                            <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 min-h-[140px]">
-                                <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-3 text-slate-400">
-                                    <Upload size={20} />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 min-h-[140px]" onClick={() => fileInputRef.current?.click()}>
+                                    <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-3 text-slate-400">
+                                        <Upload size={20} />
+                                    </div>
+                                    <p className="font-medium text-slate-700 dark:text-slate-300 text-sm">Bilder hochladen</p>
+                                    <p className="text-[10px] mt-1 opacity-70">PNG, JPG (max. 5MB)</p>
                                 </div>
-                                <p className="font-medium text-slate-700 dark:text-slate-300 text-sm">Bilder hochladen</p>
-                                <p className="text-[10px] mt-1 opacity-70">PNG, JPG (max. 5MB)</p>
+                                <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 min-h-[140px]" onClick={() => setIsMediaPickerOpen(true)}>
+                                    <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-3 text-slate-400">
+                                        <ImageIcon size={20} />
+                                    </div>
+                                    <p className="font-medium text-slate-700 dark:text-slate-300 text-sm">Aus Medienbibliothek</p>
+                                    <p className="text-[10px] mt-1 opacity-70">Wähle vorhandene Dateien</p>
+                                </div>
                             </div>
                             <div className="grid grid-cols-4 gap-3 mt-4">
                                 {formData.imageUrl && !formData.imageUrl.includes('picsum') && (
@@ -577,6 +589,24 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                     <Plus size={20} />
                                 </div>
                             </div>
+
+                            {/* Media Picker Modal */}
+                            {isMediaPickerOpen && (
+                                <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+                                    <div className="bg-slate-100 dark:bg-slate-900 w-full max-w-5xl h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+                                        <MediaLibrary
+                                            isPicker={true}
+                                            onClose={() => setIsMediaPickerOpen(false)}
+                                            onSelect={(files) => {
+                                                if (files.length > 0) {
+                                                    setFormData({ ...formData, imageUrl: files[0].url });
+                                                    setIsMediaPickerOpen(false);
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
