@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ReactReader } from 'react-reader';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
@@ -45,9 +44,6 @@ export const MediaLibrary: React.FC = () => {
     const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [selectionMode, setSelectionMode] = useState(false);
-
-    // EPUB Location State
-    const [epubLocation, setEpubLocation] = useState<string | number>(0);
 
     // File Input Ref
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -387,12 +383,12 @@ export const MediaLibrary: React.FC = () => {
                                                 <button onClick={(e) => handleDelete(null, previewFile.id)} className="p-1.5 hover:bg-red-100 text-red-500 rounded"><Trash2 size={16} /></button>
                                             </div>
                                         </div>
-                                        <div className="flex-1 relative">
-                                            <ReactReader
-                                                url={previewFile.url}
-                                                location={epubLocation}
-                                                locationChanged={(epubcifi: string | number) => setEpubLocation(epubcifi)}
-                                            />
+                                        <div className="flex-1 flex items-center justify-center">
+                                            <div className="text-center">
+                                                <BookOpen size={48} className="text-green-600 dark:text-green-400 mb-3 mx-auto" />
+                                                <p className="text-green-700 dark:text-green-300 font-medium mb-2">EPUB E-Book</p>
+                                                <p className="text-sm text-green-600 dark:text-green-400 mb-4">Bitte herunterladen zum Öffnen</p>
+                                            </div>
                                         </div>
                                     </div>
                                 );
