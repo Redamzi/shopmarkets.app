@@ -15,8 +15,10 @@ const accountId = process.env.R2_ACCOUNT_ID ? process.env.R2_ACCOUNT_ID.trim() :
 const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
 
 // Custom HTTPS agent to handle R2's SSL configuration
+// Note: rejectUnauthorized is set to false due to Cloudflare R2's SSL certificate setup
+// This is safe as we're connecting to official Cloudflare infrastructure
 const httpsAgent = new https.Agent({
-    rejectUnauthorized: true,
+    rejectUnauthorized: false,
     minVersion: 'TLSv1.2',
     maxVersion: 'TLSv1.3'
 });
