@@ -426,193 +426,194 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                 </div>
             )}
 
-            {/* Preview Modal ... (same as before) */}
-            <div className="fixed inset-0 z-50 bg-white/95 dark:bg-slate-900/95 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in" onClick={() => setPreviewFile(null)}>
+            {/* Preview Modal */}
+            {previewFile && (
+                <div className="fixed inset-0 z-50 bg-white/95 dark:bg-slate-900/95 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in" onClick={() => setPreviewFile(null)}>
 
-                {/* Navigation Buttons */}
-                {filteredFiles.length > 1 && (
-                    <>
+                    {/* Navigation Buttons */}
+                    {filteredFiles.length > 1 && (
+                        <>
+                            <button
+                                onClick={handlePrev}
+                                className="absolute left-4 md:left-10 p-3 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-slate-800 rounded-full backdrop-blur-md transition-all z-50 group shadow-sm border border-slate-200 dark:border-slate-700"
+                            >
+                                <ChevronLeft size={28} className="text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                className="absolute right-4 md:right-10 p-3 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-slate-800 rounded-full backdrop-blur-md transition-all z-50 group shadow-sm border border-slate-200 dark:border-slate-700"
+                            >
+                                <ChevronRight size={28} className="text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                            </button>
+                        </>
+                    )}
+
+                    <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
                         <button
-                            onClick={handlePrev}
-                            className="absolute left-4 md:left-10 p-3 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-slate-800 rounded-full backdrop-blur-md transition-all z-50 group shadow-sm border border-slate-200 dark:border-slate-700"
+                            onClick={() => setPreviewFile(null)}
+                            className="absolute -top-12 right-0 md:top-0 md:-right-16 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-2 bg-white/50 dark:bg-black/50 p-2 rounded-full backdrop-blur-sm"
                         >
-                            <ChevronLeft size={28} className="text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                            <X size={24} /> <span className="md:hidden">Schließen</span>
                         </button>
-                        <button
-                            onClick={handleNext}
-                            className="absolute right-4 md:right-10 p-3 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-slate-800 rounded-full backdrop-blur-md transition-all z-50 group shadow-sm border border-slate-200 dark:border-slate-700"
-                        >
-                            <ChevronRight size={28} className="text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
-                        </button>
-                    </>
-                )}
-
-                <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
-                    <button
-                        onClick={() => setPreviewFile(null)}
-                        className="absolute -top-12 right-0 md:top-0 md:-right-16 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-2 bg-white/50 dark:bg-black/50 p-2 rounded-full backdrop-blur-sm"
-                    >
-                        <X size={24} /> <span className="md:hidden">Schließen</span>
-                    </button>
 
 
-                    {(() => {
-                        const type = getFileType(previewFile);
-                        if (type.startsWith('image')) {
-                            return <img src={previewFile.url} className="max-w-full max-h-[80vh]" />;
-                        }
-                        if (type === 'application/pdf') {
+                        {(() => {
+                            const type = getFileType(previewFile);
+                            if (type.startsWith('image')) {
+                                return <img src={previewFile.url} className="max-w-full max-h-[80vh]" />;
+                            }
+                            if (type === 'application/pdf') {
+                                return (
+                                    <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg border border-red-200 dark:border-red-800">
+                                        <FileText size={64} className="text-red-600 dark:text-red-400 mb-4" />
+                                        <p className="text-red-700 dark:text-red-300 font-medium mb-2 text-xl">PDF Dokument</p>
+                                        <p className="text-sm text-red-600 dark:text-red-400 mb-2">{previewFile.filename}</p>
+                                        <p className="text-xs text-red-500 dark:text-red-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
+                                        <div className="flex gap-3">
+                                            <a
+                                                href={previewFile.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 font-medium shadow-lg"
+                                            >
+                                                <FileText size={18} />
+                                                PDF öffnen
+                                            </a>
+                                            <a
+                                                href={previewFile.url}
+                                                download
+                                                className="px-6 py-3 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 font-medium"
+                                            >
+                                                <Download size={18} />
+                                                Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            if (type === 'application/pdf') {
+                                return (
+                                    <div className="w-full h-[80vh] bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
+                                        <iframe
+                                            src={previewFile.url}
+                                            title="PDF Preview"
+                                            className="w-full h-full"
+                                        />
+
+                                        {/* Overlay Buttons (visible on hover) */}
+                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
+                                            <button
+                                                onClick={(e) => handleDelete(null, previewFile.id)}
+                                                className="px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                                            >
+                                                <Trash2 size={16} /> Löschen
+                                            </button>
+                                            <a
+                                                href={previewFile.url}
+                                                download
+                                                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                                            >
+                                                <Download size={16} /> Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            if (type === 'application/epub+zip') {
+                                return (
+                                    <div className="w-full h-[80vh] bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
+                                        <div className="w-full h-full flex flex-col items-center justify-center">
+                                            <BookOpen size={64} className="text-green-600 dark:text-green-400 mb-4" />
+                                            <p className="text-green-700 dark:text-green-300 font-medium mb-2 text-xl">EPUB E-Book</p>
+                                            <p className="text-sm text-green-600 dark:text-green-400 mb-2">{previewFile.filename}</p>
+                                            <p className="text-xs text-green-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
+                                            <a href={previewFile.url} download className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 font-medium shadow-lg">
+                                                <Download size={18} /> Download & Öffnen
+                                            </a>
+                                        </div>
+
+                                        {/* Overlay Buttons (visible on hover) */}
+                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
+                                            <button
+                                                onClick={(e) => handleDelete(null, previewFile.id)}
+                                                className="px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                                            >
+                                                <Trash2 size={16} /> Löschen
+                                            </button>
+                                            <a
+                                                href={previewFile.url}
+                                                download
+                                                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                                            >
+                                                <Download size={16} /> Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            if (type.startsWith('video')) {
+                                return (
+                                    <div className="relative group w-full h-full flex items-center justify-center">
+                                        <video
+                                            src={previewFile.url}
+                                            controls
+                                            className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
+                                        />
+                                        {/* Buttons für Video auch unterhalb oder overlay */}
+                                        <div className="absolute bottom-[-60px] flex gap-4">
+                                            <button
+                                                onClick={(e) => handleDelete(null, previewFile.id)}
+                                                className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
+                                            >
+                                                <Trash2 size={18} /> Löschen
+                                            </button>
+                                            <a href={previewFile.url} download className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
+                                                <Download size={18} /> Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
                             return (
-                                <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg border border-red-200 dark:border-red-800">
-                                    <FileText size={64} className="text-red-600 dark:text-red-400 mb-4" />
-                                    <p className="text-red-700 dark:text-red-300 font-medium mb-2 text-xl">PDF Dokument</p>
-                                    <p className="text-sm text-red-600 dark:text-red-400 mb-2">{previewFile.filename}</p>
-                                    <p className="text-xs text-red-500 dark:text-red-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
-                                    <div className="flex gap-3">
-                                        <a
-                                            href={previewFile.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 font-medium shadow-lg"
-                                        >
-                                            <FileText size={18} />
-                                            PDF öffnen
-                                        </a>
-                                        <a
-                                            href={previewFile.url}
-                                            download
-                                            className="px-6 py-3 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 font-medium"
-                                        >
-                                            <Download size={18} />
-                                            Download
-                                        </a>
+                                <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
+                                    <File size={48} />
+                                    <p>Vorschau für diesen Dateityp nicht verfügbar</p>
+                                    <div className="flex gap-4 mt-4">
+                                        <button onClick={(e) => handleDelete(null, previewFile.id)} className="text-red-500 hover:text-red-700 flex items-center gap-2"><Trash2 size={16} /> Löschen</button>
+                                        <a href={previewFile.url} download className="text-indigo-500 hover:text-indigo-700 flex items-center gap-2"><Download size={16} /> Download</a>
                                     </div>
                                 </div>
                             );
-                        }
+                        })()}
 
-                        if (type === 'application/pdf') {
-                            return (
-                                <div className="w-full h-[80vh] bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
-                                    <iframe
-                                        src={previewFile.url}
-                                        title="PDF Preview"
-                                        className="w-full h-full"
-                                    />
-
-                                    {/* Overlay Buttons (visible on hover) */}
-                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
-                                        <button
-                                            onClick={(e) => handleDelete(null, previewFile.id)}
-                                            className="px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-                                        >
-                                            <Trash2 size={16} /> Löschen
-                                        </button>
-                                        <a
-                                            href={previewFile.url}
-                                            download
-                                            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-                                        >
-                                            <Download size={16} /> Download
-                                        </a>
-                                    </div>
-                                </div>
-                            );
-                        }
-
-                        if (type === 'application/epub+zip') {
-                            return (
-                                <div className="w-full h-[80vh] bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
-                                    <div className="w-full h-full flex flex-col items-center justify-center">
-                                        <BookOpen size={64} className="text-green-600 dark:text-green-400 mb-4" />
-                                        <p className="text-green-700 dark:text-green-300 font-medium mb-2 text-xl">EPUB E-Book</p>
-                                        <p className="text-sm text-green-600 dark:text-green-400 mb-2">{previewFile.filename}</p>
-                                        <p className="text-xs text-green-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
-                                        <a href={previewFile.url} download className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 font-medium shadow-lg">
-                                            <Download size={18} /> Download & Öffnen
-                                        </a>
-                                    </div>
-
-                                    {/* Overlay Buttons (visible on hover) */}
-                                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
-                                        <button
-                                            onClick={(e) => handleDelete(null, previewFile.id)}
-                                            className="px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-                                        >
-                                            <Trash2 size={16} /> Löschen
-                                        </button>
-                                        <a
-                                            href={previewFile.url}
-                                            download
-                                            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-                                        >
-                                            <Download size={16} /> Download
-                                        </a>
-                                    </div>
-                                </div>
-                            );
-                        }
-
-                        if (type.startsWith('video')) {
-                            return (
-                                <div className="relative group w-full h-full flex items-center justify-center">
-                                    <video
-                                        src={previewFile.url}
-                                        controls
-                                        className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
-                                    />
-                                    {/* Buttons für Video auch unterhalb oder overlay */}
-                                    <div className="absolute bottom-[-60px] flex gap-4">
+                        {/* Global Buttons only for Images (others have custom layouts) */}
+                        {(() => {
+                            const type = getFileType(previewFile);
+                            if (type.startsWith('image')) {
+                                return (
+                                    <div className="mt-8 flex gap-4">
                                         <button
                                             onClick={(e) => handleDelete(null, previewFile.id)}
                                             className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
                                         >
-                                            <Trash2 size={18} /> Löschen
+                                            <Trash2 size={18} />
+                                            Löschen
                                         </button>
-                                        <a href={previewFile.url} download className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
-                                            <Download size={18} /> Download
+                                        <a href={previewFile.url} download target="_blank" className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
+                                            <Upload size={18} className="rotate-180" />
+                                            Download
                                         </a>
                                     </div>
-                                </div>
-                            );
-                        }
-
-                        return (
-                            <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
-                                <File size={48} />
-                                <p>Vorschau für diesen Dateityp nicht verfügbar</p>
-                                <div className="flex gap-4 mt-4">
-                                    <button onClick={(e) => handleDelete(null, previewFile.id)} className="text-red-500 hover:text-red-700 flex items-center gap-2"><Trash2 size={16} /> Löschen</button>
-                                    <a href={previewFile.url} download className="text-indigo-500 hover:text-indigo-700 flex items-center gap-2"><Download size={16} /> Download</a>
-                                </div>
-                            </div>
-                        );
-                    })()}
-
-                    {/* Global Buttons only for Images (others have custom layouts) */}
-                    {(() => {
-                        const type = getFileType(previewFile);
-                        if (type.startsWith('image')) {
-                            return (
-                                <div className="mt-8 flex gap-4">
-                                    <button
-                                        onClick={(e) => handleDelete(null, previewFile.id)}
-                                        className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
-                                    >
-                                        <Trash2 size={18} />
-                                        Löschen
-                                    </button>
-                                    <a href={previewFile.url} download target="_blank" className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
-                                        <Upload size={18} className="rotate-180" />
-                                        Download
-                                    </a>
-                                </div>
-                            )
-                        }
-                        return null;
-                    })()}
+                                )
+                            }
+                            return null;
+                        })()}
+                    </div>
                 </div>
-            </div>
             )
             }
 
