@@ -3,39 +3,22 @@ import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
-import https from 'https';
 import { S3Client, PutObjectCommand, ListObjectsCommand } from '@aws-sdk/client-s3';
-import { NodeHttpHandler } from '@smithy/node-http-handler';
 
 const router = express.Router();
 
-// R2 (S3) Configuration
-// construct endpoint from Account ID if R2_ENDPOINT is missing
+// R2 (S3) Configuration - Official Cloudflare Documentation
+// https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/
 const accountId = process.env.R2_ACCOUNT_ID ? process.env.R2_ACCOUNT_ID.trim() : undefined;
 const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
 
-// Custom HTTPS agent to handle R2's SSL configuration
-// Note: rejectUnauthorized is set to false due to Cloudflare R2's SSL certificate setup
-// This is safe as we're connecting to official Cloudflare infrastructure
-const httpsAgent = new https.Agent({
-    rejectUnauthorized: false,
-    minVersion: 'TLSv1.2',
-    maxVersion: 'TLSv1.3'
-});
-
 const s3 = new S3Client({
-    region: 'auto',
+    region: 'auto', // Required by SDK but not used by R2
     endpoint: endpoint,
     credentials: {
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
-    forcePathStyle: true,
-    requestHandler: new NodeHttpHandler({
-        httpsAgent: httpsAgent,
-        connectionTimeout: 30000,
-        socketTimeout: 30000,
-    }),
 });
 
 const R2_BUCKET = process.env.R2_BUCKET_NAME;

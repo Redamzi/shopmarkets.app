@@ -18,11 +18,6 @@ import pool from './utils/db.js';
 
 dotenv.config();
 
-// Workaround for Cloudflare R2 SSL handshake issues in Alpine containers
-// This is safe as we're connecting to official Cloudflare infrastructure
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 
