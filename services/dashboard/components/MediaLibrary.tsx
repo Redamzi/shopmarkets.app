@@ -87,6 +87,18 @@ export const MediaLibrary: React.FC = () => {
         e.dataTransfer.setData('fileId', fileId);
         setIsDragging(true);
         console.log('🎯 Drag started:', fileId);
+
+        // Custom Drag Image for Multi-Selection
+        if (selectedItems.has(fileId) && selectedItems.size > 1) {
+            const dragIcon = document.createElement('div');
+            dragIcon.className = 'bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-xl font-bold border-2 border-white z-50 fixed top-[-1000px] left-[-1000px]';
+            dragIcon.innerText = `${selectedItems.size} Dateien`;
+            document.body.appendChild(dragIcon);
+            e.dataTransfer.setDragImage(dragIcon, 0, 0);
+
+            // Cleanup after a short delay (browser takes snapshot)
+            setTimeout(() => document.body.removeChild(dragIcon), 0);
+        }
     };
 
     const handleDragEnd = () => {
