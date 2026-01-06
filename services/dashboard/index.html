@@ -1,87 +1,92 @@
 <!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ShopMarkets.app - Modern Commerce</title>
-    <link rel="icon" href="https://fav.farm/🛍️" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              display: ['Outfit', 'sans-serif'], // Replaces serif for the new look
-              tech: ['Space Grotesk', 'sans-serif'], // For numbers and tech details
-              'serif-display': ['Outfit', 'sans-serif'], // Fallback alias to keep existing code working instantly
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ShopMarkets.app - Modern Commerce</title>
+  <link rel="icon" href="https://fav.farm/🛍️" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'], // Replaces serif for the new look
+            tech: ['Space Grotesk', 'sans-serif'], // For numbers and tech details
+            'serif-display': ['Outfit', 'sans-serif'], // Fallback alias to keep existing code working instantly
+          },
+          borderRadius: {
+            '4xl': '2rem',
+            '5xl': '2.5rem',
+          },
+          colors: {
+            glass: {
+              100: 'rgba(255, 255, 255, 0.1)',
+              200: 'rgba(255, 255, 255, 0.2)',
+              300: 'rgba(255, 255, 255, 0.3)',
+              dark: 'rgba(15, 23, 42, 0.6)',
+            }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
             },
-            borderRadius: {
-              '4xl': '2rem',
-              '5xl': '2.5rem',
-            },
-            colors: {
-              glass: {
-                100: 'rgba(255, 255, 255, 0.1)',
-                200: 'rgba(255, 255, 255, 0.2)',
-                300: 'rgba(255, 255, 255, 0.3)',
-                dark: 'rgba(15, 23, 42, 0.6)',
-              }
-            },
-            animation: {
-              'float': 'float 6s ease-in-out infinite',
-              'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            },
-            keyframes: {
-              float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-              },
-              fadeInUp: {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              }
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
             }
           }
         }
       }
-    </script>
-    <!-- Outfit (Headings), Inter (Body), Space Grotesk (Tech/Numbers) -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-      }
-      /* Smooth transitions for theme switching */
-      * {
-        transition-property: background-color, border-color, color, fill, stroke, transform, box-shadow;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 200ms;
-      }
-      
-      /* Glassmorphism Utilities */
-      .glass-panel {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-      }
-      
-      .dark .glass-panel {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
+    }
+  </script>
+  <!-- Outfit (Headings), Inter (Body), Space Grotesk (Tech/Numbers) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
 
-      .custom-scrollbar-hide::-webkit-scrollbar {
-          display: none;
-      }
-      .custom-scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-      }
-    </style>
+    /* Smooth transitions for theme switching */
+    * {
+      transition-property: background-color, border-color, color, fill, stroke, transform, box-shadow;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 200ms;
+    }
+
+    /* Glassmorphism Utilities */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .dark .glass-panel {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .custom-scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+
+    .custom-scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -89,13 +94,18 @@
     "recharts": "https://esm.sh/recharts@^3.6.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3"
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-reader": "https://esm.sh/react-reader@^2.0.11",
+    "epubjs": "https://esm.sh/epubjs@^0.3.93"
   }
 }
 </script>
 </head>
-  <body class="bg-[#f8f9fc] dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 transition-colors duration-300 antialiased selection:bg-indigo-500/30">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body
+  class="bg-[#f8f9fc] dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 transition-colors duration-300 antialiased selection:bg-indigo-500/30">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

@@ -13,6 +13,11 @@ export default defineConfig({
       '@': path.resolve(__dirname, '.'),
     }
   },
+  build: {
+    rollupOptions: {
+      external: ['react-reader', 'epubjs']
+    }
+  },
   // Vite automatically loads VITE_ prefixed env vars from process.env
   // No need to manually define them
 });
