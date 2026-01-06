@@ -6,6 +6,7 @@ export interface Product {
     currency: string;
     image_url?: string;
     sku?: string;
+    stock: number;
     inventory_quantity?: number;
     created_at?: string;
     updated_at?: string;

@@ -30,5 +30,27 @@ export const productService = {
         const headers = await getAuthHeaders();
         const response = await axios.post(`${API_URL}/api/products`, product, { headers });
         return response.data;
+    },
+
+    async updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
+        const headers = await getAuthHeaders();
+        const response = await axios.patch(`${API_URL}/api/products/${id}`, updates, { headers });
+        return response.data;
+    },
+
+    async duplicateProduct(product: Product): Promise<Product> {
+        // Create a copy without ID and created_at
+        const { id, created_at, ...rest } = product;
+        const newProduct = {
+            ...rest,
+            title: `${product.title} (Kopie)`,
+            sku: `${product.sku}-copy-${Date.now().toString().slice(-4)}`
+        };
+        return this.createProduct(newProduct as Product);
+    },
+
+    async deleteProduct(id: string): Promise<void> {
+        const headers = await getAuthHeaders();
+        await axios.delete(`${API_URL}/api/products/${id}`, { headers });
     }
 };
