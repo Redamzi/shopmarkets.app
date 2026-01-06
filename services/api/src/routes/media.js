@@ -3,7 +3,7 @@ import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, ListObjectsCommand } from '@aws-sdk/client-s3';
 
 const router = express.Router();
 
@@ -128,6 +128,28 @@ router.get('/folders', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error fetching folders:', error);
         res.status(500).json({ error: 'Failed to fetch folders' });
+    }
+});
+
+// DEBUG: Test R2 Connection
+router.get('/test-connection', authenticateToken, async (req, res) => {
+    try {
+        const listCmd = new ListObjectsCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            MaxKeys: 1
+        });
+        await s3.send(listCmd);
+        res.json({ status: 'success', message: 'R2 Connection successful! Bucket is accessible.' });
+    } catch (error) {
+        console.error('R2 Test Failed:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'R2 Connection Failed',
+            error: error.message,
+            code: error.code,
+            endpoint: process.env.R2_ENDPOINT ? 'Defined' : 'Missing',
+            bucket: process.env.R2_BUCKET_NAME
+        });
     }
 });
 
