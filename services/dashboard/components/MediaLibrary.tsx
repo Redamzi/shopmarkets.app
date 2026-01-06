@@ -277,7 +277,7 @@ export const MediaLibrary: React.FC = () => {
 
         if (type === 'application/pdf') {
             return (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-2xl">
                     <FileText size={iconSize} className="text-red-600 dark:text-red-400 mb-1" />
                     {size === 'large' && <span className="text-[10px] font-medium text-red-600 dark:text-red-400">PDF</span>}
                 </div>
@@ -286,7 +286,7 @@ export const MediaLibrary: React.FC = () => {
 
         if (type === 'application/epub+zip') {
             return (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl">
                     <BookOpen size={iconSize} className="text-green-600 dark:text-green-400 mb-1" />
                     {size === 'large' && <span className="text-[10px] font-medium text-green-600 dark:text-green-400">EPUB</span>}
                 </div>
@@ -295,7 +295,7 @@ export const MediaLibrary: React.FC = () => {
 
         if (type.startsWith('video')) {
             return (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl">
                     <Film size={iconSize} className="text-white opacity-70 mb-1" />
                     {size === 'large' && <span className="text-[10px] font-medium text-white opacity-70">VIDEO</span>}
                 </div>
@@ -307,7 +307,7 @@ export const MediaLibrary: React.FC = () => {
         }
 
         return (
-            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-2xl">
                 <File size={iconSize} className="text-slate-400" />
             </div>
         );
@@ -623,10 +623,10 @@ export const MediaLibrary: React.FC = () => {
                             onDragLeave={() => setDragOverFolderId(undefined)}
                             onDrop={(e) => handleDrop(e, null)}
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 border border-transparent ${dragOverFolderId === null
-                                    ? 'bg-indigo-100 border-indigo-300 scale-105 shadow-md z-10'
-                                    : (selectedFolderId === null && !showInactive
-                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium'
-                                        : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800')
+                                ? 'bg-indigo-100 border-indigo-300 scale-105 shadow-md z-10'
+                                : (selectedFolderId === null && !showInactive
+                                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium'
+                                    : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800')
                                 }`}
                         >
                             <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
@@ -642,10 +642,10 @@ export const MediaLibrary: React.FC = () => {
                                 onDragLeave={() => setDragOverFolderId(undefined)}
                                 onDrop={(e) => handleDrop(e, folder.id)}
                                 className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 border border-transparent ${dragOverFolderId === folder.id
-                                        ? 'bg-indigo-100 border-indigo-300 scale-105 shadow-md z-10'
-                                        : (selectedFolderId === folder.id && !showInactive
-                                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium'
-                                            : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800')
+                                    ? 'bg-indigo-100 border-indigo-300 scale-105 shadow-md z-10'
+                                    : (selectedFolderId === folder.id && !showInactive
+                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium'
+                                        : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800')
                                     }`}
                             >
                                 <div className="flex items-center gap-3 overflow-hidden pointer-events-none">
