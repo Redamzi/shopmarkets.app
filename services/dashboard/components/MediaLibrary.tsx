@@ -297,7 +297,7 @@ export const MediaLibrary: React.FC = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien</h1>
+                    <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v2.0</span></h1>
                     <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                 </div>
                 <div className="flex gap-2">
