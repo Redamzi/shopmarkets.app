@@ -58,7 +58,7 @@ router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
         res.json(result.rows[0]);
     } catch (error) {
         console.error('Error uploading file:', error);
-        res.status(500).json({ error: 'Failed to upload file' });
+        res.status(500).json({ error: 'Failed to upload file', details: error.message });
     }
 });
 
@@ -82,7 +82,7 @@ router.get('/', authenticateToken, async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching media:', error);
-        res.status(500).json({ error: 'Failed to fetch media' });
+        res.status(500).json({ error: 'Failed to fetch media', details: error.message });
     }
 });
 
