@@ -60,6 +60,22 @@ export const authService = {
         return response.data; // Returns { userId, requires2FA: true } or { token, user, skipTwoFactor: true }
     },
 
+    // 4. Login Step 2 (Verify 2FA Code)
+    async loginStep2(userId: string, code: string, trustDevice: boolean, deviceFingerprint?: string) {
+        const response = await axios.post(`${AUTH_URL}/verify-2fa`, {
+            userId,
+            code,
+            trustDevice,
+            deviceFingerprint
+        });
+
+        if (response.data.token) {
+            setToken(response.data.token);
+        }
+
+        return response.data;
+    },
+
     // 6. Get Current User (aus Token oder API)
     async getCurrentUser() {
         const token = getToken();
