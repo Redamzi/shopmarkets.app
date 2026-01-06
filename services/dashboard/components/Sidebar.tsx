@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Share2, Activity, Settings, CreditCard, Plus, LogOut, X, Facebook, Twitter, Globe } from 'lucide-react';
+import { LayoutDashboard, Package, Share2, Activity, Settings, CreditCard, Plus, LogOut, X, Facebook, Twitter, Globe, Tags, Image as ImageIcon } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
 
@@ -16,6 +16,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onToggle }) => 
   const navItems = [
     { path: '/dashboard', label: 'Übersicht', icon: LayoutDashboard },
     { path: '/products', label: 'Produkte', icon: Package },
+    { path: '/categories', label: 'Kategorien', icon: Tags },
+    { path: '/media', label: 'Medien', icon: ImageIcon },
     { path: '/connections', label: 'Kanäle', icon: Share2 },
     { path: '/sync-history', label: 'Verlauf', icon: Activity },
     { path: '/billing', label: 'Abrechnung', icon: CreditCard },
