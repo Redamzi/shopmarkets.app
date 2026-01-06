@@ -42,6 +42,7 @@ export const MediaLibrary: React.FC = () => {
     const [newFolderName, setNewFolderName] = useState('');
     const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+    const [selectionMode, setSelectionMode] = useState(false);
 
     // File Input Ref
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -333,7 +334,7 @@ export const MediaLibrary: React.FC = () => {
 
                     <button
                         onClick={() => setIsCreateFolderOpen(true)}
-                        className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 font-medium hover:border-indigo-400 hover:text-indigo-600 transition-all shadow-sm"
+                        className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium hover:opacity-90 transition-all shadow-md"
                     >
                         <FolderPlus size={18} />
                         <span>Neuer Ordner</span>
@@ -418,19 +419,31 @@ export const MediaLibrary: React.FC = () => {
                                 </>
                             )}
                         </div>
-                        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                        <div className="flex items-center gap-2">
                             <button
-                                onClick={() => setViewMode('grid')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                                onClick={() => {
+                                    setSelectionMode(!selectionMode);
+                                    if (selectionMode) setSelectedItems(new Set());
+                                }}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${selectionMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                             >
-                                <Grid size={18} />
+                                <CheckCircle size={18} />
+                                {selectionMode ? 'Fertig' : 'Auswählen'}
                             </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
-                            >
-                                <List size={18} />
-                            </button>
+                            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                                >
+                                    <Grid size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                                >
+                                    <List size={18} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -444,12 +457,21 @@ export const MediaLibrary: React.FC = () => {
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                                 {filteredFiles.map(file => (
                                     <div key={file.id} className="group relative">
-                                        <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative" onClick={() => setPreviewFile(file)}>
+                                        <div
+                                            className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative"
+                                            onClick={(e) => {
+                                                if (selectionMode) {
+                                                    toggleSelection(e, file.id);
+                                                } else {
+                                                    setPreviewFile(file);
+                                                }
+                                            }}
+                                        >
 
                                             {/* Selection Checkbox */}
                                             <div
                                                 onClick={(e) => toggleSelection(e, file.id)}
-                                                className={`absolute top-2 left-2 p-1 rounded-full cursor-pointer z-10 transition-all ${selectedItems.has(file.id) ? 'bg-indigo-600' : 'bg-black/30 hover:bg-black/50 opacity-0 group-hover:opacity-100'}`}
+                                                className={`absolute top-2 left-2 p-1 rounded-full cursor-pointer z-10 transition-all ${selectedItems.has(file.id) || selectionMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} ${selectedItems.has(file.id) ? 'bg-indigo-600' : 'bg-black/30 hover:bg-black/50'}`}
                                             >
                                                 {selectedItems.has(file.id) ? <CheckCircle size={14} className="text-white" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-white" />}
                                             </div>
