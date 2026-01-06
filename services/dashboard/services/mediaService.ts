@@ -31,6 +31,14 @@ export const mediaService = {
         return response.data;
     },
 
+    delete: async (id: string) => {
+        const token = localStorage.getItem('auth_token');
+        const response = await axios.delete(`${API_URL}/api/media/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
     testConnection: async () => {
         // Deprecated / Not used for local storage, but kept for compatibility
         return { message: "Local Storage Mode Active" };

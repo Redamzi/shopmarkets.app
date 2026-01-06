@@ -76,6 +76,21 @@ export const MediaLibrary: React.FC = () => {
     };
 
 
+    const handleDelete = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation(); // Prevent opening the file
+        if (!confirm('Möchten Sie diese Datei wirklich löschen?')) return;
+
+        try {
+            await mediaService.delete(id);
+            // setFiles(prev => prev.filter(f => f.id !== id)); // Optimistic update
+            await loadMedia(); // Refresh list to be sure
+            // alert('Datei gelöscht.');
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('Löschen fehlgeschlagen.');
+        }
+    };
+
     const filteredFiles = files.filter(file => {
         if (showInactive) return !file.is_active;
         if (selectedFolder === 'All Media') return file.is_active;
@@ -102,21 +117,7 @@ export const MediaLibrary: React.FC = () => {
                     <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button
-                        onClick={async () => {
-                            try {
-                                alert('Verbindung wird getestet...');
-                                const res = await mediaService.testConnection();
-                                alert(`✅ ERFOLG: ${res.message}`);
-                            } catch (err: any) {
-                                console.error(err);
-                                alert(`❌ FEHLER: ${err.message}\n${err.error ? 'Details: ' + err.error : ''}\nEndpoint: ${err.endpoint}\nBucket: ${err.bucket}`);
-                            }
-                        }}
-                        className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors font-medium text-sm"
-                    >
-                        R2 Test
-                    </button>
+                    {/* Removed Test Button */}
 
                     <input
                         type="file"
@@ -229,8 +230,12 @@ export const MediaLibrary: React.FC = () => {
                                             )}
 
                                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button className="p-1 bg-white/90 rounded-full hover:text-red-500 shadow-sm">
-                                                    <MoreVertical size={14} />
+                                                <button
+                                                    onClick={(e) => handleDelete(e, file.id)}
+                                                    className="p-1.5 bg-white/90 rounded-full hover:text-red-500 shadow-sm hover:bg-red-50 transition-colors"
+                                                    title="Löschen"
+                                                >
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
                                         </div>

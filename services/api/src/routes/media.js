@@ -125,4 +125,42 @@ router.get('/folders', authenticateToken, async (req, res) => {
     }
 });
 
+// DELETE /api/media/:id - Delete media file
+router.delete('/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const fileId = req.params.id;
+
+        // Get file info first
+        const fileResult = await pool.query(
+            `SELECT * FROM public.media_files WHERE id = $1 AND user_id = $2`,
+            [fileId, userId]
+        );
+
+        if (fileResult.rows.length === 0) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        const file = fileResult.rows[0];
+        const relativePath = file.external_id; // For local strategy, we stored path in external_id
+
+        // Delete from DB (soft delete or hard delete? Let's do hard delete for now to clean up disk)
+        await pool.query('DELETE FROM public.media_files WHERE id = $1', [fileId]);
+
+        // Delete from Disk
+        if (relativePath) {
+            const filePath = path.join(UPLOAD_ROOT, relativePath);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                console.log(`🗑️ Deleted file: ${filePath}`);
+            }
+        }
+
+        res.json({ message: 'File deleted successfully' });
+    } catch (error) {
+        console.error('Delete Error:', error);
+        res.status(500).json({ error: 'Failed to delete file' });
+    }
+});
+
 export default router;
