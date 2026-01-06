@@ -1,108 +1,88 @@
 import express from 'express';
 import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
-import { S3Client, ListObjectsCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs-extra';
 
 const router = express.Router();
 
-// R2 (S3) Configuration
-const accountId = process.env.R2_ACCOUNT_ID ? process.env.R2_ACCOUNT_ID.trim() : undefined;
-const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
+// Configuration
+// In Production/Coolify: Mount a persistent volume to /app/uploads
+const UPLOAD_ROOT = process.env.UPLOAD_DIR || 'uploads';
+const CDN_BASE_URL = process.env.CDN_URL || 'https://cdn.shopmarkets.app';
 
-const s3 = new S3Client({
-    region: 'auto',
-    endpoint: endpoint,
-    credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-    },
-    forcePathStyle: true, // Required for R2 to avoid bucket name in hostname
-});
+// Ensure root upload dir exists
+fs.ensureDirSync(UPLOAD_ROOT);
 
-const R2_BUCKET = process.env.R2_BUCKET_NAME;
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
-
-// POST /api/media/upload - Generate pre-signed URL for direct upload
-router.post('/upload', authenticateToken, async (req, res) => {
-    try {
+// Configure Multer for Local Disk Storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // Organize files by User ID
         const userId = req.user.userId;
-        const { fileName, fileType } = req.body;
+        const userDir = path.join(UPLOAD_ROOT, userId);
 
-        if (!fileName || !fileType) {
-            return res.status(400).json({ error: 'fileName and fileType are required' });
-        }
+        // Ensure user directory exists
+        fs.ensureDirSync(userDir);
 
-        // Generate unique key
-        const timestamp = Date.now();
-        const randomStr = Math.random().toString(36).substring(7);
-        const key = `uploads/${userId}/${timestamp}-${randomStr}-${fileName}`;
+        cb(null, userDir);
+    },
+    filename: (req, file, cb) => {
+        // Generate secure unique filename
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        // Clean filename (remove special chars)
+        const cleanName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '_');
 
-        // Generate pre-signed URL (valid for 5 minutes)
-        // MUST use the authenticated S3 API endpoint for PUT operations
-        const command = new PutObjectCommand({
-            Bucket: R2_BUCKET,
-            Key: key,
-            ContentType: fileType,
-        });
-
-        // Use standard s3 client (with forcePathStyle: true to fix SSL issues)
-        const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
-        const publicUrl = `${R2_PUBLIC_URL}/${key}`;
-
-        console.log(`✅ Pre-signed URL generated for: ${key}`);
-        console.log(`📍 Upload URL: ${uploadUrl}`);
-
-        res.json({
-            uploadUrl,
-            key,
-            publicUrl,
-        });
-    } catch (error) {
-        console.error('❌ Error generating pre-signed URL:', error);
-        res.status(500).json({
-            error: 'Failed to generate upload URL',
-            details: error.message
-        });
+        cb(null, `${cleanName}-${uniqueSuffix}${ext}`);
     }
 });
 
-// POST /api/media/confirm - Save metadata after successful upload
-router.post('/confirm', authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const { key, title, category_id, fileSize, uploadDuration } = req.body;
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
 
-        if (!key) {
-            return res.status(400).json({ error: 'key is required' });
+// POST /api/media/upload - Handle file upload locally
+router.post('/upload', authenticateToken, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        const publicUrl = `${R2_PUBLIC_URL}/${key}`;
+        const userId = req.user.userId;
+        const { folderId } = req.body;
 
-        // Save to database
+        // Construct the relative path (stored in DB) and full Public URL
+        const filename = req.file.filename;
+        const relativePath = `${userId}/${filename}`;
+        const publicUrl = `${CDN_BASE_URL}/${relativePath}`;
+        const fileSize = req.file.size;
+        const mimeType = req.file.mimetype;
+
+        console.log(`✅ File saved locally: ${relativePath}`);
+        console.log(`📍 Public URL: ${publicUrl}`);
+
+        // Save metadata to DB
         const result = await pool.query(
             `INSERT INTO public.media_files 
             (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, source, external_id)
-            VALUES ($1, $2, $3, $4, $5, $6, true, 'manual', $7)
+            VALUES ($1, $2, $3, $4, $5, $6, true, 'local', $7)
             RETURNING *`,
-            [userId, category_id || null, title || key.split('/').pop(), publicUrl, 'application/octet-stream', fileSize || 0, key]
+            [userId, folderId || null, req.file.originalname, publicUrl, mimeType, fileSize, relativePath]
         );
-
-        console.log(`✅ Media saved to DB: ${key}`);
 
         res.json({
             ...result.rows[0],
             _performance: {
-                duration_ms: uploadDuration,
-                speed_mbps: fileSize && uploadDuration ? ((fileSize / (1024 * 1024) * 8) / (uploadDuration / 1000)).toFixed(2) : 0
+                duration_ms: 0, // Not measured for local upload
+                speed_mbps: 0
             }
         });
+
     } catch (error) {
-        console.error('❌ Error saving media metadata:', error);
-        res.status(500).json({
-            error: 'Failed to save media',
-            details: error.message
-        });
+        console.error('❌ Upload Error:', error);
+        res.status(500).json({ error: 'Failed to upload file', details: error.message });
     }
 });
 
@@ -142,28 +122,6 @@ router.get('/folders', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Error fetching folders:', error);
         res.status(500).json({ error: 'Failed to fetch folders' });
-    }
-});
-
-// DEBUG: Test R2 Connection
-router.get('/test-connection', authenticateToken, async (req, res) => {
-    try {
-        const listCmd = new ListObjectsCommand({
-            Bucket: R2_BUCKET,
-            MaxKeys: 1
-        });
-        await s3.send(listCmd);
-        res.json({ status: 'success', message: 'R2 Connection successful! Bucket is accessible.' });
-    } catch (error) {
-        console.error('R2 Test Failed:', error);
-        res.status(500).json({
-            status: 'error',
-            message: 'R2 Connection Failed',
-            error: error.message,
-            code: error.code,
-            endpoint: endpoint || 'Missing',
-            bucket: R2_BUCKET
-        });
     }
 });
 

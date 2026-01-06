@@ -21,50 +21,19 @@ export const mediaService = {
         return response.data;
     },
 
-    upload: async (file: File) => {
+    upload: async (formData: FormData) => {
         const token = localStorage.getItem('auth_token');
-
-        // Step 1: Get pre-signed URL from backend
-        const uploadRequest = await axios.post(`${API_URL}/api/media/upload`, {
-            fileName: file.name,
-            fileType: file.type
-        }, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const { uploadUrl, key, publicUrl } = uploadRequest.data;
-
-        // Step 2: Upload directly to R2 using pre-signed URL
-        const startTime = Date.now();
-        await axios.put(uploadUrl, file, {
+        const response = await axios.post(`${API_URL}/api/media/upload`, formData, {
             headers: {
-                'Content-Type': file.type
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
             }
         });
-        const uploadDuration = Date.now() - startTime;
-
-        // Step 3: Confirm upload and save metadata
-        const confirmResponse = await axios.post(`${API_URL}/api/media/confirm`, {
-            key,
-            title: file.name,
-            fileSize: file.size,
-            uploadDuration
-        }, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-
-        return confirmResponse.data;
+        return response.data;
     },
 
     testConnection: async () => {
-        const token = localStorage.getItem('auth_token');
-        try {
-            const response = await axios.get(`${API_URL}/api/media/test-connection`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            return response.data;
-        } catch (error: any) {
-            throw error.response ? error.response.data : error;
-        }
+        // Deprecated / Not used for local storage, but kept for compatibility
+        return { message: "Local Storage Mode Active" };
     }
 };
