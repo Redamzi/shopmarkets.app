@@ -106,6 +106,22 @@ export const MediaLibrary: React.FC = () => {
                     <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                 </div>
                 <div className="flex gap-2">
+                    <button
+                        onClick={async () => {
+                            try {
+                                alert('Verbindung wird getestet...');
+                                const res = await mediaService.testConnection();
+                                alert(`✅ ERFOLG: ${res.message}`);
+                            } catch (err: any) {
+                                console.error(err);
+                                alert(`❌ FEHLER: ${err.message}\n${err.error ? 'Details: ' + err.error : ''}\nEndpoint: ${err.endpoint}\nBucket: ${err.bucket}`);
+                            }
+                        }}
+                        className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-colors font-medium text-sm"
+                    >
+                        R2 Test
+                    </button>
+
                     <input
                         type="file"
                         ref={fileInputRef}

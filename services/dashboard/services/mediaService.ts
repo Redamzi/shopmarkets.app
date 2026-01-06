@@ -30,5 +30,17 @@ export const mediaService = {
             }
         });
         return response.data;
+    },
+
+    testConnection: async () => {
+        const token = localStorage.getItem('auth_token');
+        try {
+            const response = await axios.get(`${API_URL}/api/media/test-connection`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data;
+        } catch (error: any) {
+            throw error.response ? error.response.data : error;
+        }
     }
 };
