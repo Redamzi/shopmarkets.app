@@ -8,9 +8,13 @@ import { S3Client, PutObjectCommand, ListObjectsCommand } from '@aws-sdk/client-
 const router = express.Router();
 
 // R2 (S3) Configuration
+// construct endpoint from Account ID if R2_ENDPOINT is missing
+const accountId = process.env.R2_ACCOUNT_ID;
+const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
+
 const s3 = new S3Client({
     region: 'auto',
-    endpoint: process.env.R2_ENDPOINT,
+    endpoint: endpoint,
     credentials: {
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
@@ -18,7 +22,8 @@ const s3 = new S3Client({
 });
 
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
-const R2_DOMAIN = process.env.R2_PUBLIC_DOMAIN || '';
+// Support both variable names
+const R2_DOMAIN = process.env.R2_PUBLIC_DOMAIN || process.env.R2_PUBLIC_URL || '';
 
 // Use Memory Storage (keep file in RAM to measure pure upload speed to R2)
 const upload = multer({
@@ -147,7 +152,7 @@ router.get('/test-connection', authenticateToken, async (req, res) => {
             message: 'R2 Connection Failed',
             error: error.message,
             code: error.code,
-            endpoint: process.env.R2_ENDPOINT ? 'Defined' : 'Missing',
+            endpoint: endpoint || 'Missing (Set R2_ACCOUNT_ID or R2_ENDPOINT)',
             bucket: process.env.R2_BUCKET_NAME
         });
     }
