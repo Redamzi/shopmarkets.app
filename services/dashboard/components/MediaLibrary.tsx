@@ -92,14 +92,23 @@ export const MediaLibrary: React.FC = () => {
         e.preventDefault();
         const fileId = e.dataTransfer.getData('fileId');
 
-        if (!fileId) return;
+        if (!fileId) {
+            console.warn('No fileId in drop event');
+            return;
+        }
+
+        console.log('📦 Moving file:', fileId, 'to folder:', targetFolderId);
 
         try {
-            await mediaService.moveFile(fileId, targetFolderId);
+            setLoading(true);
+            const result = await mediaService.moveFile(fileId, targetFolderId);
+            console.log('✅ Move successful:', result);
             await loadData();
-        } catch (error) {
-            console.error('Move failed:', error);
-            alert('Fehler beim Verschieben der Datei.');
+        } catch (error: any) {
+            console.error('❌ Move failed:', error);
+            alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message || 'Unbekannter Fehler'}`);
+        } finally {
+            setLoading(false);
         }
     };
 
