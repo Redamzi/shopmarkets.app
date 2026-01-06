@@ -23,17 +23,6 @@ const s3 = new S3Client({
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
 
-// Separate S3Client for pre-signed URLs using public endpoint
-const s3Public = new S3Client({
-    region: 'auto',
-    endpoint: R2_PUBLIC_URL, // Use public URL for pre-signed URLs
-    credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-    },
-    forcePathStyle: true,
-});
-
 // POST /api/media/upload - Generate pre-signed URL for direct upload
 router.post('/upload', authenticateToken, async (req, res) => {
     try {
@@ -49,14 +38,16 @@ router.post('/upload', authenticateToken, async (req, res) => {
         const randomStr = Math.random().toString(36).substring(7);
         const key = `uploads/${userId}/${timestamp}-${randomStr}-${fileName}`;
 
-        // Generate pre-signed URL (valid for 5 minutes) using public endpoint
+        // Generate pre-signed URL (valid for 5 minutes)
+        // MUST use the authenticated S3 API endpoint for PUT operations
         const command = new PutObjectCommand({
             Bucket: R2_BUCKET,
             Key: key,
             ContentType: fileType,
         });
 
-        const uploadUrl = await getSignedUrl(s3Public, command, { expiresIn: 300 });
+        // Use standard s3 client (with forcePathStyle: true to fix SSL issues)
+        const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
         const publicUrl = `${R2_PUBLIC_URL}/${key}`;
 
         console.log(`✅ Pre-signed URL generated for: ${key}`);
