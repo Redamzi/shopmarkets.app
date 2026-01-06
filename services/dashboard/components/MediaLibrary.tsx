@@ -341,17 +341,11 @@ export const MediaLibrary: React.FC = () => {
                             if (type === 'application/pdf') {
                                 return (
                                     <div className="w-full h-[80vh] bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
-                                        <object
-                                            data={`${previewFile.url}#toolbar=0&navpanes=0&scrollbar=0`}
+                                        <embed
+                                            src={`${previewFile.url}#toolbar=0&navpanes=0&scrollbar=0`}
                                             type="application/pdf"
                                             className="w-full h-full"
-                                        >
-                                            {/* Fallback falls Browser kein PDF kann */}
-                                            <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                                                <p className="text-slate-500">Vorschau nicht verfügbar</p>
-                                                <a href={previewFile.url} target="_blank" className="text-indigo-600 hover:underline">Datei öffnen</a>
-                                            </div>
-                                        </object>
+                                        />
 
                                         {/* Overlay Buttons (visible on hover) */}
                                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
