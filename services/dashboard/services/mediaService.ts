@@ -39,6 +39,30 @@ export const mediaService = {
         return response.data;
     },
 
+    createFolder: async (name: string) => {
+        const token = localStorage.getItem('auth_token');
+        const response = await axios.post(`${API_URL}/api/media/folders`, { name }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
+    deleteFolder: async (id: string) => {
+        const token = localStorage.getItem('auth_token');
+        const response = await axios.delete(`${API_URL}/api/media/folders/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
+    moveFile: async (fileId: string, folderId: string | null) => {
+        const token = localStorage.getItem('auth_token');
+        const response = await axios.put(`${API_URL}/api/media/${fileId}/move`, { folderId }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
     testConnection: async () => {
         // Deprecated / Not used for local storage, but kept for compatibility
         return { message: "Local Storage Mode Active" };

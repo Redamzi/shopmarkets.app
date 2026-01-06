@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
-    CheckCircle, AlertCircle, RefreshCw
+    CheckCircle, AlertCircle, RefreshCw, X, Download
 } from 'lucide-react';
 import { mediaService } from '../services/mediaService';
 
@@ -14,36 +14,55 @@ interface MediaFile {
     size_bytes: number;
     url: string;
     is_active: boolean;
-    folder_id: string;
+    folder_id: string | null;
     created_at: string;
 }
 
-const FOLDERS = ['All Media', 'Products', 'Campaigns', 'Assets', 'Videos'];
+interface MediaFolder {
+    id: string;
+    name: string;
+    user_id: string;
+}
 
 export const MediaLibrary: React.FC = () => {
     const [files, setFiles] = useState<MediaFile[]>([]);
+    const [folders, setFolders] = useState<MediaFolder[]>([]);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-    const [selectedFolder, setSelectedFolder] = useState('All Media');
+
+    // Selection State
+    const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null); // null = All Media
     const [showInactive, setShowInactive] = useState(false);
+
+    // UI State
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+
+    // Modals
+    const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+    const [newFolderName, setNewFolderName] = useState('');
+    const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
 
     // File Input Ref
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-    const loadMedia = async () => {
+    const loadData = async () => {
         try {
-            const data = await mediaService.getAll();
-            setFiles(data);
+            setLoading(true);
+            const [filesData, foldersData] = await Promise.all([
+                mediaService.getAll(),
+                mediaService.getFolders()
+            ]);
+            setFiles(filesData);
+            setFolders(foldersData);
         } catch (e) {
-            console.error("Failed to load media", e);
+            console.error("Failed to load media data", e);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        loadMedia();
+        loadData();
     }, []);
 
     const handleUploadClick = () => {
@@ -58,14 +77,13 @@ export const MediaLibrary: React.FC = () => {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            // formData.append('folderId', selectedFolderId); // Future feature
+            if (selectedFolderId) {
+                formData.append('folderId', selectedFolderId);
+            }
 
             await mediaService.upload(formData);
-
-            // Success feedback
             console.log('Upload successful');
-
-            await loadMedia(); // Reload list
+            await loadData();
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
@@ -75,27 +93,50 @@ export const MediaLibrary: React.FC = () => {
         }
     };
 
-
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
-        e.stopPropagation(); // Prevent opening the file
+    const handleDelete = async (e: React.MouseEvent | null, id: string) => {
+        if (e) e.stopPropagation();
         if (!confirm('Möchten Sie diese Datei wirklich löschen?')) return;
 
         try {
             await mediaService.delete(id);
-            // setFiles(prev => prev.filter(f => f.id !== id)); // Optimistic update
-            await loadMedia(); // Refresh list to be sure
-            // alert('Datei gelöscht.');
+            if (previewFile && previewFile.id === id) setPreviewFile(null);
+            await loadData();
         } catch (error) {
             console.error('Delete failed:', error);
             alert('Löschen fehlgeschlagen.');
         }
     };
 
+    const handleCreateFolder = async () => {
+        if (!newFolderName.trim()) return;
+        try {
+            await mediaService.createFolder(newFolderName);
+            setNewFolderName('');
+            setIsCreateFolderOpen(false);
+            await loadData();
+        } catch (error) {
+            console.error('Create folder failed:', error);
+            alert('Ordner konnte nicht erstellt werden.');
+        }
+    };
+
+    const handleDeleteFolder = async (folderId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm('Ordner wirklich löschen? Inhalte werden NICHT gelöscht, sondern in "Alle Medien" verschoben.')) return;
+        try {
+            await mediaService.deleteFolder(folderId);
+            if (selectedFolderId === folderId) setSelectedFolderId(null);
+            await loadData();
+        } catch (error) {
+            console.error('Delete folder failed:', error);
+            alert('Ordner konnte nicht gelöscht werden.');
+        }
+    };
+
     const filteredFiles = files.filter(file => {
         if (showInactive) return !file.is_active;
-        if (selectedFolder === 'All Media') return file.is_active;
-        // Simple mock mapping for folder until we have real folders
-        return file.is_active;
+        if (selectedFolderId === null) return file.is_active;
+        return file.folder_id === selectedFolderId && file.is_active;
     });
 
     // Helper to format bytes
@@ -107,8 +148,71 @@ export const MediaLibrary: React.FC = () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    const currentFolderName = selectedFolderId
+        ? folders.find(f => f.id === selectedFolderId)?.name || 'Unbekannter Ordner'
+        : 'Alle Medien';
+
     return (
-        <div className="p-6 lg:p-10 w-full mx-auto h-[calc(100vh-100px)] flex flex-col animate-fade-in-up">
+        <div className="p-6 lg:p-10 w-full mx-auto h-[calc(100vh-100px)] flex flex-col animate-fade-in-up relative">
+
+            {/* Preview Modal */}
+            {previewFile && (
+                <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setPreviewFile(null)}>
+                    <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
+                        <button
+                            onClick={() => setPreviewFile(null)}
+                            className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors flex items-center gap-2"
+                        >
+                            <X size={24} /> Schließen (Esc)
+                        </button>
+
+                        {previewFile.type.startsWith('image') ? (
+                            <img src={previewFile.url} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" />
+                        ) : (
+                            <div className="bg-slate-800 p-20 rounded-xl text-white flex flex-col items-center gap-4">
+                                <File size={48} />
+                                <p>Vorschau für diesen Dateityp nicht verfügbar</p>
+                            </div>
+                        )}
+
+                        <div className="mt-6 flex gap-4">
+                            <button
+                                onClick={(e) => handleDelete(null, previewFile.id)}
+                                className="px-6 py-2 bg-red-600/20 text-red-400 border border-red-600/50 hover:bg-red-600 hover:text-white rounded-lg transition-all flex items-center gap-2"
+                            >
+                                <Trash2 size={18} />
+                                Löschen
+                            </button>
+                            <a href={previewFile.url} download target="_blank" className="px-6 py-2 bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-lg transition-all flex items-center gap-2">
+                                <Upload size={18} className="rotate-180" />
+                                Download
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Create Folder Modal */}
+            {isCreateFolderOpen && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setIsCreateFolderOpen(false)}>
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4 dark:text-white">Neuen Ordner erstellen</h3>
+                        <input
+                            autoFocus
+                            type="text"
+                            placeholder="Ordnername..."
+                            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 mb-4 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                            value={newFolderName}
+                            onChange={(e) => setNewFolderName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setIsCreateFolderOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Abbrechen</button>
+                            <button onClick={handleCreateFolder} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Erstellen</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
@@ -117,8 +221,6 @@ export const MediaLibrary: React.FC = () => {
                     <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                 </div>
                 <div className="flex gap-2">
-                    {/* Removed Test Button */}
-
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -151,14 +253,33 @@ export const MediaLibrary: React.FC = () => {
 
                     <div className="space-y-1 flex-1 overflow-y-auto custom-scrollbar-hide">
                         <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">Ordner</div>
-                        {FOLDERS.map(folder => (
+
+                        {/* All Media Button */}
+                        <button
+                            onClick={() => { setSelectedFolderId(null); setShowInactive(false); }}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === null && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        >
+                            <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
+                            Alle Medien
+                        </button>
+
+                        {/* Dynamic Folders */}
+                        {folders.map(folder => (
                             <button
-                                key={folder}
-                                onClick={() => { setSelectedFolder(folder); setShowInactive(false); }}
-                                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolder === folder && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                key={folder.id}
+                                onClick={() => { setSelectedFolderId(folder.id); setShowInactive(false); }}
+                                className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === folder.id && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                             >
-                                <Folder size={18} className={selectedFolder === folder && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
-                                {folder}
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <Folder size={18} className={selectedFolderId === folder.id && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
+                                    <span className="truncate">{folder.name}</span>
+                                </div>
+                                <div
+                                    onClick={(e) => handleDeleteFolder(folder.id, e)}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity"
+                                >
+                                    <Trash2 size={14} />
+                                </div>
                             </button>
                         ))}
 
@@ -170,13 +291,12 @@ export const MediaLibrary: React.FC = () => {
                             <AlertCircle size={18} className={showInactive ? 'text-amber-500' : 'text-slate-400'} />
                             Inaktiv / Ungenutzt
                         </button>
-                        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                            <Trash2 size={18} className="text-slate-400" />
-                            Papierkorb
-                        </button>
                     </div>
 
-                    <button className="mt-4 flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+                    <button
+                        onClick={() => setIsCreateFolderOpen(true)}
+                        className="mt-4 flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors"
+                    >
                         <FolderPlus size={18} />
                         Neuer Ordner
                     </button>
@@ -189,7 +309,7 @@ export const MediaLibrary: React.FC = () => {
                     <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
                         <div className="flex items-center gap-2 text-sm text-slate-500">
                             <span className="font-medium text-slate-900 dark:text-white">
-                                {showInactive ? 'Inaktive Dateien' : selectedFolder}
+                                {showInactive ? 'Inaktive Dateien' : currentFolderName}
                             </span>
                             <span>•</span>
                             <span>{filteredFiles.length} Elemente</span>
@@ -219,16 +339,17 @@ export const MediaLibrary: React.FC = () => {
                         ) : viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                                 {filteredFiles.map(file => (
-                                    <div key={file.id} className="group relative">
-                                        <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer">
-                                            {file.type === 'video' ? (
+                                    <div key={file.id} className="group relative" onClick={() => setPreviewFile(file)}>
+                                        <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative">
+                                            {file.type.startsWith('video') ? (
                                                 <div className="w-full h-full flex items-center justify-center bg-slate-900">
                                                     <Film size={32} className="text-white opacity-50" />
                                                 </div>
                                             ) : (
-                                                <img src={file.url} alt={file.filename} className="w-full h-full object-cover" />
+                                                <img src={file.url} alt={file.filename} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                                             )}
 
+                                            {/* Trash Icon (Stop Propagation to prevent preview) */}
                                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={(e) => handleDelete(e, file.id)}
@@ -247,13 +368,21 @@ export const MediaLibrary: React.FC = () => {
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {filteredFiles.map(file => (
-                                    <div key={file.id} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
+                                    <div key={file.id} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
                                         <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
                                             {file.type.startsWith('image') ? <img src={file.url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Film size={16} /></div>}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.filename}</div>
                                             <div className="text-xs text-slate-500">{formatSize(file.size_bytes)} • {new Date(file.created_at).toLocaleDateString()}</div>
+                                        </div>
+                                        <div className="opacity-0 group-hover:opacity-100 px-2">
+                                            <button
+                                                onClick={(e) => handleDelete(e, file.id)}
+                                                className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -264,6 +393,9 @@ export const MediaLibrary: React.FC = () => {
                             <div className="h-full flex flex-col items-center justify-center text-slate-400">
                                 <Folder size={64} className="mb-4 opacity-20" />
                                 <p>Dieser Ordner ist leer.</p>
+                                {selectedFolderId && (
+                                    <p className="text-sm mt-2 text-slate-500">Lade Dateien hierher hoch oder verschiebe sie.</p>
+                                )}
                             </div>
                         )}
                     </div>

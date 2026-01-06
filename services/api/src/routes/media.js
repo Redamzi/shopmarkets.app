@@ -125,7 +125,101 @@ router.get('/folders', authenticateToken, async (req, res) => {
     }
 });
 
-// DELETE /api/media/:id - Delete media file
+// POST /api/media/folders - Create new folder
+router.post('/folders', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { name } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ error: 'Folder name is required' });
+        }
+
+        const result = await pool.query(
+            `INSERT INTO public.media_folders (user_id, name) VALUES ($1, $2) RETURNING *`,
+            [userId, name]
+        );
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error creating folder:', error);
+        res.status(500).json({ error: 'Failed to create folder' });
+    }
+});
+
+// DELETE /api/media/folders/:id - Delete folder
+router.delete('/folders/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const folderId = req.params.id;
+
+        // Verify ownership
+        const check = await pool.query(
+            `SELECT * FROM public.media_folders WHERE id = $1 AND user_id = $2`,
+            [folderId, userId]
+        );
+
+        if (check.rows.length === 0) {
+            return res.status(404).json({ error: 'Folder not found' });
+        }
+
+        // Move files in this folder to root (folder_id = NULL) or delete them?
+        // Let's move to root for safety.
+        await pool.query(
+            `UPDATE public.media_files SET folder_id = NULL WHERE folder_id = $1 AND user_id = $2`,
+            [folderId, userId]
+        );
+
+        // Delete folder
+        await pool.query(`DELETE FROM public.media_folders WHERE id = $1`, [folderId]);
+
+        res.json({ message: 'Folder deleted, files moved to root' });
+    } catch (error) {
+        console.error('Error deleting folder:', error);
+        res.status(500).json({ error: 'Failed to delete folder' });
+    }
+});
+
+// PUT /api/media/:id/move - Move file to folder
+router.put('/:id/move', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const fileId = req.params.id;
+        const { folderId } = req.body; // Can be null for root
+
+        // Verify file ownership
+        const fileCheck = await pool.query(
+            `SELECT * FROM public.media_files WHERE id = $1 AND user_id = $2`,
+            [fileId, userId]
+        );
+        if (fileCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        // If folderId is provided, verify folder ownership
+        if (folderId) {
+            const folderCheck = await pool.query(
+                `SELECT * FROM public.media_folders WHERE id = $1 AND user_id = $2`,
+                [folderId, userId]
+            );
+            if (folderCheck.rows.length === 0) {
+                return res.status(404).json({ error: 'Folder not found' });
+            }
+        }
+
+        const result = await pool.query(
+            `UPDATE public.media_files SET folder_id = $1 WHERE id = $2 AND user_id = $3 RETURNING *`,
+            [folderId || null, fileId, userId]
+        );
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error moving file:', error);
+        res.status(500).json({ error: 'Failed to move file' });
+    }
+});
+
+// DELETE /api/media/:id - Delete media file (RESTORED)
 router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -142,12 +236,10 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         }
 
         const file = fileResult.rows[0];
-        const relativePath = file.external_id; // For local strategy, we stored path in external_id
+        const relativePath = file.external_id;
 
-        // Delete from DB (soft delete or hard delete? Let's do hard delete for now to clean up disk)
         await pool.query('DELETE FROM public.media_files WHERE id = $1', [fileId]);
 
-        // Delete from Disk
         if (relativePath) {
             const filePath = path.join(UPLOAD_ROOT, relativePath);
             if (fs.existsSync(filePath)) {
