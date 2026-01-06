@@ -1,7 +1,7 @@
-FROM node:18-alpine
+FROM node:18
 
-# Install CA certificates for SSL/TLS connections (required for Cloudflare R2)
-RUN apk add --no-cache ca-certificates
+# Note: Switched from Alpine to Debian to resolve SSL handshake issues with Cloudflare R2
+# Alpine's minimal SSL libraries were incompatible with R2's certificate chain
 
 WORKDIR /app
 
