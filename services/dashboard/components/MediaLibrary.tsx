@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
-    CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight, BookOpen, FileText
+    CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight, BookOpen, FileText, GripVertical
 } from 'lucide-react';
 import { mediaService } from '../services/mediaService';
 
@@ -762,7 +762,13 @@ export const MediaLibrary: React.FC = () => {
                                             {renderFileThumbnail(file, 'large')}
 
                                             {/* Trash Icon (Stop Propagation to prevent preview) */}
-                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                                <div
+                                                    className="p-1.5 bg-white/90 rounded-full text-slate-400 cursor-grab active:cursor-grabbing shadow-sm hover:bg-slate-50 transition-colors"
+                                                    title="Zum Verschieben ziehen"
+                                                >
+                                                    <GripVertical size={16} />
+                                                </div>
                                                 <button
                                                     onClick={(e) => handleDelete(e, file.id)}
                                                     className="p-1.5 bg-white/90 rounded-full hover:text-red-500 shadow-sm hover:bg-red-50 transition-colors"
@@ -795,6 +801,9 @@ export const MediaLibrary: React.FC = () => {
                                             >
                                                 <Trash2 size={16} />
                                             </button>
+                                        </div>
+                                        <div className="opacity-0 group-hover:opacity-100 px-2 cursor-grab active:cursor-grabbing text-slate-400" title="Zum Verschieben ziehen">
+                                            <GripVertical size={16} />
                                         </div>
                                     </div>
                                 ))}
