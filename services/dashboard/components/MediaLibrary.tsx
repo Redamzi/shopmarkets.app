@@ -47,6 +47,7 @@ export const MediaLibrary: React.FC = () => {
 
     // Drag state
     const [isDragging, setIsDragging] = useState(false);
+    const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(undefined); // undefined = none, null = All Media
 
     // File Input Ref
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,14 +94,29 @@ export const MediaLibrary: React.FC = () => {
         console.log('🏁 Drag ended');
     };
 
-    const handleDragOver = (e: React.DragEvent) => {
+    const handleDragOver = (e: React.DragEvent, folderId: string | null) => {
         e.preventDefault();
+        e.stopPropagation();
         e.dataTransfer.dropEffect = 'move';
+        if (dragOverFolderId !== folderId) {
+            setDragOverFolderId(folderId);
+        }
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only clear if we really left the target (logic can be tricky with children, 
+        // but for simple buttons pointer-events-none on children helps or just relying on dragOver usually suffices if distinct)
+        // Here we might just want to let the next dragOver handle it.
+        // But to remove highlight when leaving the sidebar entirely:
+        // For now, simpler: we only set it in dragOver. If we leave a specific button, another dragOver fires or we drop.
     };
 
     const handleDrop = async (e: React.DragEvent, targetFolderId: string | null) => {
         e.preventDefault();
-        e.stopPropagation(); // Stop bubbling
+        e.stopPropagation();
+        setDragOverFolderId(undefined); // Clear highlight
         const fileId = e.dataTransfer.getData('fileId');
 
         if (!fileId) {
@@ -109,26 +125,31 @@ export const MediaLibrary: React.FC = () => {
             return;
         }
 
-        // Prevent dropping on itself if it's already in that folder (optional optimization)
+        // Prevent dropping on itself
         const file = files.find(f => f.id === fileId);
         if (file && file.folder_id === targetFolderId) {
-            console.log('File already in target folder');
             setIsDragging(false);
             return;
         }
 
         console.log('📦 Moving file:', fileId, 'to folder:', targetFolderId);
 
+        // Optimistic Update
+        const previousFiles = [...files];
+        setFiles(prev => prev.map(f =>
+            f.id === fileId ? { ...f, folder_id: targetFolderId } : f
+        ));
+
         try {
-            setLoading(true);
-            const result = await mediaService.moveFile(fileId, targetFolderId);
-            console.log('✅ Move successful:', result);
-            await loadData();
+            // Background update
+            await mediaService.moveFile(fileId, targetFolderId);
+            // No need to reload all data if successful, optimistic state is correct.
         } catch (error: any) {
             console.error('❌ Move failed:', error);
-            alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message || 'Unbekannter Fehler'}`);
+            // Revert on failure
+            setFiles(previousFiles);
+            alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message}`);
         } finally {
-            setLoading(false);
             setIsDragging(false);
         }
     };
@@ -598,9 +619,15 @@ export const MediaLibrary: React.FC = () => {
                         {/* All Media Button */}
                         <button
                             onClick={() => { setSelectedFolderId(null); setShowInactive(false); }}
-                            onDragOver={handleDragOver}
+                            onDragOver={(e) => handleDragOver(e, null)}
+                            onDragLeave={() => setDragOverFolderId(undefined)}
                             onDrop={(e) => handleDrop(e, null)}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === null && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 border border-transparent ${dragOverFolderId === null
+                                    ? 'bg-indigo-100 border-indigo-300 scale-105 shadow-md z-10'
+                                    : (selectedFolderId === null && !showInactive
+                                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium'
+                                        : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800')
+                                }`}
                         >
                             <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
                             Alle Medien
@@ -611,17 +638,23 @@ export const MediaLibrary: React.FC = () => {
                             <button
                                 key={folder.id}
                                 onClick={() => { setSelectedFolderId(folder.id); setShowInactive(false); }}
-                                onDragOver={handleDragOver}
+                                onDragOver={(e) => handleDragOver(e, folder.id)}
+                                onDragLeave={() => setDragOverFolderId(undefined)}
                                 onDrop={(e) => handleDrop(e, folder.id)}
-                                className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === folder.id && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 border border-transparent ${dragOverFolderId === folder.id
+                                        ? 'bg-indigo-100 border-indigo-300 scale-105 shadow-md z-10'
+                                        : (selectedFolderId === folder.id && !showInactive
+                                            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium'
+                                            : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800')
+                                    }`}
                             >
-                                <div className="flex items-center gap-3 overflow-hidden">
+                                <div className="flex items-center gap-3 overflow-hidden pointer-events-none">
                                     <Folder size={18} className={selectedFolderId === folder.id && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
                                     <span className="truncate">{folder.name}</span>
                                 </div>
                                 <div
                                     onClick={(e) => handleDeleteFolder(folder.id, e)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity"
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity pointer-events-auto"
                                 >
                                     <Trash2 size={14} />
                                 </div>
