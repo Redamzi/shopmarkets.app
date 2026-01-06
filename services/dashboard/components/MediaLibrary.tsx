@@ -157,33 +157,33 @@ export const MediaLibrary: React.FC = () => {
 
             {/* Preview Modal */}
             {previewFile && (
-                <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in" onClick={() => setPreviewFile(null)}>
+                <div className="fixed inset-0 z-50 bg-white/95 dark:bg-slate-900/95 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in" onClick={() => setPreviewFile(null)}>
                     <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
                         <button
                             onClick={() => setPreviewFile(null)}
-                            className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors flex items-center gap-2"
+                            className="absolute -top-12 right-0 md:top-0 md:-right-12 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-2 bg-white/50 dark:bg-black/50 p-2 rounded-full backdrop-blur-sm"
                         >
-                            <X size={24} /> Schließen (Esc)
+                            <X size={24} /> <span className="md:hidden">Schließen</span>
                         </button>
 
                         {(!previewFile.type || previewFile.type.startsWith('image')) ? (
-                            <img src={previewFile.url} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" />
+                            <img src={previewFile.url} className="max-w-full max-h-[80vh] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800" />
                         ) : (
-                            <div className="bg-slate-800 p-20 rounded-xl text-white flex flex-col items-center gap-4">
+                            <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
                                 <File size={48} />
                                 <p>Vorschau für diesen Dateityp nicht verfügbar</p>
                             </div>
                         )}
 
-                        <div className="mt-6 flex gap-4">
+                        <div className="mt-8 flex gap-4">
                             <button
                                 onClick={(e) => handleDelete(null, previewFile.id)}
-                                className="px-6 py-2 bg-red-600/20 text-red-400 border border-red-600/50 hover:bg-red-600 hover:text-white rounded-lg transition-all flex items-center gap-2"
+                                className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
                             >
                                 <Trash2 size={18} />
                                 Löschen
                             </button>
-                            <a href={previewFile.url} download target="_blank" className="px-6 py-2 bg-white/10 text-white border border-white/20 hover:bg-white/20 rounded-lg transition-all flex items-center gap-2">
+                            <a href={previewFile.url} download target="_blank" className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
                                 <Upload size={18} className="rotate-180" />
                                 Download
                             </a>
