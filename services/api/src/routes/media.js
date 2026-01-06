@@ -3,7 +3,9 @@ import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
+import https from 'https';
 import { S3Client, PutObjectCommand, ListObjectsCommand } from '@aws-sdk/client-s3';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
 
 const router = express.Router();
 
@@ -12,6 +14,13 @@ const router = express.Router();
 const accountId = process.env.R2_ACCOUNT_ID ? process.env.R2_ACCOUNT_ID.trim() : undefined;
 const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
 
+// Custom HTTPS agent with proper SNI configuration for R2
+const httpsAgent = new https.Agent({
+    keepAlive: true,
+    // Explicitly set servername for proper SNI
+    servername: `${accountId}.r2.cloudflarestorage.com`,
+});
+
 const s3 = new S3Client({
     region: 'auto', // Required by SDK but not used by R2
     endpoint: endpoint,
@@ -19,6 +28,9 @@ const s3 = new S3Client({
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
+    requestHandler: new NodeHttpHandler({
+        httpsAgent: httpsAgent,
+    }),
 });
 
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
