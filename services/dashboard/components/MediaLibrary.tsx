@@ -398,6 +398,22 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                 <div className="flex justify-between items-center mb-4 px-1">
                     <h2 className="text-xl font-bold dark:text-white">Medien auswählen</h2>
                     <div className="flex gap-2">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            onChange={handleFileChange}
+                            accept="image/*,video/*,application/pdf,application/epub+zip"
+                        />
+                        <button
+                            onClick={handleUploadClick}
+                            disabled={uploading}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors font-medium disabled:opacity-50"
+                        >
+                            {uploading ? <RefreshCw className="animate-spin" size={16} /> : <Upload size={16} />}
+                            <span className="hidden sm:inline">{uploading ? 'Lädt...' : 'Hochladen'}</span>
+                        </button>
+                        <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                         <button onClick={onClose} className="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">Abbrechen</button>
                         <button
                             onClick={handleConfirmSelection}
