@@ -97,8 +97,35 @@ export const ProductsPage: React.FC = () => {
                 <ProductList
                     products={products}
                     onAddProduct={() => setIsWizardOpen(true)}
-                    onEditProduct={(p) => console.log('Edit', p)}
-                    onDeleteProduct={(id) => console.log('Delete', id)}
+                    onEditProduct={(p) => console.log('Edit', p)} // TODO: Open Wizard with edit mode
+                    onDeleteProduct={async (id) => {
+                        try {
+                            await productService.deleteProduct(id);
+                            await loadData();
+                        } catch (e: any) {
+                            alert('Fehler beim Löschen: ' + (e.message || 'Unbekannt'));
+                        }
+                    }}
+                    onIncrementStock={async (id) => {
+                        try {
+                            const product = products.find(p => p.id === id);
+                            if (product) {
+                                await productService.updateProduct(id, { stock: product.stock + 1 });
+                                await loadData();
+                            }
+                        } catch (e: any) {
+                            alert('Fehler beim Aktualisieren: ' + (e.message || 'Unbekannt'));
+                        }
+                    }}
+                    onDuplicateProduct={async (product) => {
+                        try {
+                            await productService.duplicateProduct(product);
+                            await loadData();
+                            alert('Produkt dupliziert!');
+                        } catch (e: any) {
+                            alert('Fehler beim Duplizieren: ' + (e.message || 'Unbekannt'));
+                        }
+                    }}
                 />
             )}
 
