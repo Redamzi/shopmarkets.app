@@ -179,15 +179,23 @@ export const MediaLibrary: React.FC = () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    // Helper to determine file type properly (fallback to extension)
+    const getFileType = (file: MediaFile) => {
+        if (file.type) return file.type;
+        const ext = file.filename.split('.').pop()?.toLowerCase();
+        if (ext === 'pdf') return 'application/pdf';
+        if (ext === 'epub') return 'application/epub+zip';
+        if (['mp4', 'webm', 'mov'].includes(ext || '')) return 'video/mp4';
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')) return 'image/jpeg';
+        return 'unknown'; // don't assume image
+    };
+
     // Helper to render file thumbnail
     const renderFileThumbnail = (file: MediaFile, size: 'small' | 'large' = 'large') => {
         const iconSize = size === 'small' ? 16 : 32;
+        const type = getFileType(file);
 
-        if (!file.type || file.type.startsWith('image')) {
-            return <img src={file.url} alt={file.filename} className="w-full h-full object-cover transition-transform group-hover:scale-105" />;
-        }
-
-        if (file.type === 'application/pdf') {
+        if (type === 'application/pdf') {
             return (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
                     <FileText size={iconSize} className="text-red-600 dark:text-red-400 mb-1" />
@@ -196,7 +204,7 @@ export const MediaLibrary: React.FC = () => {
             );
         }
 
-        if (file.type === 'application/epub+zip') {
+        if (type === 'application/epub+zip') {
             return (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
                     <BookOpen size={iconSize} className="text-green-600 dark:text-green-400 mb-1" />
@@ -205,13 +213,17 @@ export const MediaLibrary: React.FC = () => {
             );
         }
 
-        if (file.type?.startsWith('video')) {
+        if (type.startsWith('video')) {
             return (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
                     <Film size={iconSize} className="text-white opacity-70 mb-1" />
                     {size === 'large' && <span className="text-[10px] font-medium text-white opacity-70">VIDEO</span>}
                 </div>
             );
+        }
+
+        if (type.startsWith('image')) {
+            return <img src={file.url} alt={file.filename} className="w-full h-full object-cover transition-transform group-hover:scale-105" />;
         }
 
         return (
@@ -289,60 +301,77 @@ export const MediaLibrary: React.FC = () => {
                             <X size={24} /> <span className="md:hidden">Schließen</span>
                         </button>
 
-                        {(!previewFile.type || previewFile.type.startsWith('image')) ? (
-                            <img src={previewFile.url} className="max-w-full max-h-[80vh]" />
-                        ) : previewFile.type === 'application/pdf' ? (
-                            <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg border border-red-200 dark:border-red-800">
-                                <FileText size={64} className="text-red-600 dark:text-red-400 mb-4" />
-                                <p className="text-red-700 dark:text-red-300 font-medium mb-2 text-xl">PDF Dokument</p>
-                                <p className="text-sm text-red-600 dark:text-red-400 mb-2">{previewFile.filename}</p>
-                                <p className="text-xs text-red-500 dark:text-red-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
-                                <div className="flex gap-3">
-                                    <a
-                                        href={previewFile.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 font-medium shadow-lg"
-                                    >
-                                        <FileText size={18} />
-                                        PDF öffnen
-                                    </a>
-                                    <a
-                                        href={previewFile.url}
-                                        download
-                                        className="px-6 py-3 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 font-medium"
-                                    >
-                                        <Download size={18} />
-                                        Herunterladen
-                                    </a>
+
+                        {(() => {
+                            const type = getFileType(previewFile);
+                            if (type.startsWith('image')) {
+                                return <img src={previewFile.url} className="max-w-full max-h-[80vh]" />;
+                            }
+                            if (type === 'application/pdf') {
+                                return (
+                                    <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg border border-red-200 dark:border-red-800">
+                                        <FileText size={64} className="text-red-600 dark:text-red-400 mb-4" />
+                                        <p className="text-red-700 dark:text-red-300 font-medium mb-2 text-xl">PDF Dokument</p>
+                                        <p className="text-sm text-red-600 dark:text-red-400 mb-2">{previewFile.filename}</p>
+                                        <p className="text-xs text-red-500 dark:text-red-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
+                                        <div className="flex gap-3">
+                                            <a
+                                                href={previewFile.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 font-medium shadow-lg"
+                                            >
+                                                <FileText size={18} />
+                                                PDF öffnen
+                                            </a>
+                                            <a
+                                                href={previewFile.url}
+                                                download
+                                                className="px-6 py-3 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 font-medium"
+                                            >
+                                                <Download size={18} />
+                                                Herunterladen
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            if (type === 'application/epub+zip') {
+                                return (
+                                    <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
+                                        <BookOpen size={64} className="text-green-600 dark:text-green-400 mb-4" />
+                                        <p className="text-green-700 dark:text-green-300 font-medium mb-2">EPUB E-Book</p>
+                                        <p className="text-sm text-green-600 dark:text-green-400 mb-4">Vorschau nicht verfügbar</p>
+                                        <a
+                                            href={previewFile.url}
+                                            download
+                                            className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 font-medium"
+                                        >
+                                            <Download size={18} />
+                                            Herunterladen & Öffnen
+                                        </a>
+                                    </div>
+                                );
+                            }
+
+                            if (type.startsWith('video')) {
+                                return (
+                                    <video
+                                        src={previewFile.url}
+                                        controls
+                                        className="max-w-full max-h-[80vh] rounded-lg"
+                                    />
+                                );
+                            }
+
+                            return (
+                                <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
+                                    <File size={48} />
+                                    <p>Vorschau für diesen Dateityp nicht verfügbar</p>
                                 </div>
-                            </div>
-                        ) : previewFile.type === 'application/epub+zip' ? (
-                            <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
-                                <BookOpen size={64} className="text-green-600 dark:text-green-400 mb-4" />
-                                <p className="text-green-700 dark:text-green-300 font-medium mb-2">EPUB E-Book</p>
-                                <p className="text-sm text-green-600 dark:text-green-400 mb-4">Vorschau nicht verfügbar</p>
-                                <a
-                                    href={previewFile.url}
-                                    download
-                                    className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 font-medium"
-                                >
-                                    <Download size={18} />
-                                    Herunterladen & Öffnen
-                                </a>
-                            </div>
-                        ) : previewFile.type?.startsWith('video') ? (
-                            <video
-                                src={previewFile.url}
-                                controls
-                                className="max-w-full max-h-[80vh] rounded-lg"
-                            />
-                        ) : (
-                            <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
-                                <File size={48} />
-                                <p>Vorschau für diesen Dateityp nicht verfügbar</p>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         <div className="mt-8 flex gap-4">
                             <button
