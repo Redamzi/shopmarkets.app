@@ -21,8 +21,13 @@ const getToken = () => {
 };
 
 const removeToken = () => {
-    localStorage.removeItem('auth_token');
-    useAuthStore.getState().logout();
+    try {
+        localStorage.removeItem('auth_token');
+        // Try to clear Zustand store, but don't block if it fails
+        useAuthStore.getState().logout();
+    } catch (e) {
+        console.error('Store logout failed, but token removed:', e);
+    }
 };
 
 export const authService = {
@@ -105,6 +110,20 @@ export const authService = {
             }
         );
         return response.data;
+    },
+
+    // 5. Logout
+    async logout() {
+        try {
+            removeToken();
+        } catch (e) {
+            console.error('Logout error:', e);
+            // Fallback: Ensure clear manually
+            localStorage.removeItem('auth_token');
+        } finally {
+            // Always redirect
+            window.location.href = '/login';
+        }
     },
 
     // Update Password - Placeholder for now
