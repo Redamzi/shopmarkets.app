@@ -50,7 +50,7 @@ export const Dashboard: React.FC = () => {
     );
 
     return (
-        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto space-y-8 animate-fade-in-up">
+        <div className="p-6 lg:p-10 max-w-[1920px] mx-auto space-y-8 animate-fade-in-up">
 
             {/* Page Header */}
             <div>
