@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ReactReader } from 'react-reader';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
@@ -25,6 +26,7 @@ interface MediaFolder {
 }
 
 export const MediaLibrary: React.FC = () => {
+    // State
     const [files, setFiles] = useState<MediaFile[]>([]);
     const [folders, setFolders] = useState<MediaFolder[]>([]);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -44,8 +46,11 @@ export const MediaLibrary: React.FC = () => {
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [selectionMode, setSelectionMode] = useState(false);
 
+    // EPUB Location State
+    const [epubLocation, setEpubLocation] = useState<string | number>(0);
+
     // File Input Ref
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const toggleSelection = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
@@ -328,390 +333,394 @@ export const MediaLibrary: React.FC = () => {
                                                 href={previewFile.url}
                                                 download
                                                 className="px-6 py-3 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 font-medium"
+                                            >
+                                                <Download size={18} />
+                                                Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            if (type === 'application/pdf') {
+                                return (
                                     <div className="w-full h-[80vh] bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
-                                                <object
-                                                    data={`${previewFile.url}#toolbar=0&navpanes=0&scrollbar=0`}
-                                                    type="application/pdf"
-                                                    className="w-full h-full"
-                                                >
-                                                    {/* Fallback falls Browser kein PDF kann */}
-                                                    <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                                                        <p className="text-slate-500">Vorschau nicht verfügbar</p>
-                                                        <a href={previewFile.url} target="_blank" className="text-indigo-600 hover:underline">Datei öffnen</a>
-                                                    </div>
-                                                </object>
-
-                                                {/* Overlay Buttons (visible on hover) */}
-                                                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
-                                                    <button
-                                                        onClick={(e) => handleDelete(null, previewFile.id)}
-                                                        className="px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-                                                    >
-                                                        <Trash2 size={16} /> Löschen
-                                                    </button>
-                                                    <a
-                                                        href={previewFile.url}
-                                                        download
-                                                        className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-                                                    >
-                                                        <Download size={16} /> Download
-                                                    </a>
-                                                </div>
+                                        <object
+                                            data={`${previewFile.url}#toolbar=0&navpanes=0&scrollbar=0`}
+                                            type="application/pdf"
+                                            className="w-full h-full"
+                                        >
+                                            {/* Fallback falls Browser kein PDF kann */}
+                                            <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+                                                <p className="text-slate-500">Vorschau nicht verfügbar</p>
+                                                <a href={previewFile.url} target="_blank" className="text-indigo-600 hover:underline">Datei öffnen</a>
                                             </div>
-                                            );
+                                        </object>
+
+                                        {/* Overlay Buttons (visible on hover) */}
+                                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
+                                            <button
+                                                onClick={(e) => handleDelete(null, previewFile.id)}
+                                                className="px-4 py-2 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                                            >
+                                                <Trash2 size={16} /> Löschen
+                                            </button>
+                                            <a
+                                                href={previewFile.url}
+                                                download
+                                                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+                                            >
+                                                <Download size={16} /> Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
                             }
 
-                                            if (type === 'application/epub+zip') {
+                            if (type === 'application/epub+zip') {
                                 return (
-                                            <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-800">
-                                                <BookOpen size={64} className="text-green-600 dark:text-green-400 mb-4" />
-                                                <p className="text-green-700 dark:text-green-300 font-medium mb-2">EPUB E-Book</p>
-                                                <p className="text-sm text-green-600 dark:text-green-400 mb-4">Vorschau im Browser nicht möglich</p>
-                                                <a
-                                                    href={previewFile.url}
-                                                    download
-                                                    className="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 font-medium"
-                                                >
-                                                    <Download size={18} />
-                                                    Download
-                                                </a>
-
-                                                {/* Action Buttons */}
-                                                <div className="mt-8 flex gap-4">
-                                                    <button
-                                                        onClick={(e) => handleDelete(null, previewFile.id)}
-                                                        className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
-                                                    >
-                                                        <Trash2 size={18} /> Löschen
-                                                    </button>
-                                                </div>
+                                    <div className="w-full h-[80vh] bg-white rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative flex flex-col">
+                                        <div className="h-12 border-b border-slate-100 flex items-center justify-between px-4 bg-slate-50 dark:bg-slate-900 dark:border-slate-800">
+                                            <span className="font-medium text-sm text-slate-600 dark:text-slate-300 truncate max-w-[50%]">{previewFile.filename}</span>
+                                            <div className="flex gap-2">
+                                                <a href={previewFile.url} download className="p-1.5 hover:bg-slate-200 rounded text-slate-500 dark:hover:bg-slate-800"><Download size={16} /></a>
+                                                <button onClick={(e) => handleDelete(null, previewFile.id)} className="p-1.5 hover:bg-red-100 text-red-500 rounded"><Trash2 size={16} /></button>
                                             </div>
-                                            );
+                                        </div>
+                                        <div className="flex-1 relative">
+                                            <ReactReader
+                                                url={previewFile.url}
+                                                location={epubLocation}
+                                                locationChanged={(epubcifi: string | number) => setEpubLocation(epubcifi)}
+                                            />
+                                        </div>
+                                    </div>
+                                );
                             }
 
-                                            if (type.startsWith('video')) {
+                            if (type.startsWith('video')) {
                                 return (
-                                            <div className="relative group w-full h-full flex items-center justify-center">
-                                                <video
-                                                    src={previewFile.url}
-                                                    controls
-                                                    className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
-                                                />
-                                                {/* Buttons für Video auch unterhalb oder overlay */}
-                                                <div className="absolute bottom-[-60px] flex gap-4">
-                                                    <button
-                                                        onClick={(e) => handleDelete(null, previewFile.id)}
-                                                        className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
-                                                    >
-                                                        <Trash2 size={18} /> Löschen
-                                                    </button>
-                                                    <a href={previewFile.url} download className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
-                                                        <Download size={18} /> Download
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            );
+                                    <div className="relative group w-full h-full flex items-center justify-center">
+                                        <video
+                                            src={previewFile.url}
+                                            controls
+                                            className="max-w-full max-h-[80vh] rounded-lg shadow-2xl"
+                                        />
+                                        {/* Buttons für Video auch unterhalb oder overlay */}
+                                        <div className="absolute bottom-[-60px] flex gap-4">
+                                            <button
+                                                onClick={(e) => handleDelete(null, previewFile.id)}
+                                                className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
+                                            >
+                                                <Trash2 size={18} /> Löschen
+                                            </button>
+                                            <a href={previewFile.url} download className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
+                                                <Download size={18} /> Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
                             }
 
-                                            return (
-                                            <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
-                                                <File size={48} />
-                                                <p>Vorschau für diesen Dateityp nicht verfügbar</p>
-                                                <div className="flex gap-4 mt-4">
-                                                    <button onClick={(e) => handleDelete(null, previewFile.id)} className="text-red-500 hover:text-red-700 flex items-center gap-2"><Trash2 size={16} /> Löschen</button>
-                                                    <a href={previewFile.url} download className="text-indigo-500 hover:text-indigo-700 flex items-center gap-2"><Download size={16} /> Download</a>
-                                                </div>
-                                            </div>
-                                            );
+                            return (
+                                <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
+                                    <File size={48} />
+                                    <p>Vorschau für diesen Dateityp nicht verfügbar</p>
+                                    <div className="flex gap-4 mt-4">
+                                        <button onClick={(e) => handleDelete(null, previewFile.id)} className="text-red-500 hover:text-red-700 flex items-center gap-2"><Trash2 size={16} /> Löschen</button>
+                                        <a href={previewFile.url} download className="text-indigo-500 hover:text-indigo-700 flex items-center gap-2"><Download size={16} /> Download</a>
+                                    </div>
+                                </div>
+                            );
                         })()}
 
-                                            {/* Global Buttons only for Images (others have custom layouts) */}
-                                            {(() => {
-                                                const type = getFileType(previewFile);
-                                                if (type.startsWith('image')) {
-                                                    return (
-                                                        <div className="mt-8 flex gap-4">
-                                                            <button
-                                                                onClick={(e) => handleDelete(null, previewFile.id)}
-                                                                className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
-                                                            >
-                                                                <Trash2 size={18} />
-                                                                Löschen
-                                                            </button>
-                                                            <a href={previewFile.url} download target="_blank" className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
-                                                                <Upload size={18} className="rotate-180" />
-                                                                Download
-                                                            </a>
-                                                        </div>
-                                                    )
+                        {/* Global Buttons only for Images (others have custom layouts) */}
+                        {(() => {
+                            const type = getFileType(previewFile);
+                            if (type.startsWith('image')) {
+                                return (
+                                    <div className="mt-8 flex gap-4">
+                                        <button
+                                            onClick={(e) => handleDelete(null, previewFile.id)}
+                                            className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/30 rounded-xl transition-all flex items-center gap-2 font-medium"
+                                        >
+                                            <Trash2 size={18} />
+                                            Löschen
+                                        </button>
+                                        <a href={previewFile.url} download target="_blank" className="px-6 py-2.5 bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:hover:bg-slate-700 rounded-xl transition-all flex items-center gap-2 font-medium">
+                                            <Upload size={18} className="rotate-180" />
+                                            Download
+                                        </a>
+                                    </div>
+                                )
+                            }
+                            return null;
+                        })()}
+                    </div>
+                </div>
+            )
+            }
+
+            {/* Create Folder Modal */}
+            {
+                isCreateFolderOpen && (
+                    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setIsCreateFolderOpen(false)}>
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+                            <h3 className="text-lg font-bold mb-4 dark:text-white">Neuen Ordner erstellen</h3>
+                            <input
+                                autoFocus
+                                type="text"
+                                placeholder="Ordnername..."
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 mb-4 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                                value={newFolderName}
+                                onChange={(e) => setNewFolderName(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                            />
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => setIsCreateFolderOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Abbrechen</button>
+                                <button onClick={handleCreateFolder} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Erstellen</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v2.0</span></h1>
+                    <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
+                </div>
+                <div className="flex gap-2">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileChange}
+                        accept="image/*,video/*,application/pdf,application/epub+zip"
+                    />
+                    <button
+                        onClick={handleUploadClick}
+                        disabled={uploading}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-shadow shadow-lg shadow-indigo-200 dark:shadow-none font-medium disabled:opacity-50 disabled:cursor-wait"
+                    >
+                        {uploading ? <RefreshCw className="animate-spin" size={18} /> : <Upload size={18} />}
+                        <span>{uploading ? 'Lädt hoch...' : 'Hochladen'}</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Layout */}
+            <div className="flex-1 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex">
+
+                {/* Sidebar */}
+                <div className="w-64 bg-slate-50/50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-slate-800 p-6 flex flex-col">
+                    <div className="mb-6">
+                        <button className="w-full flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 font-medium hover:border-indigo-400 hover:text-indigo-600 transition-all shadow-sm">
+                            <Search size={18} />
+                            <span className="text-sm">Suchen...</span>
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => setIsCreateFolderOpen(true)}
+                        className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium hover:opacity-90 transition-all shadow-md"
+                    >
+                        <FolderPlus size={18} />
+                        <span>Neuer Ordner</span>
+                    </button>
+
+                    <div className="space-y-1 flex-1 overflow-y-auto custom-scrollbar-hide">
+                        <div className="flex items-center justify-between mb-2 px-3">
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordner</div>
+                        </div>
+
+                        {/* All Media Button */}
+                        <button
+                            onClick={() => { setSelectedFolderId(null); setShowInactive(false); }}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === null && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        >
+                            <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
+                            Alle Medien
+                        </button>
+
+                        {/* Dynamic Folders */}
+                        {folders.map(folder => (
+                            <button
+                                key={folder.id}
+                                onClick={() => { setSelectedFolderId(folder.id); setShowInactive(false); }}
+                                className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === folder.id && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                            >
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <Folder size={18} className={selectedFolderId === folder.id && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
+                                    <span className="truncate">{folder.name}</span>
+                                </div>
+                                <div
+                                    onClick={(e) => handleDeleteFolder(folder.id, e)}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity"
+                                >
+                                    <Trash2 size={14} />
+                                </div>
+                            </button>
+                        ))}
+
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2 px-3">Filter</div>
+                        <button
+                            onClick={() => setShowInactive(true)}
+                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${showInactive ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                        >
+                            <AlertCircle size={18} className={showInactive ? 'text-amber-500' : 'text-slate-400'} />
+                            Inaktiv / Ungenutzt
+                        </button>
+                    </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 flex flex-col">
+
+                    {/* Toolbar */}
+                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                            {selectedItems.size > 0 ? (
+                                <div className="flex items-center gap-4">
+                                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                        {selectedItems.size} ausgewählt
+                                    </span>
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="text-red-500 hover:text-red-700 flex items-center gap-1.5 px-3 py-1 bg-red-50 dark:bg-red-900/20 rounded-md transition-colors"
+                                    >
+                                        <Trash2 size={16} /> Löschen
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedItems(new Set())}
+                                        className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                                    >
+                                        Abbrechen
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <span className="font-medium text-slate-900 dark:text-white">
+                                        {showInactive ? 'Inaktive Dateien' : currentFolderName}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{filteredFiles.length} Elemente</span>
+                                </>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    setSelectionMode(!selectionMode);
+                                    if (selectionMode) setSelectedItems(new Set());
+                                }}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${selectionMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                            >
+                                <CheckCircle size={18} />
+                                {selectionMode ? 'Fertig' : 'Auswählen'}
+                            </button>
+                            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                                >
+                                    <Grid size={18} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                                >
+                                    <List size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Files Grid/List */}
+                    <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-900/50">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-full">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                            </div>
+                        ) : viewMode === 'grid' ? (
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                                {filteredFiles.map(file => (
+                                    <div key={file.id} className="group relative">
+                                        <div
+                                            className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative"
+                                            onClick={(e) => {
+                                                if (selectionMode) {
+                                                    toggleSelection(e, file.id);
+                                                } else {
+                                                    setPreviewFile(file);
                                                 }
-                                                return null;
-                                            })()}
-                                        </div>
-                                    </div>
-                                )
-                            }
+                                            }}
+                                        >
 
-                            {/* Create Folder Modal */ }
-                            {
-                                isCreateFolderOpen && (
-                                    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setIsCreateFolderOpen(false)}>
-                                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
-                                            <h3 className="text-lg font-bold mb-4 dark:text-white">Neuen Ordner erstellen</h3>
-                                            <input
-                                                autoFocus
-                                                type="text"
-                                                placeholder="Ordnername..."
-                                                className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 mb-4 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
-                                                value={newFolderName}
-                                                onChange={(e) => setNewFolderName(e.target.value)}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                                            />
-                                            <div className="flex justify-end gap-2">
-                                                <button onClick={() => setIsCreateFolderOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Abbrechen</button>
-                                                <button onClick={handleCreateFolder} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Erstellen</button>
+                                            {/* Selection Checkbox */}
+                                            <div
+                                                onClick={(e) => toggleSelection(e, file.id)}
+                                                className={`absolute top-2 left-2 p-1 rounded-full cursor-pointer z-10 transition-all ${selectedItems.has(file.id) || selectionMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} ${selectedItems.has(file.id) ? 'bg-indigo-600' : 'bg-black/30 hover:bg-black/50'}`}
+                                            >
+                                                {selectedItems.has(file.id) ? <CheckCircle size={14} className="text-white" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-white" />}
                                             </div>
-                                        </div>
-                                    </div>
-                                )
-                            }
 
-                            {/* Header */ }
-                            <div className="flex justify-between items-center mb-6">
-                                <div>
-                                    <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v2.0</span></h1>
-                                    <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        className="hidden"
-                                        onChange={handleFileChange}
-                                        accept="image/*,video/*,application/pdf,application/epub+zip"
-                                    />
-                                    <button
-                                        onClick={handleUploadClick}
-                                        disabled={uploading}
-                                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-shadow shadow-lg shadow-indigo-200 dark:shadow-none font-medium disabled:opacity-50 disabled:cursor-wait"
-                                    >
-                                        {uploading ? <RefreshCw className="animate-spin" size={18} /> : <Upload size={18} />}
-                                        <span>{uploading ? 'Lädt hoch...' : 'Hochladen'}</span>
-                                    </button>
-                                </div>
-                            </div>
 
-                            {/* Main Layout */ }
-                            <div className="flex-1 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex">
+                                            {renderFileThumbnail(file, 'large')}
 
-                                {/* Sidebar */}
-                                <div className="w-64 bg-slate-50/50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-slate-800 p-6 flex flex-col">
-                                    <div className="mb-6">
-                                        <button className="w-full flex items-center gap-2 px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 font-medium hover:border-indigo-400 hover:text-indigo-600 transition-all shadow-sm">
-                                            <Search size={18} />
-                                            <span className="text-sm">Suchen...</span>
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        onClick={() => setIsCreateFolderOpen(true)}
-                                        className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium hover:opacity-90 transition-all shadow-md"
-                                    >
-                                        <FolderPlus size={18} />
-                                        <span>Neuer Ordner</span>
-                                    </button>
-
-                                    <div className="space-y-1 flex-1 overflow-y-auto custom-scrollbar-hide">
-                                        <div className="flex items-center justify-between mb-2 px-3">
-                                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordner</div>
-                                        </div>
-
-                                        {/* All Media Button */}
-                                        <button
-                                            onClick={() => { setSelectedFolderId(null); setShowInactive(false); }}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === null && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                                        >
-                                            <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
-                                            Alle Medien
-                                        </button>
-
-                                        {/* Dynamic Folders */}
-                                        {folders.map(folder => (
-                                            <button
-                                                key={folder.id}
-                                                onClick={() => { setSelectedFolderId(folder.id); setShowInactive(false); }}
-                                                className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === folder.id && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                                            >
-                                                <div className="flex items-center gap-3 overflow-hidden">
-                                                    <Folder size={18} className={selectedFolderId === folder.id && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
-                                                    <span className="truncate">{folder.name}</span>
-                                                </div>
-                                                <div
-                                                    onClick={(e) => handleDeleteFolder(folder.id, e)}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </div>
-                                            </button>
-                                        ))}
-
-                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2 px-3">Filter</div>
-                                        <button
-                                            onClick={() => setShowInactive(true)}
-                                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${showInactive ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                                        >
-                                            <AlertCircle size={18} className={showInactive ? 'text-amber-500' : 'text-slate-400'} />
-                                            Inaktiv / Ungenutzt
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Content Area */}
-                                <div className="flex-1 flex flex-col">
-
-                                    {/* Toolbar */}
-                                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
-                                        <div className="flex items-center gap-2 text-sm text-slate-500">
-                                            {selectedItems.size > 0 ? (
-                                                <div className="flex items-center gap-4">
-                                                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                                                        {selectedItems.size} ausgewählt
-                                                    </span>
-                                                    <button
-                                                        onClick={handleBulkDelete}
-                                                        className="text-red-500 hover:text-red-700 flex items-center gap-1.5 px-3 py-1 bg-red-50 dark:bg-red-900/20 rounded-md transition-colors"
-                                                    >
-                                                        <Trash2 size={16} /> Löschen
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setSelectedItems(new Set())}
-                                                        className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-                                                    >
-                                                        Abbrechen
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <span className="font-medium text-slate-900 dark:text-white">
-                                                        {showInactive ? 'Inaktive Dateien' : currentFolderName}
-                                                    </span>
-                                                    <span>•</span>
-                                                    <span>{filteredFiles.length} Elemente</span>
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => {
-                                                    setSelectionMode(!selectionMode);
-                                                    if (selectionMode) setSelectedItems(new Set());
-                                                }}
-                                                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${selectionMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-                                            >
-                                                <CheckCircle size={18} />
-                                                {selectionMode ? 'Fertig' : 'Auswählen'}
-                                            </button>
-                                            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                                            {/* Trash Icon (Stop Propagation to prevent preview) */}
+                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
-                                                    onClick={() => setViewMode('grid')}
-                                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
+                                                    onClick={(e) => handleDelete(e, file.id)}
+                                                    className="p-1.5 bg-white/90 rounded-full hover:text-red-500 shadow-sm hover:bg-red-50 transition-colors"
+                                                    title="Löschen"
                                                 >
-                                                    <Grid size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => setViewMode('list')}
-                                                    className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-600' : 'text-slate-400'}`}
-                                                >
-                                                    <List size={18} />
+                                                    <Trash2 size={16} />
                                                 </button>
                                             </div>
                                         </div>
+                                        <p className="mt-2 text-xs font-medium text-slate-700 dark:text-slate-300 truncate px-1">{file.filename}</p>
+                                        <p className="text-[10px] text-slate-400 px-1">{formatSize(file.size_bytes)}</p>
                                     </div>
-
-                                    {/* Files Grid/List */}
-                                    <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-900/50">
-                                        {loading ? (
-                                            <div className="flex items-center justify-center h-full">
-                                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                                            </div>
-                                        ) : viewMode === 'grid' ? (
-                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                                                {filteredFiles.map(file => (
-                                                    <div key={file.id} className="group relative">
-                                                        <div
-                                                            className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative"
-                                                            onClick={(e) => {
-                                                                if (selectionMode) {
-                                                                    toggleSelection(e, file.id);
-                                                                } else {
-                                                                    setPreviewFile(file);
-                                                                }
-                                                            }}
-                                                        >
-
-                                                            {/* Selection Checkbox */}
-                                                            <div
-                                                                onClick={(e) => toggleSelection(e, file.id)}
-                                                                className={`absolute top-2 left-2 p-1 rounded-full cursor-pointer z-10 transition-all ${selectedItems.has(file.id) || selectionMode ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} ${selectedItems.has(file.id) ? 'bg-indigo-600' : 'bg-black/30 hover:bg-black/50'}`}
-                                                            >
-                                                                {selectedItems.has(file.id) ? <CheckCircle size={14} className="text-white" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-white" />}
-                                                            </div>
-
-
-                                                            {renderFileThumbnail(file, 'large')}
-
-                                                            {/* Trash Icon (Stop Propagation to prevent preview) */}
-                                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button
-                                                                    onClick={(e) => handleDelete(e, file.id)}
-                                                                    className="p-1.5 bg-white/90 rounded-full hover:text-red-500 shadow-sm hover:bg-red-50 transition-colors"
-                                                                    title="Löschen"
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                        <p className="mt-2 text-xs font-medium text-slate-700 dark:text-slate-300 truncate px-1">{file.filename}</p>
-                                                        <p className="text-[10px] text-slate-400 px-1">{formatSize(file.size_bytes)}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col gap-2">
-                                                {filteredFiles.map(file => (
-                                                    <div key={file.id} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
-                                                        <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                                                            {renderFileThumbnail(file, 'small')}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.filename}</div>
-                                                            <div className="text-xs text-slate-500">{formatSize(file.size_bytes)} • {new Date(file.created_at).toLocaleDateString()}</div>
-                                                        </div>
-                                                        <div className="opacity-0 group-hover:opacity-100 px-2">
-                                                            <button
-                                                                onClick={(e) => handleDelete(e, file.id)}
-                                                                className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {filteredFiles.length === 0 && (
-                                            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                                <Folder size={64} className="mb-4 opacity-20" />
-                                                <p>Dieser Ordner ist leer.</p>
-                                                {selectedFolderId && (
-                                                    <p className="text-sm mt-2 text-slate-500">Lade Dateien hierher hoch oder verschiebe sie.</p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                ))}
                             </div>
+                        ) : (
+                            <div className="flex flex-col gap-2">
+                                {filteredFiles.map(file => (
+                                    <div key={file.id} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
+                                        <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
+                                            {renderFileThumbnail(file, 'small')}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.filename}</div>
+                                            <div className="text-xs text-slate-500">{formatSize(file.size_bytes)} • {new Date(file.created_at).toLocaleDateString()}</div>
+                                        </div>
+                                        <div className="opacity-0 group-hover:opacity-100 px-2">
+                                            <button
+                                                onClick={(e) => handleDelete(e, file.id)}
+                                                className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {filteredFiles.length === 0 && (
+                            <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                                <Folder size={64} className="mb-4 opacity-20" />
+                                <p>Dieser Ordner ist leer.</p>
+                                {selectedFolderId && (
+                                    <p className="text-sm mt-2 text-slate-500">Lade Dateien hierher hoch oder verschiebe sie.</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
-                    );
+    );
 };
