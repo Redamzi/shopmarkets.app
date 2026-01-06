@@ -60,7 +60,15 @@ export const MediaLibrary: React.FC = () => {
             formData.append('file', file);
             // formData.append('folderId', selectedFolderId); // Future
 
-            await mediaService.upload(formData);
+            const result = await mediaService.upload(formData);
+
+            if (result && result._performance) {
+                const { duration_ms, speed_mbps } = result._performance;
+                // Optional: Zeige es nur in Console oder als Toast. Hier als Alert für Demo.
+                console.log(`Upload Speed: ${speed_mbps} Mbps`);
+                alert(`Upload fertig! 🚀\nGeschwindigkeit: ${speed_mbps} Mbps\nDauer: ${duration_ms}ms`);
+            }
+
             await loadMedia(); // Reload list
         } catch (error) {
             console.error('Upload failed:', error);

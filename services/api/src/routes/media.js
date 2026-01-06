@@ -3,36 +3,30 @@ import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs-extra';
-import { fileURLToPath } from 'url';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const router = express.Router();
 
-// Setup local upload storage
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadDir = path.join(__dirname, '../../../uploads');
-fs.ensureDirSync(uploadDir);
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
+// R2 (S3) Configuration
+const s3 = new S3Client({
+    region: 'auto',
+    endpoint: process.env.R2_ENDPOINT,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
-    filename: function (req, file, cb) {
-        // clean filename of special chars but keep extension
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        const name = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '_');
-        cb(null, name + '-' + uniqueSuffix + ext);
-    }
 });
 
+const R2_BUCKET = process.env.R2_BUCKET_NAME;
+const R2_DOMAIN = process.env.R2_PUBLIC_DOMAIN || '';
+
+// Use Memory Storage (keep file in RAM to measure pure upload speed to R2)
 const upload = multer({
-    storage: storage,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
-// POST Upload Single File
+// POST Upload Single File to R2 with Speed Measurement
 router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
@@ -42,22 +36,58 @@ router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
         const userId = req.user.userId;
         const { folderId } = req.body;
 
-        // Generate Public URL (assuming server serves static files from /uploads)
-        // Adjust port/domain as needed, assuming API runs on port 4000
-        const baseUrl = process.env.API_URL || 'https://api.shopmarkets.app'; // Fallback
-        const publicUrl = `/uploads/${req.file.filename}`;
+        // Prepare S3 Parameters
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(req.file.originalname);
+        const filenameClean = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '_');
+        const key = `uploads/${userId}/${filenameClean}-${uniqueSuffix}${ext}`; // Organized by User ID
+
+        // --- START TIMER ---
+        const startTime = Date.now();
+
+        await s3.send(new PutObjectCommand({
+            Bucket: R2_BUCKET,
+            Key: key,
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype,
+            // ACL: 'public-read' // R2 usually manages public access via bucket settings, but can be added if needed
+        }));
+
+        // --- STOP TIMER ---
+        const endTime = Date.now();
+        const durationMs = endTime - startTime;
+        const sizeMb = req.file.size / (1024 * 1024);
+        const speedMbps = sizeMb > 0 ? (sizeMb * 8) / (durationMs / 1000) : 0; // Megabits per second
+
+        console.log(`🚀 Upload to R2 took ${durationMs}ms for ${sizeMb.toFixed(2)}MB (${speedMbps.toFixed(2)} Mbps)`);
+
+        // Construct Public URL
+        // If R2_DOMAIN is set, use it. Otherwise, use endpoint/bucket/key (often needs tweaking for R2)
+        const publicUrl = R2_DOMAIN
+            ? `${R2_DOMAIN}/${key}`
+            : `${process.env.R2_ENDPOINT}/${R2_BUCKET}/${key}`;
 
         const result = await pool.query(
             `INSERT INTO public.media_files 
-            (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, source)
-            VALUES ($1, $2, $3, $4, $5, $6, true, 'manual')
+            (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, source, external_id)
+            VALUES ($1, $2, $3, $4, $5, $6, true, 'manual', $7)
             RETURNING *`,
-            [userId, folderId || null, req.file.originalname, publicUrl, req.file.mimetype, req.file.size]
+            [userId, folderId || null, req.file.originalname, publicUrl, req.file.mimetype, req.file.size, key]
         );
 
-        res.json(result.rows[0]);
+        // Add performance stats to response for frontend display
+        const responseData = {
+            ...result.rows[0],
+            _performance: {
+                duration_ms: durationMs,
+                speed_mbps: speedMbps.toFixed(2)
+            }
+        };
+
+        res.json(responseData);
+
     } catch (error) {
-        console.error('Error uploading file:', error);
+        console.error('Error uploading file to R2:', error);
         res.status(500).json({ error: 'Failed to upload file', details: error.message });
     }
 });
@@ -66,7 +96,7 @@ router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { folderId, type } = req.query;
+        const { folderId } = req.query;
 
         let query = `SELECT * FROM public.media_files WHERE user_id = $1`;
         const params = [userId];
