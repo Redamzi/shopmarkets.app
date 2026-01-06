@@ -166,7 +166,7 @@ export const MediaLibrary: React.FC = () => {
                             <X size={24} /> Schließen (Esc)
                         </button>
 
-                        {previewFile.type.startsWith('image') ? (
+                        {(previewFile.type || '').startsWith('image') ? (
                             <img src={previewFile.url} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" />
                         ) : (
                             <div className="bg-slate-800 p-20 rounded-xl text-white flex flex-col items-center gap-4">
@@ -341,7 +341,7 @@ export const MediaLibrary: React.FC = () => {
                                 {filteredFiles.map(file => (
                                     <div key={file.id} className="group relative" onClick={() => setPreviewFile(file)}>
                                         <div className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative">
-                                            {file.type.startsWith('video') ? (
+                                            {(file.type || '').startsWith('video') ? (
                                                 <div className="w-full h-full flex items-center justify-center bg-slate-900">
                                                     <Film size={32} className="text-white opacity-50" />
                                                 </div>
@@ -370,7 +370,7 @@ export const MediaLibrary: React.FC = () => {
                                 {filteredFiles.map(file => (
                                     <div key={file.id} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
                                         <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                                            {file.type.startsWith('image') ? <img src={file.url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Film size={16} /></div>}
+                                            {(file.type || '').startsWith('image') ? <img src={file.url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Film size={16} /></div>}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.filename}</div>
