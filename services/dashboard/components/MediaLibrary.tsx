@@ -166,7 +166,7 @@ export const MediaLibrary: React.FC = () => {
                             <X size={24} /> Schließen (Esc)
                         </button>
 
-                        {(previewFile.type || '').startsWith('image') ? (
+                        {(!previewFile.type || previewFile.type.startsWith('image')) ? (
                             <img src={previewFile.url} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" />
                         ) : (
                             <div className="bg-slate-800 p-20 rounded-xl text-white flex flex-col items-center gap-4">
