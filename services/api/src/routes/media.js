@@ -3,7 +3,9 @@ import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import path from 'path';
+import https from 'https';
 import { S3Client, PutObjectCommand, ListObjectsCommand } from '@aws-sdk/client-s3';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
 
 const router = express.Router();
 
@@ -12,6 +14,14 @@ const router = express.Router();
 const accountId = process.env.R2_ACCOUNT_ID ? process.env.R2_ACCOUNT_ID.trim() : undefined;
 const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
 
+// Custom HTTPS agent to handle R2's SSL configuration
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: true,
+    secureProtocol: 'TLSv1_2_method',
+    minVersion: 'TLSv1.2',
+    maxVersion: 'TLSv1.3'
+});
+
 const s3 = new S3Client({
     region: 'auto',
     endpoint: endpoint,
@@ -19,7 +29,12 @@ const s3 = new S3Client({
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
-    forcePathStyle: true, // Required for R2 to avoid SSL handshake errors
+    forcePathStyle: true,
+    requestHandler: new NodeHttpHandler({
+        httpsAgent: httpsAgent,
+        connectionTimeout: 30000,
+        socketTimeout: 30000,
+    }),
 });
 
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
