@@ -923,6 +923,6 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                     </div>
                 </div>
             </div>
-
-            );
+        </div>
+    );
 };
