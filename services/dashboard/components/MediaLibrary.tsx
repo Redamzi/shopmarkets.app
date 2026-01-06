@@ -125,19 +125,41 @@ export const MediaLibrary: React.FC = () => {
             return;
         }
 
-        // Prevent dropping on itself
-        const file = files.find(f => f.id === fileId);
-        if (file && file.folder_id === targetFolderId) {
-            setIsDragging(false);
-            return;
+        // Determine if we are moving a single file or a selection
+        const filesToMove: string[] = [];
+
+        if (selectedItems.has(fileId)) {
+            // If the dragged file is part of the selection, move all selected files
+            selectedItems.forEach(id => filesToMove.push(id));
+        } else {
+            // Otherwise just move the single file
+            filesToMove.push(fileId);
         }
 
-        console.log('📦 Moving file:', fileId, 'to folder:', targetFolderId);
+        console.log(`📦 Moving ${filesToMove.length} files to folder:`, targetFolderId);
 
         try {
             setLoading(true);
-            const result = await mediaService.moveFile(fileId, targetFolderId);
-            console.log('✅ Move successful:', result);
+
+            // Execute moves in parallel
+            const movePromises = filesToMove.map(id => {
+                // Check if file is already in target (skip if so)
+                const file = files.find(f => f.id === id);
+                if (file && file.folder_id === targetFolderId) {
+                    return Promise.resolve();
+                }
+                return mediaService.moveFile(id, targetFolderId);
+            });
+
+            await Promise.all(movePromises);
+            console.log('✅ Move successful');
+
+            // Clear selection if we moved selected items
+            if (selectedItems.has(fileId)) {
+                setSelectedItems(new Set());
+                setSelectionMode(false);
+            }
+
             await loadData();
         } catch (error: any) {
             console.error('❌ Move failed:', error);
