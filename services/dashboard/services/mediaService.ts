@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { storage } from '../utils/storage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.shopmarkets.app';
 
 export const mediaService = {
     getAll: async (folderId?: string) => {
-        const token = localStorage.getItem('auth_token');
+        const token = storage.getItem('auth_token');
         const params = folderId ? { folderId } : {};
         const response = await axios.get(`${API_URL}/api/media`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -14,7 +15,7 @@ export const mediaService = {
     },
 
     getFolders: async () => {
-        const token = localStorage.getItem('auth_token');
+        const token = storage.getItem('auth_token');
         const response = await axios.get(`${API_URL}/api/media/folders`, {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -22,7 +23,7 @@ export const mediaService = {
     },
 
     upload: async (formData: FormData) => {
-        const token = localStorage.getItem('auth_token');
+        const token = storage.getItem('auth_token');
         const response = await axios.post(`${API_URL}/api/media/upload`, formData, {
             headers: {
                 Authorization: `Bearer ${token}`
@@ -32,7 +33,7 @@ export const mediaService = {
     },
 
     delete: async (id: string) => {
-        const token = localStorage.getItem('auth_token');
+        const token = storage.getItem('auth_token');
         const response = await axios.delete(`${API_URL}/api/media/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -40,7 +41,7 @@ export const mediaService = {
     },
 
     createFolder: async (name: string) => {
-        const token = localStorage.getItem('auth_token');
+        const token = storage.getItem('auth_token');
         const response = await axios.post(`${API_URL}/api/media/folders`, { name }, {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -48,7 +49,7 @@ export const mediaService = {
     },
 
     deleteFolder: async (id: string) => {
-        const token = localStorage.getItem('auth_token');
+        const token = storage.getItem('auth_token');
         const response = await axios.delete(`${API_URL}/api/media/folders/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -56,7 +57,7 @@ export const mediaService = {
     },
 
     moveFile: async (fileId: string, folderId: string | null) => {
-        const token = localStorage.getItem('auth_token');
+        const token = storage.getItem('auth_token');
         const response = await axios.put(`${API_URL}/api/media/${fileId}/move`, { folderId }, {
             headers: { Authorization: `Bearer ${token}` }
         });

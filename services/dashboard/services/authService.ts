@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { User, AuthResponse } from '../types/auth';
+import { storage } from '../utils/storage';
 
 // URL zum neuen Auth-Microservice
 const AUTH_URL = 'https://security.shopmarkets.app/api/auth';
 
 // Token Handling Helper
 const setToken = (token: string) => {
-    localStorage.setItem('auth_token', token);
+    storage.setItem('auth_token', token);
     useAuthStore.getState().setSession({ access_token: token });
 };
 
@@ -17,12 +18,12 @@ const getToken = () => {
     if (session?.access_token) return session.access_token;
 
     // Check Legacy/Direct Storage
-    return localStorage.getItem('auth_token');
+    return storage.getItem('auth_token');
 };
 
 const removeToken = () => {
     try {
-        localStorage.removeItem('auth_token');
+        storage.removeItem('auth_token');
         // Try to clear Zustand store, but don't block if it fails
         useAuthStore.getState().logout();
     } catch (e) {

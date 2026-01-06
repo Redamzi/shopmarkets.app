@@ -1,3 +1,4 @@
+import { storage } from '../utils/storage';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://api.shopmarkets.app';
@@ -12,7 +13,7 @@ export interface UserCredits {
 export const billingService = {
     async getCredits(userId: string): Promise<UserCredits> {
         try {
-            const token = localStorage.getItem('auth_token');
+            const token = storage.getItem('auth_token');
             const response = await axios.get(`${API_URL}/api/billing/credits/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
