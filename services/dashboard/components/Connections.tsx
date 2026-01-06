@@ -54,7 +54,7 @@ export const Connections: React.FC = () => {
     };
 
     return (
-        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto space-y-8">
+        <div className="p-6 lg:p-10 w-full mx-auto space-y-8 animate-fade-in-up">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">Verbindungen</h1>
