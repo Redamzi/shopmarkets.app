@@ -65,11 +65,16 @@ export const Login: React.FC = () => {
             // Sanitize code (remove spaces)
             const cleanCode = code.replace(/\s/g, '');
 
-            const { user, session } = await authService.loginStep2(userId, cleanCode, trustDevice, deviceFingerprint);
-            if (user && session) {
-                setUser(user);
-                setSession(session);
+            // Response contains { user, token, message }
+            const response = await authService.loginStep2(userId, cleanCode, trustDevice, deviceFingerprint);
+
+            if (response.user && response.token) {
+                setUser(response.user);
+                setSession({ access_token: response.token });
                 navigate('/dashboard');
+            } else {
+                console.error("Login response missing user or token:", response);
+                setError('Login erfolgreich, aber fehlerhafte Antwort vom Server.');
             }
         } catch (err: any) {
             setError(err.response?.data?.error || 'Falscher Code. Bitte erneut versuchen.');
