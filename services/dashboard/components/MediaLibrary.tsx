@@ -292,21 +292,28 @@ export const MediaLibrary: React.FC = () => {
                         {(!previewFile.type || previewFile.type.startsWith('image')) ? (
                             <img src={previewFile.url} className="max-w-full max-h-[80vh]" />
                         ) : previewFile.type === 'application/pdf' ? (
-                            <div className="w-full h-[80vh] flex flex-col items-center justify-center gap-4">
-                                <embed
-                                    src={`${previewFile.url}#toolbar=0`}
-                                    type="application/pdf"
-                                    className="w-full h-full rounded-lg border border-slate-200 dark:border-slate-700"
-                                />
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
+                            <div className="w-full h-[80vh] flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg border border-red-200 dark:border-red-800">
+                                <FileText size={64} className="text-red-600 dark:text-red-400 mb-4" />
+                                <p className="text-red-700 dark:text-red-300 font-medium mb-2 text-xl">PDF Dokument</p>
+                                <p className="text-sm text-red-600 dark:text-red-400 mb-2">{previewFile.filename}</p>
+                                <p className="text-xs text-red-500 dark:text-red-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
+                                <div className="flex gap-3">
                                     <a
                                         href={previewFile.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 text-sm font-medium shadow-lg"
+                                        className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all flex items-center gap-2 font-medium shadow-lg"
                                     >
-                                        <FileText size={16} />
-                                        In neuem Tab öffnen
+                                        <FileText size={18} />
+                                        PDF öffnen
+                                    </a>
+                                    <a
+                                        href={previewFile.url}
+                                        download
+                                        className="px-6 py-3 bg-white dark:bg-slate-800 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2 font-medium"
+                                    >
+                                        <Download size={18} />
+                                        Herunterladen
                                     </a>
                                 </div>
                             </div>
