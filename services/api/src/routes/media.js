@@ -17,7 +17,6 @@ const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r
 // Custom HTTPS agent to handle R2's SSL configuration
 const httpsAgent = new https.Agent({
     rejectUnauthorized: true,
-    secureProtocol: 'TLSv1_2_method',
     minVersion: 'TLSv1.2',
     maxVersion: 'TLSv1.3'
 });
