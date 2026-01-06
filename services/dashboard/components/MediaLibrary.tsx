@@ -249,6 +249,18 @@ export const MediaLibrary: React.FC = () => {
 
                         {(!previewFile.type || previewFile.type.startsWith('image')) ? (
                             <img src={previewFile.url} className="max-w-full max-h-[80vh]" />
+                        ) : previewFile.type === 'application/pdf' ? (
+                            <iframe
+                                src={previewFile.url}
+                                className="w-full h-[80vh] rounded-lg border border-slate-200 dark:border-slate-700"
+                                title="PDF Vorschau"
+                            />
+                        ) : previewFile.type?.startsWith('video') ? (
+                            <video
+                                src={previewFile.url}
+                                controls
+                                className="max-w-full max-h-[80vh] rounded-lg"
+                            />
                         ) : (
                             <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
                                 <File size={48} />
@@ -476,7 +488,12 @@ export const MediaLibrary: React.FC = () => {
                                                 {selectedItems.has(file.id) ? <CheckCircle size={14} className="text-white" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-white" />}
                                             </div>
 
-                                            {(file.type || '').startsWith('video') ? (
+
+                                            {file.type === 'application/pdf' ? (
+                                                <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20">
+                                                    <File size={32} className="text-red-500" />
+                                                </div>
+                                            ) : (file.type || '').startsWith('video') ? (
                                                 <div className="w-full h-full flex items-center justify-center bg-slate-900">
                                                     <Film size={32} className="text-white opacity-50" />
                                                 </div>
@@ -505,7 +522,17 @@ export const MediaLibrary: React.FC = () => {
                                 {filteredFiles.map(file => (
                                     <div key={file.id} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
                                         <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                                            {(file.type || '').startsWith('image') ? <img src={file.url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Film size={16} /></div>}
+                                            {file.type === 'application/pdf' ? (
+                                                <div className="w-full h-full flex items-center justify-center bg-red-50 dark:bg-red-900/20">
+                                                    <File size={16} className="text-red-500" />
+                                                </div>
+                                            ) : (file.type || '').startsWith('image') ? (
+                                                <img src={file.url} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <Film size={16} />
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.filename}</div>
