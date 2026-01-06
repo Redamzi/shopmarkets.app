@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Tag, Folder, Hash, Search, Filter,
     MoreHorizontal, Plus, Download, RefreshCw,
@@ -16,19 +16,29 @@ interface Category {
     parentId?: string;
 }
 
-// Mock Data
-const MOCK_CATEGORIES: Category[] = [
-    { id: '1', name: 'Herrenbekleidung', slug: 'herren', type: 'category', count: 142, source: 'woocommerce' },
-    { id: '2', name: 'Sommer-Kollektion', slug: 'sommer-2025', type: 'collection', count: 45, source: 'shopify' },
-    { id: '3', name: 'Sale', slug: 'sale', type: 'tag', count: 320, source: 'manual' },
-    { id: '4', name: 'T-Shirts', slug: 't-shirts', type: 'category', count: 89, source: 'woocommerce', parentId: '1' },
-    { id: '5', name: 'Elektronik', slug: 'electronics', type: 'category', count: 12, source: 'amazon' },
-    { id: '6', name: 'Neuheiten', slug: 'new-arrivals', type: 'tag', count: 56, source: 'shopify' },
-];
+import { categoryService } from '../services/categoryService';
+
+// ...Interfaces...
 
 export const CategoriesPage: React.FC = () => {
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'all' | 'category' | 'tag'>('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const data = await categoryService.getAll();
+                setCategories(data);
+            } catch (e) {
+                console.error("Failed to load categories", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
 
     const getSourceIcon = (source: string) => {
         switch (source) {
@@ -39,7 +49,7 @@ export const CategoriesPage: React.FC = () => {
         }
     };
 
-    const filteredCategories = MOCK_CATEGORIES.filter(cat => {
+    const filteredCategories = categories.filter(cat => {
         const matchesTab = activeTab === 'all' || cat.type === activeTab || (activeTab === 'category' && cat.type === 'collection');
         const matchesSearch = cat.name.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesTab && matchesSearch;

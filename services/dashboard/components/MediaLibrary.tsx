@@ -1,32 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
     CheckCircle, AlertCircle
 } from 'lucide-react';
+import { mediaService } from '../services/mediaService';
 
-// Mock Data
-const MOCK_FILES = [
-    { id: '1', name: 'Header-Summer.jpg', type: 'image', size: '1.2 MB', url: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=400&q=80', active: true, folder: 'Campaigns' },
-    { id: '2', name: 'Product-Shoe-Red.png', type: 'image', size: '450 KB', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=400&q=80', active: true, folder: 'Products' },
-    { id: '3', name: 'Promo-Video.mp4', type: 'video', size: '15.4 MB', url: '', active: true, folder: 'Videos' },
-    { id: '4', name: 'Unused-Banner.png', type: 'image', size: '2.1 MB', url: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=400&q=80', active: false, folder: 'Inactive' },
-    { id: '5', name: 'Logo-V2.svg', type: 'image', size: '4 KB', url: 'https://images.unsplash.com/photo-1629904853001-ad75929c1763?auto=format&fit=crop&w=400&q=80', active: true, folder: 'Assets' },
-    { id: '6', name: 'Old-Campaign.jpg', type: 'image', size: '3.4 MB', url: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=400&q=80', active: false, folder: 'Inactive' },
-];
+// Interfaces
+interface MediaFile {
+    id: string;
+    filename: string;
+    type: string;
+    size_bytes: number;
+    url: string;
+    is_active: boolean;
+    folder_id: string;
+    created_at: string;
+}
 
 const FOLDERS = ['All Media', 'Products', 'Campaigns', 'Assets', 'Videos'];
 
 export const MediaLibrary: React.FC = () => {
+    const [files, setFiles] = useState<MediaFile[]>([]);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [selectedFolder, setSelectedFolder] = useState('All Media');
     const [showInactive, setShowInactive] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    const filteredFiles = MOCK_FILES.filter(file => {
-        if (showInactive) return !file.active; // Show only inactive
-        if (selectedFolder === 'All Media') return file.active;
-        return file.folder === selectedFolder && file.active;
+    useEffect(() => {
+        const load = async () => {
+            try {
+                // In real app, we would map folder name to ID. currently using mock folder names
+                const data = await mediaService.getAll();
+                setFiles(data);
+            } catch (e) {
+                console.error("Failed to load media", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
+
+    const filteredFiles = files.filter(file => {
+        if (showInactive) return !file.is_active;
+        if (selectedFolder === 'All Media') return file.is_active;
+        // Simple mock mapping for folder until we have real folders
+        return file.is_active;
     });
+
+    // Helper to format bytes
+    const formatSize = (bytes: number) => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
 
     return (
         <div className="p-6 lg:p-10 w-full mx-auto h-[calc(100vh-100px)] flex flex-col animate-fade-in-up">
@@ -118,7 +148,11 @@ export const MediaLibrary: React.FC = () => {
 
                     {/* Files Grid/List */}
                     <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-slate-900/50">
-                        {viewMode === 'grid' ? (
+                        {loading ? (
+                            <div className="flex items-center justify-center h-full">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                            </div>
+                        ) : viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                                 {filteredFiles.map(file => (
                                     <div key={file.id} className="group relative">
@@ -128,13 +162,8 @@ export const MediaLibrary: React.FC = () => {
                                                     <Film size={32} className="text-white opacity-50" />
                                                 </div>
                                             ) : (
-                                                <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
+                                                <img src={file.url} alt={file.filename} className="w-full h-full object-cover" />
                                             )}
-
-                                            {/* Overlay Actions */}
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-[1px]">
-                                                {/* Actions like View/Delete */}
-                                            </div>
 
                                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button className="p-1 bg-white/90 rounded-full hover:text-red-500 shadow-sm">
@@ -142,8 +171,8 @@ export const MediaLibrary: React.FC = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                        <p className="mt-2 text-xs font-medium text-slate-700 dark:text-slate-300 truncate px-1">{file.name}</p>
-                                        <p className="text-[10px] text-slate-400 px-1">{file.size}</p>
+                                        <p className="mt-2 text-xs font-medium text-slate-700 dark:text-slate-300 truncate px-1">{file.filename}</p>
+                                        <p className="text-[10px] text-slate-400 px-1">{formatSize(file.size_bytes)}</p>
                                     </div>
                                 ))}
                             </div>
@@ -152,15 +181,11 @@ export const MediaLibrary: React.FC = () => {
                                 {filteredFiles.map(file => (
                                     <div key={file.id} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
                                         <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
-                                            {file.type === 'image' && <img src={file.url} className="w-full h-full object-cover" />}
-                                            {file.type === 'video' && <div className="w-full h-full flex items-center justify-center"><Film size={16} /></div>}
+                                            {file.type.startsWith('image') ? <img src={file.url} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Film size={16} /></div>}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.name}</div>
-                                            <div className="text-xs text-slate-500">{file.size} • {new Date().toLocaleDateString()}</div>
-                                        </div>
-                                        <div className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-500">
-                                            {file.folder}
+                                            <div className="font-medium text-sm text-slate-900 dark:text-white truncate">{file.filename}</div>
+                                            <div className="text-xs text-slate-500">{formatSize(file.size_bytes)} • {new Date(file.created_at).toLocaleDateString()}</div>
                                         </div>
                                     </div>
                                 ))}
