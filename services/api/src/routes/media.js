@@ -9,7 +9,7 @@ const router = express.Router();
 
 // R2 (S3) Configuration
 // construct endpoint from Account ID if R2_ENDPOINT is missing
-const accountId = process.env.R2_ACCOUNT_ID;
+const accountId = process.env.R2_ACCOUNT_ID ? process.env.R2_ACCOUNT_ID.trim() : undefined;
 const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
 
 const s3 = new S3Client({
@@ -19,6 +19,7 @@ const s3 = new S3Client({
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
+    forcePathStyle: true, // Required for R2 to avoid SSL handshake errors
 });
 
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
