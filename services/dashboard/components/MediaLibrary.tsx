@@ -251,6 +251,14 @@ export const MediaLibrary: React.FC = () => {
                         </button>
                     </div>
 
+                    <button
+                        onClick={() => setIsCreateFolderOpen(true)}
+                        className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 font-medium hover:border-indigo-400 hover:text-indigo-600 transition-all shadow-sm"
+                    >
+                        <FolderPlus size={18} />
+                        <span>Neuer Ordner</span>
+                    </button>
+
                     <div className="space-y-1 flex-1 overflow-y-auto custom-scrollbar-hide">
                         <div className="flex items-center justify-between mb-2 px-3">
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordner</div>
