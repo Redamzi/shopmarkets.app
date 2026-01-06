@@ -252,7 +252,16 @@ export const MediaLibrary: React.FC = () => {
                     </div>
 
                     <div className="space-y-1 flex-1 overflow-y-auto custom-scrollbar-hide">
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-3">Ordner</div>
+                        <div className="flex items-center justify-between mb-2 px-3">
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordner</div>
+                            <button
+                                onClick={() => setIsCreateFolderOpen(true)}
+                                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-600 transition-colors"
+                                title="Neuer Ordner"
+                            >
+                                <FolderPlus size={16} />
+                            </button>
+                        </div>
 
                         {/* All Media Button */}
                         <button
@@ -292,14 +301,6 @@ export const MediaLibrary: React.FC = () => {
                             Inaktiv / Ungenutzt
                         </button>
                     </div>
-
-                    <button
-                        onClick={() => setIsCreateFolderOpen(true)}
-                        className="mt-4 flex items-center gap-2 px-3 py-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors"
-                    >
-                        <FolderPlus size={18} />
-                        Neuer Ordner
-                    </button>
                 </div>
 
                 {/* Content Area */}
