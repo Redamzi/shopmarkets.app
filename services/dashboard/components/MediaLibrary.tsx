@@ -393,20 +393,22 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
     return (
         <div className={`w-full mx-auto flex flex-col animate-fade-in-up relative ${isPicker ? 'h-full' : 'p-6 lg:p-10 h-[calc(100vh-100px)]'}`}>
 
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileChange}
+                accept="image/*,video/*,application/pdf,application/epub+zip"
+            />
+
             {/* Picker Header / Actions */}
             {isPicker && (
                 <div className="flex justify-between items-center mb-4 px-1">
                     <h2 className="text-xl font-bold dark:text-white">Medien auswählen</h2>
                     <div className="flex gap-2">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={handleFileChange}
-                            accept="image/*,video/*,application/pdf,application/epub+zip"
-                        />
                         <button
                             onClick={handleUploadClick}
+                            //...
                             disabled={uploading}
                             className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors font-medium disabled:opacity-50"
                         >
@@ -649,13 +651,6 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                         <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                     </div>
                     <div className="flex gap-2">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            onChange={handleFileChange}
-                            accept="image/*,video/*,application/pdf,application/epub+zip"
-                        />
                         <button
                             onClick={handleUploadClick}
                             disabled={uploading}
@@ -784,16 +779,18 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                             )}
                         </div>
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => {
-                                    setSelectionMode(!selectionMode);
-                                    if (selectionMode) setSelectedItems(new Set());
-                                }}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${selectionMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
-                            >
-                                <CheckCircle size={18} />
-                                {selectionMode ? 'Fertig' : 'Auswählen'}
-                            </button>
+                            {!isPicker && (
+                                <button
+                                    onClick={() => {
+                                        setSelectionMode(!selectionMode);
+                                        if (selectionMode) setSelectedItems(new Set());
+                                    }}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${selectionMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                                >
+                                    <CheckCircle size={18} />
+                                    {selectionMode ? 'Fertig' : 'Auswählen'}
+                                </button>
+                            )}
                             <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                                 <button
                                     onClick={() => setViewMode('grid')}
