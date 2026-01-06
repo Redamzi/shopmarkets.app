@@ -370,11 +370,15 @@ export const MediaLibrary: React.FC = () => {
                             if (type === 'application/epub+zip') {
                                 return (
                                     <div className="w-full h-[80vh] bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
-                                        <iframe
-                                            src={`https://reader.epubjs.org/?bookPath=${encodeURIComponent(previewFile.url)}`}
-                                            title="EPUB Preview"
-                                            className="w-full h-full"
-                                        />
+                                        <div className="w-full h-full flex flex-col items-center justify-center">
+                                            <BookOpen size={64} className="text-green-600 dark:text-green-400 mb-4" />
+                                            <p className="text-green-700 dark:text-green-300 font-medium mb-2 text-xl">EPUB E-Book</p>
+                                            <p className="text-sm text-green-600 dark:text-green-400 mb-2">{previewFile.filename}</p>
+                                            <p className="text-xs text-green-500 mb-6">{formatSize(previewFile.size_bytes)}</p>
+                                            <a href={previewFile.url} download className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all flex items-center gap-2 font-medium shadow-lg">
+                                                <Download size={18} /> Download & Öffnen
+                                            </a>
+                                        </div>
 
                                         {/* Overlay Buttons (visible on hover) */}
                                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 p-2 rounded-xl backdrop-blur-sm">
