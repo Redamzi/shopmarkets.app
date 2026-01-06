@@ -55,6 +55,30 @@ export const CategoriesPage: React.FC = () => {
         return matchesTab && matchesSearch;
     });
 
+    const handleCreateCategory = async () => {
+        const name = prompt('Name der neuen Kategorie:');
+        if (!name) return;
+
+        try {
+            // Simple slug generation
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+            await categoryService.create({
+                name,
+                slug,
+                type: 'category',
+                source: 'manual'
+            });
+
+            // Reload
+            const data = await categoryService.getAll();
+            setCategories(data);
+        } catch (error) {
+            console.error(error);
+            alert('Fehler beim Erstellen');
+        }
+    };
+
     return (
         <div className="p-6 lg:p-10 w-full mx-auto space-y-8 animate-fade-in-up">
 
@@ -69,7 +93,10 @@ export const CategoriesPage: React.FC = () => {
                         <Download size={18} />
                         <span className="font-medium">Importieren</span>
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none">
+                    <button
+                        onClick={handleCreateCategory}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                    >
                         <Plus size={18} />
                         <span className="font-medium">Erstellen</span>
                     </button>
@@ -84,10 +111,10 @@ export const CategoriesPage: React.FC = () => {
                     </div>
                     <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-2 text-purple-100 font-medium text-sm">
-                            <RefreshCw size={14} className="animate-spin-slow" />
-                            <span>Letzter Import: vor 2 Min</span>
+                            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                            <span>Status: {loading ? 'Lädt...' : 'Aktuell'}</span>
                         </div>
-                        <div className="text-3xl font-bold">187</div>
+                        <div className="text-3xl font-bold">{categories.length}</div>
                         <div className="text-purple-100">Kategorien synchronisiert</div>
                     </div>
                 </div>
@@ -96,6 +123,7 @@ export const CategoriesPage: React.FC = () => {
 
             {/* Main Content */}
             <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+
 
                 {/* Toolbar */}
                 <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row gap-4 justify-between items-center">

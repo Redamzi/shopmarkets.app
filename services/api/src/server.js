@@ -35,6 +35,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Serve uploaded files statically
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+
 // Routes
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/products', authenticateToken, productRoutes);
@@ -52,8 +57,7 @@ app.get('/health', (req, res) => {
 
 
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
 
 // Auto-Run Migrations
 const initDB = async () => {

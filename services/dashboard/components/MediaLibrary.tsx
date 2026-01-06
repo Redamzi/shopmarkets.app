@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
-    CheckCircle, AlertCircle
+    CheckCircle, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { mediaService } from '../services/mediaService';
 
@@ -26,21 +26,51 @@ export const MediaLibrary: React.FC = () => {
     const [selectedFolder, setSelectedFolder] = useState('All Media');
     const [showInactive, setShowInactive] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
+
+    // File Input Ref
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const loadMedia = async () => {
+        try {
+            const data = await mediaService.getAll();
+            setFiles(data);
+        } catch (e) {
+            console.error("Failed to load media", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const load = async () => {
-            try {
-                // In real app, we would map folder name to ID. currently using mock folder names
-                const data = await mediaService.getAll();
-                setFiles(data);
-            } catch (e) {
-                console.error("Failed to load media", e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
+        loadMedia();
     }, []);
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            // formData.append('folderId', selectedFolderId); // Future
+
+            await mediaService.upload(formData);
+            await loadMedia(); // Reload list
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Upload fehlgeschlagen');
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
 
     const filteredFiles = files.filter(file => {
         if (showInactive) return !file.is_active;
@@ -67,10 +97,23 @@ export const MediaLibrary: React.FC = () => {
                     <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien</h1>
                     <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                 </div>
-                <button className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-shadow shadow-lg shadow-indigo-200 dark:shadow-none font-medium">
-                    <Upload size={18} />
-                    <span>Hochladen</span>
-                </button>
+                <div className="flex gap-2">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileChange}
+                        accept="image/*,video/*,application/pdf"
+                    />
+                    <button
+                        onClick={handleUploadClick}
+                        disabled={uploading}
+                        className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-shadow shadow-lg shadow-indigo-200 dark:shadow-none font-medium disabled:opacity-50 disabled:cursor-wait"
+                    >
+                        {uploading ? <RefreshCw className="animate-spin" size={18} /> : <Upload size={18} />}
+                        <span>{uploading ? 'Lädt hoch...' : 'Hochladen'}</span>
+                    </button>
+                </div>
             </div>
 
             {/* Main Layout */}

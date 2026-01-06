@@ -19,5 +19,16 @@ export const mediaService = {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;
+    },
+
+    upload: async (formData: FormData) => {
+        const token = localStorage.getItem('auth_token');
+        const response = await axios.post(`${API_URL}/api/media`, formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
     }
 };
