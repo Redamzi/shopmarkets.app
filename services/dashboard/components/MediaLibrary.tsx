@@ -56,11 +56,7 @@ export const MediaLibrary: React.FC = () => {
 
         setUploading(true);
         try {
-            const formData = new FormData();
-            formData.append('file', file);
-            // formData.append('folderId', selectedFolderId); // Future
-
-            const result = await mediaService.upload(formData);
+            const result = await mediaService.upload(file);
 
             if (result && result._performance) {
                 const { duration_ms, speed_mbps } = result._performance;
@@ -72,7 +68,7 @@ export const MediaLibrary: React.FC = () => {
             await loadMedia(); // Reload list
         } catch (error) {
             console.error('Upload failed:', error);
-            alert('Upload fehlgeschlagen');
+            alert('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';

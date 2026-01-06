@@ -1,111 +1,104 @@
 import express from 'express';
 import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
-import multer from 'multer';
-import path from 'path';
-import https from 'https';
-import { S3Client, PutObjectCommand, ListObjectsCommand } from '@aws-sdk/client-s3';
-import { NodeHttpHandler } from '@smithy/node-http-handler';
+import { S3Client, ListObjectsCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const router = express.Router();
 
-// R2 (S3) Configuration - Official Cloudflare Documentation
-// https://developers.cloudflare.com/r2/examples/aws/aws-sdk-js-v3/
+// R2 (S3) Configuration
 const accountId = process.env.R2_ACCOUNT_ID ? process.env.R2_ACCOUNT_ID.trim() : undefined;
 const endpoint = process.env.R2_ENDPOINT || (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : undefined);
 
-// Custom HTTPS agent with proper SNI configuration for R2
-const httpsAgent = new https.Agent({
-    keepAlive: true,
-    // Explicitly set servername for proper SNI
-    servername: `${accountId}.r2.cloudflarestorage.com`,
-});
-
 const s3 = new S3Client({
-    region: 'auto', // Required by SDK but not used by R2
+    region: 'auto',
     endpoint: endpoint,
     credentials: {
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     },
-    requestHandler: new NodeHttpHandler({
-        httpsAgent: httpsAgent,
-    }),
 });
 
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
-// Support both variable names
-const R2_DOMAIN = process.env.R2_PUBLIC_DOMAIN || process.env.R2_PUBLIC_URL || '';
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
 
-// Use Memory Storage (keep file in RAM to measure pure upload speed to R2)
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
-});
-
-// POST Upload Single File to R2 with Speed Measurement
-router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
+// POST /api/media/upload - Generate pre-signed URL for direct upload
+router.post('/upload', authenticateToken, async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
+        const userId = req.user.userId;
+        const { fileName, fileType } = req.body;
+
+        if (!fileName || !fileType) {
+            return res.status(400).json({ error: 'fileName and fileType are required' });
         }
 
-        const userId = req.user.userId;
-        const { folderId } = req.body;
+        // Generate unique key
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(7);
+        const key = `uploads/${userId}/${timestamp}-${randomStr}-${fileName}`;
 
-        // Prepare S3 Parameters
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(req.file.originalname);
-        const filenameClean = path.basename(req.file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '_');
-        const key = `uploads/${userId}/${filenameClean}-${uniqueSuffix}${ext}`; // Organized by User ID
-
-        // --- START TIMER ---
-        const startTime = Date.now();
-
-        await s3.send(new PutObjectCommand({
+        // Generate pre-signed URL (valid for 5 minutes)
+        const command = new PutObjectCommand({
             Bucket: R2_BUCKET,
             Key: key,
-            Body: req.file.buffer,
-            ContentType: req.file.mimetype,
-            // ACL: 'public-read' // R2 usually manages public access via bucket settings, but can be added if needed
-        }));
+            ContentType: fileType,
+        });
 
-        // --- STOP TIMER ---
-        const endTime = Date.now();
-        const durationMs = endTime - startTime;
-        const sizeMb = req.file.size / (1024 * 1024);
-        const speedMbps = sizeMb > 0 ? (sizeMb * 8) / (durationMs / 1000) : 0; // Megabits per second
+        const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 });
+        const publicUrl = `${R2_PUBLIC_URL}/${key}`;
 
-        console.log(`🚀 Upload to R2 took ${durationMs}ms for ${sizeMb.toFixed(2)}MB (${speedMbps.toFixed(2)} Mbps)`);
+        console.log(`✅ Pre-signed URL generated for: ${key}`);
 
-        // Construct Public URL
-        // If R2_DOMAIN is set, use it. Otherwise, use endpoint/bucket/key (often needs tweaking for R2)
-        const publicUrl = R2_DOMAIN
-            ? `${R2_DOMAIN}/${key}`
-            : `${process.env.R2_ENDPOINT}/${R2_BUCKET}/${key}`;
+        res.json({
+            uploadUrl,
+            key,
+            publicUrl,
+        });
+    } catch (error) {
+        console.error('❌ Error generating pre-signed URL:', error);
+        res.status(500).json({
+            error: 'Failed to generate upload URL',
+            details: error.message
+        });
+    }
+});
 
+// POST /api/media/confirm - Save metadata after successful upload
+router.post('/confirm', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { key, title, category_id, fileSize, uploadDuration } = req.body;
+
+        if (!key) {
+            return res.status(400).json({ error: 'key is required' });
+        }
+
+        const publicUrl = `${R2_PUBLIC_URL}/${key}`;
+
+        // Save to database
         const result = await pool.query(
             `INSERT INTO public.media_files 
             (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, source, external_id)
             VALUES ($1, $2, $3, $4, $5, $6, true, 'manual', $7)
             RETURNING *`,
-            [userId, folderId || null, req.file.originalname, publicUrl, req.file.mimetype, req.file.size, key]
+            [userId, category_id || null, title || key.split('/').pop(), publicUrl, 'application/octet-stream', fileSize || 0, key]
         );
 
-        // Add performance stats to response for frontend display
-        const responseData = {
+        console.log(`✅ Media saved to DB: ${key}`);
+
+        res.json({
             ...result.rows[0],
             _performance: {
-                duration_ms: durationMs,
-                speed_mbps: speedMbps.toFixed(2)
+                duration_ms: uploadDuration,
+                speed_mbps: fileSize && uploadDuration ? ((fileSize / (1024 * 1024) * 8) / (uploadDuration / 1000)).toFixed(2) : 0
             }
-        };
-
-        res.json(responseData);
-
+        });
     } catch (error) {
-        console.error('Error uploading file to R2:', error);
-        res.status(500).json({ error: 'Failed to upload file', details: error.message });
+        console.error('❌ Error saving media metadata:', error);
+        res.status(500).json({
+            error: 'Failed to save media',
+            details: error.message
+        });
     }
 });
 
@@ -152,7 +145,7 @@ router.get('/folders', authenticateToken, async (req, res) => {
 router.get('/test-connection', authenticateToken, async (req, res) => {
     try {
         const listCmd = new ListObjectsCommand({
-            Bucket: process.env.R2_BUCKET_NAME,
+            Bucket: R2_BUCKET,
             MaxKeys: 1
         });
         await s3.send(listCmd);
@@ -164,8 +157,8 @@ router.get('/test-connection', authenticateToken, async (req, res) => {
             message: 'R2 Connection Failed',
             error: error.message,
             code: error.code,
-            endpoint: endpoint || 'Missing (Set R2_ACCOUNT_ID or R2_ENDPOINT)',
-            bucket: process.env.R2_BUCKET_NAME
+            endpoint: endpoint || 'Missing',
+            bucket: R2_BUCKET
         });
     }
 });
