@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
-    CheckCircle, AlertCircle, RefreshCw, X, Download
+    CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { mediaService } from '../services/mediaService';
 
@@ -152,22 +152,72 @@ export const MediaLibrary: React.FC = () => {
         ? folders.find(f => f.id === selectedFolderId)?.name || 'Unbekannter Ordner'
         : 'Alle Medien';
 
+    // Gallery Navigation Logic
+    const handleNext = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (!previewFile) return;
+        const currentIndex = filteredFiles.findIndex(f => f.id === previewFile.id);
+        if (currentIndex === -1) return;
+        const nextIndex = (currentIndex + 1) % filteredFiles.length;
+        setPreviewFile(filteredFiles[nextIndex]);
+    };
+
+    const handlePrev = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        if (!previewFile) return;
+        const currentIndex = filteredFiles.findIndex(f => f.id === previewFile.id);
+        if (currentIndex === -1) return;
+        const prevIndex = (currentIndex - 1 + filteredFiles.length) % filteredFiles.length;
+        setPreviewFile(filteredFiles[prevIndex]);
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!previewFile) return;
+            if (e.key === 'ArrowRight') handleNext();
+            if (e.key === 'ArrowLeft') handlePrev();
+            if (e.key === 'Escape') setPreviewFile(null);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [previewFile, filteredFiles]);
+
+
     return (
         <div className="p-6 lg:p-10 w-full mx-auto h-[calc(100vh-100px)] flex flex-col animate-fade-in-up relative">
 
             {/* Preview Modal */}
             {previewFile && (
                 <div className="fixed inset-0 z-50 bg-white/95 dark:bg-slate-900/95 flex items-center justify-center p-4 backdrop-blur-md animate-fade-in" onClick={() => setPreviewFile(null)}>
+
+                    {/* Navigation Buttons */}
+                    {filteredFiles.length > 1 && (
+                        <>
+                            <button
+                                onClick={handlePrev}
+                                className="absolute left-4 md:left-10 p-3 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-slate-800 rounded-full backdrop-blur-md transition-all z-50 group shadow-sm border border-slate-200 dark:border-slate-700"
+                            >
+                                <ChevronLeft size={28} className="text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                            </button>
+                            <button
+                                onClick={handleNext}
+                                className="absolute right-4 md:right-10 p-3 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-slate-800 rounded-full backdrop-blur-md transition-all z-50 group shadow-sm border border-slate-200 dark:border-slate-700"
+                            >
+                                <ChevronRight size={28} className="text-slate-600 dark:text-slate-300 group-hover:scale-110 transition-transform" />
+                            </button>
+                        </>
+                    )}
+
                     <div className="relative max-w-5xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
                         <button
                             onClick={() => setPreviewFile(null)}
-                            className="absolute -top-12 right-0 md:top-0 md:-right-12 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-2 bg-white/50 dark:bg-black/50 p-2 rounded-full backdrop-blur-sm"
+                            className="absolute -top-12 right-0 md:top-0 md:-right-16 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-2 bg-white/50 dark:bg-black/50 p-2 rounded-full backdrop-blur-sm"
                         >
                             <X size={24} /> <span className="md:hidden">Schließen</span>
                         </button>
 
                         {(!previewFile.type || previewFile.type.startsWith('image')) ? (
-                            <img src={previewFile.url} className="max-w-full max-h-[80vh] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800" />
+                            <img src={previewFile.url} className="max-w-full max-h-[80vh] rounded-lg shadow-lg" />
                         ) : (
                             <div className="bg-slate-100 dark:bg-slate-800 p-20 rounded-2xl text-slate-500 dark:text-slate-400 flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-700">
                                 <File size={48} />
@@ -262,13 +312,6 @@ export const MediaLibrary: React.FC = () => {
                     <div className="space-y-1 flex-1 overflow-y-auto custom-scrollbar-hide">
                         <div className="flex items-center justify-between mb-2 px-3">
                             <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ordner</div>
-                            <button
-                                onClick={() => setIsCreateFolderOpen(true)}
-                                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-600 transition-colors"
-                                title="Neuer Ordner"
-                            >
-                                <FolderPlus size={16} />
-                            </button>
                         </div>
 
                         {/* All Media Button */}
