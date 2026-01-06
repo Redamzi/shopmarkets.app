@@ -12,6 +12,8 @@ import { Billing } from './components/Billing';
 import { Settings } from './components/Settings';
 import { Onboarding } from './components/Onboarding';
 import { AVVModal } from './components/AVVModal';
+import { CategoriesPage } from './components/CategoriesPage';
+import { MediaLibrary } from './components/MediaLibrary';
 import { DebugOverlay } from './components/DebugOverlay';
 import { useAuthStore } from './store/authStore';
 import { authService } from './services/authService';
@@ -93,6 +95,8 @@ const AppContent: React.FC = () => {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ProductsPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="media" element={<MediaLibrary />} />
           <Route path="connections" element={<Connections />} />
           <Route path="sync-history" element={<SyncHistory />} />
           <Route path="billing" element={<Billing />} />

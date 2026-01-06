@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LayoutDashboard, Package, Share2, Activity, CreditCard, Settings, LogOut, Menu, X, ExternalLink, Image, Tag } from 'lucide-react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
