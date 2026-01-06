@@ -12,6 +12,7 @@ interface ConnectionWizardProps {
     isOpen: boolean;
     onClose: () => void;
     platformName: string; // e.g. 'WooCommerce'
+    onConnect?: (data: any) => void;
 }
 
 export const ConnectionWizard: React.FC<ConnectionWizardProps> = ({ isOpen, onClose, platformName }) => {
