@@ -162,7 +162,7 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Chart */}
-                    <div className="h-64 w-full" style={{ minWidth: 0 }}>
+                    <div className="h-64 w-full min-w-0" style={{ minWidth: 0 }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={ANALYTICS_DATA} barSize={20}>
                                 <XAxis

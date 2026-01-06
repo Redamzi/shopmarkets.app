@@ -147,41 +147,19 @@ export const verify2FA = async (req, res, next) => {
     try {
         const { userId, code, trustDevice, deviceFingerprint } = req.body;
 
-        console.log(`[2FA Debug] Verifying for UserID: ${userId}`);
-        console.log(`[2FA Debug] Input Code length: ${code.length}, Content: '${code}'`);
-
         // Get verification code
         const result = await pool.query(
-            `SELECT id, expires_at, code FROM public.verification_codes 
-       WHERE user_id = $1 AND type = '2fa_login' AND used_at IS NULL
-       ORDER BY created_at DESC LIMIT 5`,
-            [userId]
-        );
-
-        console.log(`[2FA Debug] Found ${result.rows.length} active codes for user.`);
-        if (result.rows.length > 0) {
-            const matching = result.rows.find(r => r.code === code);
-            if (matching) {
-                console.log('[2FA Debug] MATCH FOUND!');
-            } else {
-                console.log(`[2FA Debug] NO MATCH. Latest DB code is: '${result.rows[0].code}' (Length: ${result.rows[0].code.length})`);
-                console.log(`[2FA Debug] Comparison: Input '${code}' vs DB '${result.rows[0].code}'`);
-            }
-        }
-
-        // Restore original strict query for logic
-        const strictResult = await pool.query(
             `SELECT id, expires_at FROM public.verification_codes 
        WHERE user_id = $1 AND code = $2 AND type = '2fa_login' AND used_at IS NULL
        ORDER BY created_at DESC LIMIT 1`,
             [userId, code]
         );
 
-        if (strictResult.rows.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(400).json({ error: 'Invalid or expired code' });
         }
 
-        const verificationCode = strictResult.rows[0];
+        const verificationCode = result.rows[0];
 
         // Check expiration
         if (new Date() > new Date(verificationCode.expires_at)) {
