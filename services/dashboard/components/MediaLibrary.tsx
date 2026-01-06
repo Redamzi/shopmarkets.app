@@ -77,6 +77,32 @@ export const MediaLibrary: React.FC = () => {
         }
     };
 
+    // Drag & Drop Handlers
+    const handleDragStart = (e: React.DragEvent, fileId: string) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('fileId', fileId);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = async (e: React.DragEvent, targetFolderId: string | null) => {
+        e.preventDefault();
+        const fileId = e.dataTransfer.getData('fileId');
+
+        if (!fileId) return;
+
+        try {
+            await mediaService.moveFile(fileId, targetFolderId);
+            await loadData();
+        } catch (error) {
+            console.error('Move failed:', error);
+            alert('Fehler beim Verschieben der Datei.');
+        }
+    };
+
     const loadData = async () => {
         try {
             setLoading(true);
@@ -540,6 +566,8 @@ export const MediaLibrary: React.FC = () => {
                         {/* All Media Button */}
                         <button
                             onClick={() => { setSelectedFolderId(null); setShowInactive(false); }}
+                            onDragOver={handleDragOver}
+                            onDrop={(e) => handleDrop(e, null)}
                             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === null && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                         >
                             <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
@@ -551,6 +579,8 @@ export const MediaLibrary: React.FC = () => {
                             <button
                                 key={folder.id}
                                 onClick={() => { setSelectedFolderId(folder.id); setShowInactive(false); }}
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, folder.id)}
                                 className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${selectedFolderId === folder.id && !showInactive ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 font-medium' : 'text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                             >
                                 <div className="flex items-center gap-3 overflow-hidden">
@@ -648,7 +678,7 @@ export const MediaLibrary: React.FC = () => {
                         ) : viewMode === 'grid' ? (
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
                                 {filteredFiles.map(file => (
-                                    <div key={file.id} className="group relative">
+                                    <div key={file.id} className="group relative" draggable onDragStart={(e) => handleDragStart(e, file.id)}>
                                         <div
                                             className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 group-hover:border-indigo-400 transition-all shadow-sm group-hover:shadow-md cursor-pointer relative"
                                             onClick={(e) => {
@@ -690,7 +720,7 @@ export const MediaLibrary: React.FC = () => {
                         ) : (
                             <div className="flex flex-col gap-2">
                                 {filteredFiles.map(file => (
-                                    <div key={file.id} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
+                                    <div key={file.id} draggable onDragStart={(e) => handleDragStart(e, file.id)} onClick={() => setPreviewFile(file)} className="flex items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-indigo-300 transition-all cursor-pointer group">
                                         <div className="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden shrink-0">
                                             {renderFileThumbnail(file, 'small')}
                                         </div>
