@@ -62,7 +62,10 @@ export const Login: React.FC = () => {
             // Generate device fingerprint (simple version - can be enhanced)
             const deviceFingerprint = await generateDeviceFingerprint();
 
-            const { user, session } = await authService.loginStep2(userId, code, trustDevice, deviceFingerprint);
+            // Sanitize code (remove spaces)
+            const cleanCode = code.replace(/\s/g, '');
+
+            const { user, session } = await authService.loginStep2(userId, cleanCode, trustDevice, deviceFingerprint);
             if (user && session) {
                 setUser(user);
                 setSession(session);
