@@ -90,15 +90,22 @@ export const authService = {
                 }
             });
             return response.data.user;
-        } catch (e) {
+        } catch (e: any) {
             console.error('Failed to fetch current user', e);
-            // Fallback: Decodiere Token Payload (Base64) für Basis-Daten
+
+            // If token is invalid/expired (401 or 403), force logout logic
+            if (e.response && (e.response.status === 401 || e.response.status === 403)) {
+                removeToken();
+                return null;
+            }
+
+            // Only fallback if it's a network error or server error (500), NOT if it's an auth error
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 return {
                     id: payload.userId,
                     email: payload.email,
-                    is_avv_signed: true // Fallback: Assume signed to prevent blocking if API fails? Or false? Better false.
+                    is_avv_signed: true
                 };
             } catch (decodeError) {
                 return null;
