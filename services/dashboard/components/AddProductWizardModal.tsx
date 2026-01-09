@@ -145,7 +145,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
         category: 'Möbel',
         manufacturer: '',
         tags: '',
-        imageUrl: ''
+        image_url: ''
     });
 
     const [tiktokParams, setTiktokParams] = useState({
@@ -285,7 +285,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
 
         // Create local preview immediately
         const previewUrl = URL.createObjectURL(file);
-        setFormData(prev => ({ ...prev, imageUrl: previewUrl }));
+        setFormData(prev => ({ ...prev, image_url: previewUrl }));
 
         if (credits < 1) { alert("Nicht genügend Credits!"); return; }
 
@@ -429,7 +429,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                 sku: formData.sku,
                 price: parseFloat(formData.price) || 0,
                 stock: parseInt(formData.stock) || 0,
-                imageUrl: initialProduct?.imageUrl || `https://picsum.photos/400/400?random=${Date.now()}`,
+                image_url: initialProduct?.image_url || `https://picsum.photos/400/400?random=${Date.now()}`,
                 channels: formData.channels,
                 lastSync: new Date().toISOString(),
                 category: formData.category,
@@ -579,10 +579,10 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                 </div>
                             </div>
                             <div className="grid grid-cols-4 gap-3 mt-4">
-                                {formData.imageUrl && !formData.imageUrl.includes('picsum') && (
+                                {formData.image_url && !formData.image_url.includes('picsum') && (
                                     <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
-                                        <img src={formData.imageUrl} className="w-full h-full object-cover" />
-                                        <button onClick={() => setFormData({ ...formData, imageUrl: '' })} className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
+                                        <img src={formData.image_url} className="w-full h-full object-cover" />
+                                        <button onClick={() => setFormData({ ...formData, image_url: '' })} className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
                                     </div>
                                 )}
                                 <div className="aspect-square bg-slate-50 dark:bg-slate-800/50 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700 border-dashed">
@@ -599,7 +599,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                             onClose={() => setIsMediaPickerOpen(false)}
                                             onSelect={(files) => {
                                                 if (files.length > 0) {
-                                                    setFormData({ ...formData, imageUrl: files[0].url });
+                                                    setFormData({ ...formData, image_url: files[0].url });
                                                     setIsMediaPickerOpen(false);
                                                 }
                                             }}

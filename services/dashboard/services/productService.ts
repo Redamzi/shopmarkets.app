@@ -16,14 +16,9 @@ async function getAuthHeaders() {
 
 export const productService = {
     async getProducts(): Promise<Product[]> {
-        try {
-            const headers = await getAuthHeaders();
-            const response = await axios.get(`${API_URL}/api/products`, { headers });
-            return response.data;
-        } catch (error) {
-            console.error('Failed to fetch products:', error);
-            return []; // Leeres Array bei Fehler
-        }
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API_URL}/api/products`, { headers });
+        return response.data;
     },
 
     async createProduct(product: Product): Promise<Product> {

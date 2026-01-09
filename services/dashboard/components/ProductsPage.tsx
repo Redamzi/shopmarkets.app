@@ -28,8 +28,13 @@ export const ProductsPage: React.FC = () => {
             ]);
             setProducts(prodData);
             setConnections(connData);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+            // If it's a 403/401, the authService listener should have triggered logout.
+            // But if it's another error, show an alert or set error state.
+            if (err.response?.status !== 401 && err.response?.status !== 403) {
+                alert(`Fehler beim Laden der Produkte: ${err.message}`);
+            }
         }
         setLoading(false);
     };
