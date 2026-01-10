@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useProductWizardStore } from '../../store/productWizardStore';
 import { GeneralInfo } from './GeneralInfo';
 import { AttributesVariants } from './AttributesVariants';
 import { Organization } from './Organization';
@@ -7,15 +8,24 @@ import { SEOMarketing } from './SEOMarketing';
 import { Layers, SlidersHorizontal, Tag, Wrench, Video } from 'lucide-react';
 
 export const StepDetails: React.FC = () => {
+    const { productType } = useProductWizardStore();
     const [subTab, setSubTab] = useState<'general' | 'variants' | 'org' | 'extras' | 'tiktok'>('general');
 
+    // Dynamic Tabs based on Product Type
     const tabs = [
-        { id: 'general', label: 'Basis', icon: Layers, component: GeneralInfo },
-        { id: 'variants', label: 'Varianten', icon: SlidersHorizontal, component: AttributesVariants },
-        { id: 'org', label: 'Organisation', icon: Tag, component: Organization },
-        { id: 'extras', label: 'Extras', icon: Wrench, component: Configurator },
-        { id: 'tiktok', label: 'TikTok/SEO', icon: Video, component: SEOMarketing },
-    ];
+        { id: 'general', label: 'Basis', icon: Layers, component: GeneralInfo, show: true },
+        { id: 'variants', label: 'Varianten', icon: SlidersHorizontal, component: AttributesVariants, show: productType === 'configurable' || productType === 'variable' },
+        { id: 'org', label: 'Organisation', icon: Tag, component: Organization, show: true },
+        { id: 'extras', label: 'Extras', icon: Wrench, component: Configurator, show: productType === 'simple' || productType === 'configurable' }, // Extras usually for physical
+        { id: 'tiktok', label: 'TikTok/SEO', icon: Video, component: SEOMarketing, show: true },
+    ].filter(t => t.show);
+
+    // Reset subTab if not available (e.g. switching types)
+    useEffect(() => {
+        if (!tabs.find(t => t.id === subTab)) {
+            setSubTab(tabs[0].id as any);
+        }
+    }, [productType, tabs]);
 
     const ActiveComponent = tabs.find(t => t.id === subTab)?.component || GeneralInfo;
 
@@ -27,8 +37,8 @@ export const StepDetails: React.FC = () => {
                         key={tab.id}
                         onClick={() => setSubTab(tab.id as any)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${subTab === tab.id
-                                ? 'bg-indigo-50 text-indigo-700'
-                                : 'text-gray-600 hover:bg-gray-50'
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-gray-600 hover:bg-gray-50'
                             }`}
                     >
                         {React.createElement(tab.icon, { size: 16 })}
