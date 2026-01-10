@@ -4,13 +4,10 @@ import { useProductWizardStore } from '../store/productWizardStore';
 import { ProductTypeSelector } from './ProductWizard/ProductTypeSelector';
 import { AIGenerator } from './ProductWizard/AIGenerator';
 import { MediaUpload } from './ProductWizard/MediaUpload';
-import { PricingInventory } from './ProductWizard/PricingInventory';
 import { AttributesVariants } from './ProductWizard/AttributesVariants';
+import { PriceRadar } from './ProductWizard/PriceRadar';
+import { PricingInventory } from './ProductWizard/PricingInventory';
 import { SEOMarketing } from './ProductWizard/SEOMarketing';
-import { ChannelsSync } from './ProductWizard/ChannelsSync';
-import { SEOPreview } from './ProductWizard/SEOPreview';
-import { ReadyCheck } from './ProductWizard/ReadyCheck';
-import { PreviewSave } from './ProductWizard/PreviewSave';
 
 // Import Icons
 import {
@@ -23,7 +20,7 @@ const WIZARD_STEPS = [
     { id: 'general', label: 'Basis', icon: Layers, component: ProductTypeSelector }, // Step 1 is mapped to Type Selector for now
     { id: 'media', label: 'Medien', icon: ImageIcon, component: MediaUpload },
     { id: 'variants', label: 'Varianten', icon: SlidersHorizontal, component: AttributesVariants },
-    { id: 'price_check', label: 'Preis Radar', icon: TrendingDown, component: () => <div className="p-10 text-center">Preis Radar Feature (Coming Soon)</div> },
+    { id: 'price_check', label: 'Preis Radar', icon: TrendingDown, component: PriceRadar },
     { id: 'pricing', label: 'Preise', icon: DollarSign, component: PricingInventory },
     { id: 'inventory', label: 'Lager', icon: Box, component: () => <div className="p-10 text-center">Lager Verwaltung (Teil von Preise)</div> },
     { id: 'shipping', label: 'Versand', icon: Truck, component: () => <div className="p-10 text-center">Versand Feature (Coming Soon)</div> },
