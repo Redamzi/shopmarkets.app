@@ -113,6 +113,20 @@ export const ProductWizard: React.FC = () => {
             channels: stepData[12]?.channels || []
         };
 
+        // Validation (PRODUCT-CREATION-FLOW.md)
+        const missing = [];
+        if (!payload.title || payload.title === 'Neues Produkt') missing.push('Titel (Step 2)');
+        if (!payload.price) missing.push('Preis (Step 6)');
+        if (!payload.sku) missing.push('SKU (Step 7)');
+        if (payload.stock === undefined) missing.push('Bestand (Step 7)');
+        if (!payload.images || payload.images.length === 0) missing.push('Bilder (Step 3)');
+
+        if (missing.length > 0) {
+            alert(`Bitte folgende Pflichtfelder prüfen:\n\n${missing.join('\n')}`);
+            setIsSaving(false);
+            return;
+        }
+
         try {
             const response = await fetch('/api/product-wizard', {
                 method: 'POST',
