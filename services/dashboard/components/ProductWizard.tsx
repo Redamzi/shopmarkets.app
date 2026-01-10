@@ -1,12 +1,13 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProductWizardStore } from '../store/productWizardStore';
 import { ProductTypeSelector } from './ProductWizard/ProductTypeSelector';
 import { AIGenerator } from './ProductWizard/AIGenerator';
+import { GeneralInfo } from './ProductWizard/GeneralInfo'; // Step 2 now
 import { MediaUpload } from './ProductWizard/MediaUpload';
 import { AttributesVariants } from './ProductWizard/AttributesVariants';
 import { PriceRadar } from './ProductWizard/PriceRadar';
-import { PricingInventory } from './ProductWizard/PricingInventory'; // Used for step 6 Pricing
+import { PricingInventory } from './ProductWizard/PricingInventory';
 import { Inventory } from './ProductWizard/Inventory';
 import { Shipping } from './ProductWizard/Shipping';
 import { SEOMarketing } from './ProductWizard/SEOMarketing';
@@ -25,7 +26,7 @@ import {
 
 const WIZARD_STEPS = [
     { id: 'ai', label: 'AI Start', icon: Sparkles, component: AIGenerator },
-    { id: 'general', label: 'Basis', icon: Layers, component: ProductTypeSelector },
+    { id: 'general', label: 'Basis', icon: Layers, component: GeneralInfo },
     { id: 'media', label: 'Medien', icon: ImageIcon, component: MediaUpload },
     { id: 'variants', label: 'Varianten', icon: SlidersHorizontal, component: AttributesVariants },
     { id: 'price_check', label: 'Preis Radar', icon: TrendingDown, component: PriceRadar },
@@ -41,8 +42,9 @@ const WIZARD_STEPS = [
 
 export const ProductWizard: React.FC = () => {
     const navigate = useNavigate();
-    const { currentStep, setCurrentStep } = useProductWizardStore();
+    const { currentStep, setCurrentStep, stepData, reset, productType } = useProductWizardStore();
     const navRef = useRef<HTMLDivElement>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Map 1-based index (currentStep) to 0-based index for array access
     const currentStepIndex = currentStep - 1;
@@ -66,7 +68,76 @@ export const ProductWizard: React.FC = () => {
     };
 
     const handleClose = () => {
-        navigate('/products');
+        if (confirm('Möchten Sie den Wizard wirklich verlassen? Ihre Daten gehen verloren.')) {
+            navigate('/products');
+        }
+    };
+
+    const handleSaveProduct = async () => {
+        setIsSaving(true);
+
+        // Assemble Payload
+        const payload = {
+            product_type: productType || 'simple',
+            // Basic Info (Step 2)
+            title: stepData[2]?.title || 'Neues Produkt',
+            description: stepData[2]?.description || '',
+            short_description: stepData[2]?.shortDescription || '',
+            // Media (Step 3)
+            images: stepData[3]?.images || [],
+            // Variants (Step 4)
+            attributes: stepData[4]?.attributes || {},
+            variants: stepData[4]?.variants || [],
+            // Price Radar (Step 5)
+            price_radar: stepData[5],
+            // Pricing (Step 6)
+            price: stepData[6]?.price,
+            // Inventory (Step 7)
+            sku: stepData[7]?.sku,
+            barcode: stepData[7]?.barcode,
+            stock: stepData[7]?.quantity,
+            track_quantity: stepData[7]?.trackQuantity,
+            low_stock_threshold: stepData[7]?.lowStockThreshold,
+            // Shipping (Step 8)
+            shipping: stepData[8],
+            // SEO & TikTok (Step 9)
+            seo: stepData[9]?.seo,
+            tiktok: stepData[9]?.tiktok,
+            // Org (Step 10)
+            category: stepData[10]?.category,
+            vendor: stepData[10]?.vendor,
+            tags: stepData[10]?.tags,
+            // Extras (Step 11)
+            extras: stepData[11],
+            // Channels (Step 12)
+            channels: stepData[12]?.channels || []
+        };
+
+        try {
+            const response = await fetch('/api/product-wizard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('Produkt erfolgreich gespeichert!');
+                reset();
+                navigate('/products');
+            } else {
+                alert(`Fehler: ${result.message || 'Speichern fehlgeschlagen'}`);
+            }
+        } catch (error) {
+            console.error('Save failed:', error);
+            alert('Netzwerkfehler beim Speichern');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // Auto-scroll navigation
@@ -102,7 +173,7 @@ export const ProductWizard: React.FC = () => {
                             </div>
                         </div>
                         <div className="text-right text-xs text-gray-400">
-                            v2.0 New Design
+                            v2.1 Full
                         </div>
                     </div>
 
@@ -156,19 +227,21 @@ export const ProductWizard: React.FC = () => {
                 <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 z-20 flex justify-between items-center">
                     <button
                         onClick={handlePrevStep}
-                        disabled={currentStepIndex === 0}
+                        disabled={currentStepIndex === 0 || isSaving}
                         className="px-6 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         Zurück
                     </button>
 
                     <button
-                        onClick={handleNextStep}
-                        className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-105 shadow-lg flex items-center gap-2 transition-all"
+                        onClick={currentStepIndex === WIZARD_STEPS.length - 1 ? handleSaveProduct : handleNextStep}
+                        disabled={isSaving}
+                        className="px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold hover:scale-105 shadow-lg flex items-center gap-2 transition-all disabled:opacity-50"
                     >
                         {currentStepIndex === WIZARD_STEPS.length - 1 ? (
                             <>
-                                <Check size={18} /> Speichern & Fertig
+                                {isSaving ? <Loader2 className="animate-spin" /> : <Check size={18} />}
+                                {isSaving ? 'Speichert...' : 'Speichern & Fertig'}
                             </>
                         ) : (
                             <>
