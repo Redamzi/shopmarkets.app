@@ -1,4 +1,3 @@
-```typescript
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProductWizardStore } from '../store/productWizardStore';
@@ -215,4 +214,3 @@ export const ProductWizard: React.FC = () => {
         </div>
     );
 };
-```
