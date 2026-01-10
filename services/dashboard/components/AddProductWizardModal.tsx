@@ -118,6 +118,7 @@ const getSourceLabel = (targetKey: string): string => {
 export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ isOpen, onClose, onSave, credits, setCredits, initialProduct, connections }) => {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiTone, setAiTone] = useState(AI_TONES[0]);
     const [loadingChannelId, setLoadingChannelId] = useState<string | null>(null);
@@ -372,14 +373,11 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
 
         // Upload logic
         const formDataPayload = new FormData();
-        formDataPayload.append('file', file); // API expects 'file' usually, checking service...
+        formDataPayload.append('file', file);
 
+        setIsUploading(true);
         try {
-            // Attempt upload via mediaService
-            // Based on service definition: upload(formData) -> posts to /api/media/upload
             const uploadedMedia = await mediaService.upload(formDataPayload);
-
-            // Assuming the response structure returns the file URL or object
             if (uploadedMedia && uploadedMedia.url) {
                 setFormData(prev => ({ ...prev, image_url: uploadedMedia.url }));
             }
@@ -387,6 +385,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
             console.error("Upload failed", error);
             alert("Bild-Upload fehlgeschlagen. Bitte erneut versuchen.");
         } finally {
+            setIsUploading(false);
             if (uploadInputRef.current) uploadInputRef.current.value = '';
         }
     };
@@ -1299,11 +1298,11 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                     {currentStepIndex === WIZARD_STEPS.length - 1 ? (
                         <button
                             onClick={handleSubmit}
-                            disabled={loading}
-                            className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all"
+                            disabled={loading || isUploading}
+                            className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? <Loader2 className="animate-spin" /> : <Check />}
-                            {initialProduct ? 'Änderungen speichern' : 'Speichern & Sync'}
+                            {isUploading ? 'Bild wird hochgeladen...' : (initialProduct ? 'Änderungen speichern' : 'Speichern & Sync')}
                         </button>
                     ) : (
                         <button

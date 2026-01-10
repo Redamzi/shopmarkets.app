@@ -229,6 +229,7 @@ const getSourceLabel = (targetKey: string): string => {
 export const AddProductPage: React.FC<AddProductPageProps> = ({ onSave, onCancel, credits, setCredits }) => {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const [aiTone, setAiTone] = useState(AI_TONES[0]);
     const [loadingChannelId, setLoadingChannelId] = useState<string | null>(null);
@@ -271,6 +272,7 @@ export const AddProductPage: React.FC<AddProductPageProps> = ({ onSave, onCancel
         const formDataPayload = new FormData();
         formDataPayload.append('file', file);
 
+        setIsUploading(true);
         try {
             const uploadedMedia = await mediaService.upload(formDataPayload);
             if (uploadedMedia && uploadedMedia.url) {
@@ -280,6 +282,7 @@ export const AddProductPage: React.FC<AddProductPageProps> = ({ onSave, onCancel
             console.error("Upload failed", error);
             alert("Bild-Upload fehlgeschlagen. Bitte erneut versuchen.");
         } finally {
+            setIsUploading(false);
             if (uploadInputRef.current) uploadInputRef.current.value = '';
         }
     };
