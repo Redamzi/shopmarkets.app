@@ -1,14 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const productWizardController = require('../controllers/productWizardController');
-const authenticateToken = require('../middleware/authMiddleware');
-const validate = require('../middleware/validate');
-const {
+import express from 'express';
+import productWizardController from '../controllers/productWizardController.js';
+import { authenticateToken } from '../middleware/authMiddleware.js';
+import validate from '../middleware/validate.js';
+import {
     createProductSchema,
     updateProductSchema,
     stepDataSchemas,
     aiGenerateSchema
-} = require('../validation/productSchema');
+} from '../validation/productSchema.js';
+
+const router = express.Router();
 
 // Get available steps for product type
 router.get('/steps', productWizardController.getSteps);
@@ -31,4 +32,5 @@ router.put('/:id/step/:stepNumber', authenticateToken, productWizardController.s
 // AI Generate
 router.post('/ai-generate', authenticateToken, validate(aiGenerateSchema), productWizardController.aiGenerate);
 
-module.exports = router;
+export default router;
+
