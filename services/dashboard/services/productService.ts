@@ -34,20 +34,11 @@ export const productService = {
     },
 
     async duplicateProduct(product: Product): Promise<Product> {
-        // Create a copy without ID and created_at
+        // Create a copy without ID and timestamps
         const { id, created_at, updated_at, ...rest } = product;
 
-        // Handle image_url vs imageUrl for creation if needed
-        // Assuming create expects imageUrl if it was mapped, but here we just pass rest.
-        // API controller line 27 reads imageUrl. But our product has image_url.
-        // We need to map it back if we want to preserve the image.
-        const productData: any = { ...rest };
-        if (product.image_url) {
-            productData.imageUrl = product.image_url;
-        }
-
         const newProduct = {
-            ...productData,
+            ...rest,
             title: `${product.title} (Kopie)`,
             sku: `${product.sku}-copy-${Date.now().toString().slice(-4)}`
         };

@@ -24,7 +24,7 @@ export const addProduct = async (req, res) => {
         const userId = req.user.userId;
         // Frontend sends camelCase, DB expects snake_case usually.
         // Adjusting columns based on guess. If fails, we migration.
-        const { title, price, stock, sku, imageUrl, category, description } = req.body;
+        const { title, price, stock, sku, image_url, category, description } = req.body;
 
         const query = `
             INSERT INTO products (user_id, title, price, stock, sku, image_url, category, description)
@@ -38,7 +38,7 @@ export const addProduct = async (req, res) => {
             parseFloat(price) || 0,
             parseInt(stock) || 0,
             sku,
-            imageUrl,
+            image_url,
             category,
             description
         ];
