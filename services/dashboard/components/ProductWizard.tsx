@@ -16,13 +16,13 @@ import {
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
 const WIZARD_STEPS = [
-    { id: 'type', label: '1. Produktart', icon: Layers, component: ProductTypeSelector },
-    { id: 'ai', label: '2. AI-Generator', icon: Sparkles, component: AIGenerator },
-    { id: 'details', label: '3. Details', icon: Layers, component: StepDetails },
-    { id: 'media', label: '4. Medien', icon: ImageIcon, component: MediaUpload },
-    { id: 'pricing', label: '5. Preise & Lager', icon: DollarSign, component: StepPricing },
-    { id: 'save', label: '6. Speichern', icon: ShieldCheck, component: PreviewSave },
-    { id: 'sync', label: '7. Channel Sync', icon: Globe, component: ChannelsSync }, // Post-Save
+    { id: 'type', label: 'Produktart', icon: Layers, component: ProductTypeSelector },
+    { id: 'ai', label: 'AI-Generator', icon: Sparkles, component: AIGenerator },
+    { id: 'details', label: 'Details', icon: Layers, component: StepDetails },
+    { id: 'media', label: 'Medien', icon: ImageIcon, component: MediaUpload },
+    { id: 'pricing', label: 'Preise & Lager', icon: DollarSign, component: StepPricing },
+    { id: 'save', label: 'Speichern', icon: ShieldCheck, component: PreviewSave },
+    { id: 'sync', label: 'Channel Sync', icon: Globe, component: ChannelsSync }, // Post-Save
 ];
 
 export const ProductWizard: React.FC = () => {
@@ -66,13 +66,13 @@ export const ProductWizard: React.FC = () => {
 
     const handleSaveProduct = async () => {
         setIsSaving(true);
-        
+
         // Assemble Payload from Wrappers
         // NOTE: StepDetails and StepPricing write to steps 2,4,9,10,11 (Details) and 6,7,5,8 (Pricing) in global store.
         // We need to ensure we read from correct Store Keys regardless of UI Step Index.
         // The Store Keys are numeric. StepDetails writes to: 2 (General), 4 (Vars), 9 (TikTok), 10 (Org), 11 (Extras)
         // StepPricing writes to: 6 (Price), 5 (Radar), 7 (Inv), 8 (Shipping)
-        
+
         const payload = {
             product_type: productType || 'simple',
             // Basic Info (Key 2)
@@ -85,12 +85,12 @@ export const ProductWizard: React.FC = () => {
             // THIS IS CRITICAL. Components use `currentStep` to write data?
             // Checking MediaUpload: uses `stepData[currentStep]`.
             // Checking GeneralInfo: uses `stepData[2]` (Hardcoded? No, I implemented it to use Hardcoded 2 in GeneralInfo, but others?)
-            
+
             // I MUST ENSURE COMPONENTS WRITE TO FIXED KEYS, NOT `currentStep`.
             // GeneralInfo: writes to 2. (Checked)
             // MediaUpload: writes to `currentStep`? I need to check.
             images: stepData[3]?.images || [], // Let's Assume Media maps to 3
-            
+
             attributes: stepData[4]?.attributes || {},
             variants: stepData[4]?.variants || [],
             price_radar: stepData[5],
@@ -120,7 +120,7 @@ export const ProductWizard: React.FC = () => {
         try {
             const response = await fetch('/api/product-wizard', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ localStorage.getItem('token') } ` },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')} ` },
                 body: JSON.stringify(payload)
             });
 
@@ -130,7 +130,7 @@ export const ProductWizard: React.FC = () => {
                 setIsProductSaved(true);
                 setCurrentStep(7); // Go to Sync
             } else {
-                alert(`Fehler: ${ result.message } `);
+                alert(`Fehler: ${result.message} `);
             }
         } catch (error) {
             console.error(error);
@@ -161,7 +161,7 @@ export const ProductWizard: React.FC = () => {
                 {/* Header with 7 Steps */}
                 <div className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl z-20 flex flex-col gap-3">
                     <div className="flex justify-between items-center w-full">
-                         <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4">
                             <button onClick={handleClose} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
                                 <X size={16} className="text-slate-600" />
                             </button>
@@ -174,14 +174,13 @@ export const ProductWizard: React.FC = () => {
                         {WIZARD_STEPS.map((step, idx) => (
                             <button
                                 key={step.id}
-                                onClick={() => { if(idx < 6 || isProductSaved) setCurrentStep(idx + 1)}}
-                                className={`flex items - center gap - 2 px - 3 py - 1.5 rounded - full text - xs font - bold transition - all border ${
-    currentStepIndex === idx
-        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-        : idx < currentStepIndex
-            ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
-            : 'bg-white text-gray-400 border-gray-100'
-} `}
+                                onClick={() => { if (idx < 6 || isProductSaved) setCurrentStep(idx + 1) }}
+                                className={`flex items - center gap - 2 px - 3 py - 1.5 rounded - full text - xs font - bold transition - all border ${currentStepIndex === idx
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                        : idx < currentStepIndex
+                                            ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                            : 'bg-white text-gray-400 border-gray-100'
+                                    } `}
                             >
                                 <span>{idx + 1}</span>
                                 <span className={currentStepIndex === idx ? 'inline' : 'hidden md:inline'}>{step.label}</span>
@@ -192,23 +191,23 @@ export const ProductWizard: React.FC = () => {
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#f8f9fc] dark:bg-[#0b0f19] p-8">
-                     <div className="max-w-4xl mx-auto">
+                    <div className="max-w-4xl mx-auto">
                         <CurrentComponent />
                     </div>
                 </div>
 
                 {/* Footer */}
                 <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-between">
-                     <button onClick={handlePrevStep} disabled={currentStepIndex === 0 || isSaving} className="px-6 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Zurück</button>
-                     
-                     <button 
+                    <button onClick={handlePrevStep} disabled={currentStepIndex === 0 || isSaving} className="px-6 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Zurück</button>
+
+                    <button
                         onClick={currentStepIndex === 5 ? handleSaveProduct : handleNextStep} // Step 6 (Index 5) is Save
                         disabled={isSaving}
                         className="px-8 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-lg flex items-center gap-2 disabled:opacity-50"
-                     >
-                        {isSaving ? <Loader2 className="animate-spin"/> : null}
+                    >
+                        {isSaving ? <Loader2 className="animate-spin" /> : null}
                         {currentStepIndex === 5 ? 'Produkt Speichern' : currentStepIndex === 6 ? 'Fertigstellen' : 'Weiter'}
-                     </button>
+                    </button>
                 </div>
             </div>
         </div>
