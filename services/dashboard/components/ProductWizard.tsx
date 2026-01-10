@@ -155,51 +155,51 @@ export const ProductWizard: React.FC = () => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
 
-            {/* Main Modal Container - Matches Legacy Rounding and Shadow */}
-            <div className="relative w-full max-w-7xl bg-[#0F172A] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[90vh] border border-white/10 ring-1 ring-white/5">
+            {/* Main Modal Container - Dynamic Theme */}
+            <div className="relative w-full max-w-7xl bg-white dark:bg-[#0F172A] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[90vh] border border-gray-200 dark:border-white/10 ring-1 ring-black/5 dark:ring-white/5 transition-colors duration-300">
 
-                {/* Header - Legacy Gradient & Spacing */}
-                <div className="px-8 py-6 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 z-20 flex flex-col gap-6">
+                {/* Header - Dynamic Theme */}
+                <div className="px-8 py-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 z-20 flex flex-col gap-6 transition-colors duration-300">
                     <div className="flex justify-between items-start w-full">
                         <div>
-                            <h2 className="text-2xl font-display font-bold text-white mb-1">Neues Produkt</h2>
-                            <p className="text-sm text-slate-400">Schritt {currentStep} von {WIZARD_STEPS.length}</p>
+                            <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-1">Neues Produkt</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Schritt {currentStep} von {WIZARD_STEPS.length}</p>
                         </div>
                         <button
                             onClick={handleClose}
-                            className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-colors border border-slate-700 group"
+                            className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors border border-gray-200 dark:border-slate-700 group"
                         >
-                            <X size={20} className="text-slate-400 group-hover:text-white transition-colors" />
+                            <X size={20} className="text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
                         </button>
                     </div>
 
-                    {/* Navigation Pills - Legacy Style */}
+                    {/* Navigation Pills - Dynamic Theme */}
                     <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2" ref={navRef}>
                         {WIZARD_STEPS.map((step, idx) => {
                             const isActive = currentStepIndex === idx;
                             const isCompleted = idx < currentStepIndex;
 
-                            // Legacy Pill Logic
+                            // Dynamic Pill Logic
                             let iconColor = 'text-slate-400';
-                            let bgClass = 'bg-slate-800/50 border-slate-800 text-slate-400';
+                            let bgClass = 'bg-gray-50 dark:bg-slate-800/50 border-gray-200 dark:border-slate-800 text-slate-500 dark:text-slate-400';
 
                             if (isActive) {
-                                iconColor = 'text-indigo-400';
-                                bgClass = 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400 shadow-lg shadow-indigo-500/10';
+                                iconColor = 'text-indigo-600 dark:text-indigo-400';
+                                bgClass = 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/50 text-indigo-700 dark:text-indigo-400 shadow-sm';
                             } else if (isCompleted) {
-                                iconColor = 'text-green-400';
-                                bgClass = 'bg-slate-800/50 border-green-900/30 text-slate-300';
+                                iconColor = 'text-green-500 dark:text-green-400';
+                                bgClass = 'bg-white dark:bg-slate-800/50 border-green-200 dark:border-green-900/30 text-slate-700 dark:text-slate-300';
                             }
 
                             return (
                                 <button
                                     key={step.id}
                                     onClick={() => { if (idx < 6 || isProductSaved) setCurrentStep(idx + 1) }}
-                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all text-sm font-medium whitespace-nowrap group hover:bg-slate-800 ${bgClass}`}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all text-sm font-medium whitespace-nowrap group hover:bg-gray-50 dark:hover:bg-slate-800 ${bgClass}`}
                                 >
                                     {isCompleted ? (
-                                        <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
-                                            <Check size={12} className="text-green-400" />
+                                        <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-500/20 flex items-center justify-center">
+                                            <Check size={12} className="text-green-600 dark:text-green-400" />
                                         </div>
                                     ) : (
                                         React.createElement(step.icon, { size: 18, className: iconColor })
@@ -211,26 +211,26 @@ export const ProductWizard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Content Body - Dark Mode Default */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0B0F19] relative">
+                {/* Content Body - Dynamic Theme */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-[#0B0F19] relative transition-colors duration-300">
                     <div className="max-w-5xl mx-auto p-8 lg:p-12">
                         <CurrentComponent />
                     </div>
                 </div>
 
-                {/* Footer - Legacy Style */}
-                <div className="px-8 py-5 border-t border-slate-800 bg-slate-900/90 backdrop-blur-md flex justify-between items-center z-20">
+                {/* Footer - Dynamic Theme */}
+                <div className="px-8 py-5 border-t border-gray-100 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex justify-between items-center z-20 transition-colors duration-300">
                     <button
                         onClick={handlePrevStep}
                         disabled={currentStepIndex === 0 || isSaving}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                         <ChevronRight className="rotate-180" size={18} /> Zurück
                     </button>
 
                     <div className="flex items-center gap-4">
                         {/* Optional Info Text */}
-                        <span className="text-xs text-slate-500 hidden sm:inline-block">
+                        <span className="text-xs text-slate-400 hidden sm:inline-block">
                             {isProductSaved ? 'Gespeichert' : 'Änderungen werden geprüft'}
                         </span>
 
