@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MediaLibrary } from './MediaLibrary';
+import { mediaService } from '../services/mediaService';
 import { ArrowLeft, Upload, Check, Globe, ShoppingBag, Store, Tag, DollarSign, Barcode, Layers, Image as ImageIcon, Box, Truck, Plus, Trash2, SlidersHorizontal, ChevronRight, Info, X, Wrench, Package, Maximize2, ShoppingCart, Sparkles, Wand2, Loader2, Zap, ArrowRightLeft, Database, Link, RefreshCw, Facebook, Instagram, Twitter, Video, Film, PlayCircle, Calculator, Percent, Ruler, Scale, Coins, TrendingDown, Clock, Search, ChevronLeft, ShieldCheck, AlertCircle, Eye, Smartphone, Music, Hash, MessageCircle, Share2, ThumbsUp, Heart, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import { authService } from '../services/authService';
@@ -125,6 +126,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
     const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
     const navRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const uploadInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -360,6 +362,35 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
         }
     };
 
+    const handleLocalImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Preview rendering
+        const previewUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, image_url: previewUrl }));
+
+        // Upload logic
+        const formDataPayload = new FormData();
+        formDataPayload.append('file', file); // API expects 'file' usually, checking service...
+
+        try {
+            // Attempt upload via mediaService
+            // Based on service definition: upload(formData) -> posts to /api/media/upload
+            const uploadedMedia = await mediaService.upload(formDataPayload);
+
+            // Assuming the response structure returns the file URL or object
+            if (uploadedMedia && uploadedMedia.url) {
+                setFormData(prev => ({ ...prev, image_url: uploadedMedia.url }));
+            }
+        } catch (error) {
+            console.error("Upload failed", error);
+            alert("Bild-Upload fehlgeschlagen. Bitte erneut versuchen.");
+        } finally {
+            if (uploadInputRef.current) uploadInputRef.current.value = '';
+        }
+    };
+
     const addOption = () => setOptions([...options, { id: `opt_${Date.now()}`, name: '', values: [], currentInput: '' }]);
     const removeOption = (id: string) => setOptions(options.filter(o => o.id !== id));
     const updateOptionName = (id: string, name: string) => setOptions(options.map(o => o.id === id ? { ...o, name } : o));
@@ -430,7 +461,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                 price: parseFloat(formData.price) || 0,
                 currency: 'EUR',
                 stock: parseInt(formData.stock) || 0,
-                image_url: initialProduct?.image_url || '',
+                image_url: formData.image_url || initialProduct?.image_url || '',
                 channels: formData.channels,
                 lastSync: new Date().toISOString(),
                 category: formData.category,
@@ -564,7 +595,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                 <ImageIcon size={16} /> Produktbilder
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 min-h-[140px]" onClick={() => fileInputRef.current?.click()}>
+                                <input type="file" ref={uploadInputRef} onChange={handleLocalImageUpload} style={{ display: 'none' }} accept="image/*" />
+                                <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 min-h-[140px]" onClick={() => uploadInputRef.current?.click()}>
                                     <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-3 text-slate-400">
                                         <Upload size={20} />
                                     </div>

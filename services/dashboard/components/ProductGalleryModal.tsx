@@ -33,7 +33,7 @@ export const ProductGalleryModal: React.FC<ProductGalleryModalProps> = ({ isOpen
     if (!isOpen || !product) return null;
 
     // Gallery images - only show product image if available
-    const galleryImages = product.imageUrl ? [product.imageUrl] : [];
+    const galleryImages = product.image_url ? [product.image_url] : [];
 
     // Mock Sales Data for Chart
     const salesData = [
@@ -115,7 +115,7 @@ export const ProductGalleryModal: React.FC<ProductGalleryModalProps> = ({ isOpen
                 <div className="flex-1 relative flex items-center justify-center p-4 md:p-10">
                     <img
                         src={galleryImages[activeImageIndex]}
-                        alt="Zoom View"
+                        alt="Zoom Ansicht"
                         className="max-w-full max-h-full object-contain shadow-2xl"
                     />
 
@@ -337,7 +337,7 @@ export const ProductGalleryModal: React.FC<ProductGalleryModalProps> = ({ isOpen
                                         {currentChannels.length > 0 && (
                                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400 flex justify-between">
                                                 <span>Letzter Sync: {new Date(product.lastSync).toLocaleDateString()}</span>
-                                                <button className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Sync Logs</button>
+                                                <button className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Protokolle</button>
                                             </div>
                                         )}
                                     </div>

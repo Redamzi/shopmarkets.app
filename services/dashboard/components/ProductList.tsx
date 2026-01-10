@@ -156,16 +156,22 @@ export const ProductList: React.FC<ProductListProps> = ({ products, onAddProduct
                             >
                                 {/* Image Container - Aspect 4:5 edge-to-edge */}
                                 <div className="relative w-full aspect-[4/5] overflow-hidden bg-slate-100 dark:bg-slate-800">
-                                    <img
-                                        src={product.image_url}
-                                        alt={product.title}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                    />
+                                    {product.image_url ? (
+                                        <img
+                                            src={product.image_url}
+                                            alt={product.title}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-300">
+                                            <ShoppingBag size={32} />
+                                        </div>
+                                    )}
 
                                     {/* Badges - Glassmorphism */}
                                     <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
                                         <span className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-900 dark:text-white text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full shadow-sm border border-white/20">
-                                            {product.category || 'Urban Time'}
+                                            {product.category || 'Allgemein'}
                                         </span>
                                     </div>
 
@@ -173,7 +179,7 @@ export const ProductList: React.FC<ProductListProps> = ({ products, onAddProduct
                                     {(isNew || product.stock < 5) && (
                                         <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10">
                                             <span className="bg-black text-white text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1.5 rounded-full shadow-sm">
-                                                {product.stock < 5 ? 'Low Stock' : 'Sale'}
+                                                {product.stock < 5 ? 'Knapp' : 'Angebot'}
                                             </span>
                                         </div>
                                     )}
@@ -214,8 +220,8 @@ export const ProductList: React.FC<ProductListProps> = ({ products, onAddProduct
                                             <button
                                                 onClick={(e) => toggleMenu(e, product.id)}
                                                 className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all ${activeMenuId === product.id
-                                                        ? 'bg-slate-900 text-white'
-                                                        : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                                                    ? 'bg-slate-900 text-white'
+                                                    : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                                                     }`}
                                             >
                                                 <Pencil size={14} className="md:w-[18px] md:h-[18px]" strokeWidth={2} />
@@ -321,12 +327,12 @@ export const ProductList: React.FC<ProductListProps> = ({ products, onAddProduct
 
                                 <div className="lg:col-span-2">
                                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${product.stock > 10 ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' :
-                                            product.stock > 0 ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400' :
-                                                'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                                        product.stock > 0 ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400' :
+                                            'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                                         }`}>
                                         <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 10 ? 'bg-green-500' :
-                                                product.stock > 0 ? 'bg-orange-500' :
-                                                    'bg-red-500'
+                                            product.stock > 0 ? 'bg-orange-500' :
+                                                'bg-red-500'
                                             }`}></div>
                                         {product.stock} Stk.
                                     </div>

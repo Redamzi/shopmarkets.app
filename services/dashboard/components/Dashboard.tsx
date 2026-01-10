@@ -113,7 +113,7 @@ export const Dashboard: React.FC = () => {
                                 <div className="text-3xl font-bold">98%</div>
                                 <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
                             </div>
-                            <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Efficiency</div>
+                            <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">Effizienz</div>
                             <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
                                 <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-[98%] rounded-full"></div>
                             </div>
@@ -129,8 +129,8 @@ export const Dashboard: React.FC = () => {
                 <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
                     <div className="flex justify-between items-center mb-8">
                         <div>
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Performance Overview</h3>
-                            <p className="text-sm text-slate-500">Cross-channel performance overview</p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Leistungsübersicht</h3>
+                            <p className="text-sm text-slate-500">Kanalübergreifende Leistungsübersicht</p>
                         </div>
                         <button className="p-2 hover:bg-slate-50 rounded-full text-slate-400">
                             <Activity size={20} />
@@ -155,9 +155,9 @@ export const Dashboard: React.FC = () => {
                         </div>
                         {/* Box 3 */}
                         <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Syncs</div>
+                            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Gesamt Syncs</div>
                             <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{stats?.totalSyncs}</div>
-                            <div className="text-xs text-slate-500 text-blue-500 font-medium">Real-time</div>
+                            <div className="text-xs text-slate-500 text-blue-500 font-medium">Echtzeit</div>
                         </div>
                     </div>
 
@@ -191,7 +191,7 @@ export const Dashboard: React.FC = () => {
                     <div className="flex justify-between items-end px-2">
                         <h3 className="text-xl font-bold text-slate-900 dark:text-white">Live Feed</h3>
                         <button onClick={() => navigate('/sync-history')} className="text-sm font-bold text-indigo-600 hover:text-indigo-700">
-                            View All
+                            Alle anzeigen
                         </button>
                     </div>
 

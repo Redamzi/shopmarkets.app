@@ -66,14 +66,14 @@ export const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen
                 const newProducts: Product[] = Array.from({ length: nextBatchSize }).map((_, i) => ({
                     id: `imp_${Date.now()}_${i}`,
                     sku: `${selectedChannel.id.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 10000)}`,
-                    title: `${selectedChannel.label} Product ${current - nextBatchSize + i + 1}`,
+                    title: `${selectedChannel.label} Produkt ${current - nextBatchSize + i + 1}`,
                     price: parseFloat((Math.random() * 100).toFixed(2)),
                     stock: Math.floor(Math.random() * 50),
                     image_url: '',
                     currency: 'EUR',
                     channels: [selectedChannel.id as Platform],
                     lastSync: new Date().toISOString(),
-                    category: 'Imported',
+                    category: 'Importiert',
                 }));
 
                 // Send batch to App

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, Check, Globe, ShoppingBag, Store, Tag, DollarSign, Barcode, Layers, Image as ImageIcon, Box, Truck, Plus, Trash2, SlidersHorizontal, ChevronRight, Info, X, Wrench, Package, Maximize2, ShoppingCart, Sparkles, Wand2, Loader2, Zap, ArrowRightLeft, Database, Link, RefreshCw, Facebook, Instagram, Twitter, Video, Film, PlayCircle, Calculator, Percent, Ruler, Scale, Coins, TrendingDown, Clock, Search, ChevronLeft } from 'lucide-react';
 import { Product, Platform } from '../types';
+import { mediaService } from '../services/mediaService';
 
 interface AddProductPageProps {
     onSave: (product: Product) => void;
@@ -253,8 +254,35 @@ export const AddProductPage: React.FC<AddProductPageProps> = ({ onSave, onCancel
         channels: ['shopify'] as Platform[],
         category: 'Möbel',
         manufacturer: '',
-        tags: ''
+        tags: '',
+        image_url: ''
     });
+
+    const uploadInputRef = React.useRef<HTMLInputElement>(null);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Optimistic update
+        const previewUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, image_url: previewUrl }));
+
+        const formDataPayload = new FormData();
+        formDataPayload.append('file', file);
+
+        try {
+            const uploadedMedia = await mediaService.upload(formDataPayload);
+            if (uploadedMedia && uploadedMedia.url) {
+                setFormData(prev => ({ ...prev, image_url: uploadedMedia.url }));
+            }
+        } catch (error) {
+            console.error("Upload failed", error);
+            alert("Bild-Upload fehlgeschlagen. Bitte erneut versuchen.");
+        } finally {
+            if (uploadInputRef.current) uploadInputRef.current.value = '';
+        }
+    };
 
     // Channel specific pricing state
     const [channelPrices, setChannelPrices] = useState<Record<string, string>>({});
@@ -576,7 +604,7 @@ export const AddProductPage: React.FC<AddProductPageProps> = ({ onSave, onCancel
                 sku: hasVariants ? generatedVariants[0]?.sku || 'VAR-001' : (formData.sku || `SKU-${Math.floor(Math.random() * 1000)}`),
                 price: hasVariants ? parseFloat(generatedVariants[0]?.price || '0') : (parseFloat(formData.price) || 0),
                 stock: hasVariants ? generatedVariants.reduce((acc, curr) => acc + (parseInt(curr.stock) || 0), 0) : (parseInt(formData.stock) || 0),
-                image_url: hasVariants && generatedVariants[0]?.image ? generatedVariants[0].image : '',
+                image_url: formData.image_url || (hasVariants && generatedVariants[0]?.image ? generatedVariants[0].image : ''),
                 currency: 'EUR',
                 channels: formData.channels,
                 lastSync: new Date().toISOString(),
@@ -799,7 +827,19 @@ export const AddProductPage: React.FC<AddProductPageProps> = ({ onSave, onCancel
                         {/* Images Section */}
                         <div>
                             <label className="block text-sm font-bold text-slate-900 dark:text-white mb-3 ml-1">Produktbilder</label>
-                            <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 min-h-[160px]">
+
+                            <input
+                                type="file"
+                                ref={uploadInputRef}
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                            />
+
+                            <div
+                                onClick={() => uploadInputRef.current?.click()}
+                                className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 min-h-[160px]"
+                            >
                                 <div className="w-14 h-14 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center mb-3 text-slate-400">
                                     <Upload size={24} />
                                 </div>
@@ -807,7 +847,22 @@ export const AddProductPage: React.FC<AddProductPageProps> = ({ onSave, onCancel
                                 <p className="text-xs mt-1">PNG, JPG (max. 5MB)</p>
                             </div>
                             <div className="grid grid-cols-4 gap-4 mt-4">
-                                <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700"><ImageIcon size={24} /></div>
+                                {formData.image_url ? (
+                                    <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700 relative group">
+                                        <img src={formData.image_url} alt="Product" className="w-full h-full object-cover" />
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFormData(prev => ({ ...prev, image_url: '' }));
+                                            }}
+                                            className="absolute top-2 right-2 bg-white/90 text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700"><ImageIcon size={24} /></div>
+                                )}
                             </div>
                         </div>
 
