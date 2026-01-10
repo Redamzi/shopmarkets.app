@@ -138,19 +138,31 @@ exports.aiGenerate = async (req, res) => {
     const { image, product_type } = req.body;
 
     try {
-        // TODO: Integrate with AI Generator Service
-        const aiResponse = await fetch('http://localhost:5005/generate/product-from-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image, product_type })
+        const aiService = require('../services/aiService');
+
+        // Generate product data from image
+        const aiOutput = await aiService.generateProductFromImage(image, product_type);
+
+        // Validate AI output
+        const validation = aiService.validateAIOutput(aiOutput);
+
+        if (!validation.valid) {
+            return res.status(400).json({
+                error: 'AI output validation failed',
+                details: validation.errors
+            });
+        }
+
+        res.json({
+            success: true,
+            data: aiOutput
         });
-
-        const data = await aiResponse.json();
-
-        res.json(data);
     } catch (err) {
         console.error('aiGenerate error:', err);
-        res.status(500).json({ error: 'AI generation failed' });
+        res.status(500).json({
+            error: 'AI generation failed',
+            message: err.message
+        });
     }
 };
 
