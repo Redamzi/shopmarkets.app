@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                 {/* Right: Actions & Profile */}
                 <div className="flex items-center gap-3 md:gap-4">
                     <button
-                        onClick={() => navigate('/products')}
+                        onClick={() => navigate('/products/new')}
                         className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#5245e5] hover:bg-[#4338ca] text-white rounded-xl shadow-lg shadow-indigo-500/30 transition-all active:scale-95"
                     >
                         <span className="font-bold text-sm">Produkt hinzufügen</span>
