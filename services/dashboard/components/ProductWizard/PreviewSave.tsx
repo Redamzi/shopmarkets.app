@@ -1,127 +1,98 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const PreviewSave: React.FC = () => {
-    const { productType, stepData, reset } = useProductWizardStore();
-    const [isSaving, setIsSaving] = useState(false);
-    const [saved, setSaved] = useState(false);
+    const { productType, stepData } = useProductWizardStore();
 
+    // Correct Data Mapping for 13 Steps
     const allData = {
+        title: stepData[2]?.title || stepData[1]?.title || 'Unbenanntes Produkt',
         product_type: productType,
-        ...stepData[2],
-        ...stepData[3],
-        ...stepData[4],
-        ...stepData[5],
-        ...stepData[6],
-        channels: stepData[7]?.channels || []
-    };
-
-    const handleSave = async () => {
-        setIsSaving(true);
-        try {
-            const response = await fetch('/api/product-wizard', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(allData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                setSaved(true);
-                setTimeout(() => {
-                    reset();
-                    window.location.href = '/products';
-                }, 2000);
-            }
-        } catch (error) {
-            console.error('Save failed:', error);
-            alert('Fehler beim Speichern');
-        } finally {
-            setIsSaving(false);
-        }
+        price: stepData[6]?.price || '0.00',
+        stock: stepData[7]?.quantity || '0',
+        sku: stepData[7]?.sku || '-',
+        category: stepData[10]?.category || '-',
+        images: stepData[3]?.images || [],
+        channels: stepData[12]?.channels || []
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-2">Vorschau & Speichern</h2>
-            <p className="text-gray-600 mb-6">Überprüfen Sie alle Daten vor dem Speichern</p>
+        <div className="max-w-4xl mx-auto p-2 md:p-6">
+            <h2 className="text-2xl font-bold mb-2 font-serif-display">Prüfung & Abschluss</h2>
+            <p className="text-gray-600 mb-6">Bitte überprüfen Sie Ihre Eingaben vor dem Speichern.</p>
 
             <div className="space-y-6">
-                <div className="border rounded-lg p-4">
-                    <h3 className="font-semibold mb-3">Produktinformationen</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span className="text-gray-600">Produktart:</span>
-                            <span className="ml-2 font-medium">{productType}</span>
+                <div className="border rounded-2xl p-6 bg-white shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Produktinformationen</h3>
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                        <div className="flex flex-col">
+                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Titel</span>
+                            <span className="font-medium text-slate-800 text-lg">{allData.title}</span>
                         </div>
-                        <div>
-                            <span className="text-gray-600">Titel:</span>
-                            <span className="ml-2 font-medium">{allData.title}</span>
+                        <div className="flex flex-col">
+                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Produktart</span>
+                            <span className="font-medium text-slate-800">{allData.product_type}</span>
                         </div>
-                        <div>
-                            <span className="text-gray-600">SKU:</span>
-                            <span className="ml-2 font-medium">{allData.sku}</span>
+                        <div className="flex flex-col">
+                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">SKU</span>
+                            <span className="font-medium text-slate-800">{allData.sku}</span>
                         </div>
-                        <div>
-                            <span className="text-gray-600">Kategorie:</span>
-                            <span className="ml-2 font-medium">{allData.category}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="border rounded-lg p-4">
-                    <h3 className="font-semibold mb-3">Preis & Inventar</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span className="text-gray-600">Preis:</span>
-                            <span className="ml-2 font-medium">€{allData.price}</span>
-                        </div>
-                        <div>
-                            <span className="text-gray-600">Bestand:</span>
-                            <span className="ml-2 font-medium">{allData.stock}</span>
+                        <div className="flex flex-col">
+                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Kategorie</span>
+                            <span className="font-medium text-slate-800">{allData.category}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="border rounded-lg p-4">
-                    <h3 className="font-semibold mb-3">Bilder</h3>
-                    <div className="grid grid-cols-4 gap-2">
-                        {allData.images?.map((img: string, i: number) => (
-                            <img key={i} src={img} alt={`Product ${i + 1}`} className="w-full h-24 object-cover rounded" />
-                        ))}
+                <div className="border rounded-2xl p-6 bg-white shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Preis & Lager</h3>
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                        <div className="flex flex-col">
+                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Preis (Netto)</span>
+                            <span className="font-medium text-emerald-600 text-xl">€ {allData.price}</span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Verfügbarer Bestand</span>
+                            <span className="font-medium text-slate-800">{allData.stock} Stück</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="border rounded-lg p-4">
-                    <h3 className="font-semibold mb-3">Verkaufskanäle</h3>
+                <div className="border rounded-2xl p-6 bg-white shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Medien ({allData.images.length})</h3>
+                    <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                        {allData.images.length > 0 ? (
+                            allData.images.map((img: string, i: number) => (
+                                <img key={i} src={img} alt={`Product ${i + 1}`} className="w-full aspect-square object-cover rounded-lg border border-slate-100" />
+                            ))
+                        ) : (
+                            <span className="text-gray-400 italic">Keine Bilder hochgeladen</span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="border rounded-2xl p-6 bg-white shadow-sm">
+                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Aktive Kanäle</h3>
                     <div className="flex flex-wrap gap-2">
-                        {allData.channels.map((channel: string) => (
-                            <span key={channel} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                                {channel}
-                            </span>
-                        ))}
+                        {allData.channels.length > 0 ? (
+                            allData.channels.map((channel: string) => (
+                                <span key={channel} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100">
+                                    {channel}
+                                </span>
+                            ))
+                        ) : (
+                            <span className="text-gray-400 italic">Keine Kanäle ausgewählt</span>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {saved && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-6">
-                    <p className="text-green-700 font-semibold">✅ Produkt erfolgreich gespeichert!</p>
-                </div>
-            )}
-
-            <div className="flex gap-4 mt-8">
-                <button
-                    onClick={handleSave}
-                    disabled={isSaving || saved}
-                    className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-300"
-                >
-                    {isSaving ? 'Speichert...' : saved ? 'Gespeichert ✓' : 'Produkt speichern'}
-                </button>
+            <div className="mt-8 p-4 bg-blue-50 text-blue-800 rounded-xl text-sm flex items-start gap-3">
+                <span className="text-xl">💡</span>
+                <p>
+                    Klicken Sie unten rechts auf <strong>"Speichern & Fertig"</strong>, um das Produkt zu erstellen.
+                    Es wird anschließend in Ihrer Produktübersicht erscheinen.
+                </p>
             </div>
         </div>
     );
