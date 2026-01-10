@@ -27,8 +27,17 @@ app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow all origins for now to avoid CORS hell, or restrict to frontend
-        return callback(null, true);
+        const allowedOrigins = [
+            'https://start.shopmarkets.app',
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ];
+
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
