@@ -6,8 +6,12 @@ import { AIGenerator } from './ProductWizard/AIGenerator';
 import { MediaUpload } from './ProductWizard/MediaUpload';
 import { AttributesVariants } from './ProductWizard/AttributesVariants';
 import { PriceRadar } from './ProductWizard/PriceRadar';
-import { PricingInventory } from './ProductWizard/PricingInventory';
+import { PricingInventory } from './ProductWizard/PricingInventory'; // Used for step 6 Pricing
+import { Inventory } from './ProductWizard/Inventory';
+import { Shipping } from './ProductWizard/Shipping';
 import { SEOMarketing } from './ProductWizard/SEOMarketing';
+import { Organization } from './ProductWizard/Organization';
+import { Configurator } from './ProductWizard/Configurator';
 import { ChannelsSync } from './ProductWizard/ChannelsSync';
 import { SEOPreview } from './ProductWizard/SEOPreview';
 import { ReadyCheck } from './ProductWizard/ReadyCheck';
@@ -21,16 +25,16 @@ import {
 
 const WIZARD_STEPS = [
     { id: 'ai', label: 'AI Start', icon: Sparkles, component: AIGenerator },
-    { id: 'general', label: 'Basis', icon: Layers, component: ProductTypeSelector }, // Step 1 is mapped to Type Selector for now
+    { id: 'general', label: 'Basis', icon: Layers, component: ProductTypeSelector },
     { id: 'media', label: 'Medien', icon: ImageIcon, component: MediaUpload },
     { id: 'variants', label: 'Varianten', icon: SlidersHorizontal, component: AttributesVariants },
     { id: 'price_check', label: 'Preis Radar', icon: TrendingDown, component: PriceRadar },
     { id: 'pricing', label: 'Preise', icon: DollarSign, component: PricingInventory },
-    { id: 'inventory', label: 'Lager', icon: Box, component: () => <div className="p-10 text-center">Lager Verwaltung (Teil von Preise)</div> },
-    { id: 'shipping', label: 'Versand', icon: Truck, component: () => <div className="p-10 text-center">Versand Feature (Coming Soon)</div> },
-    { id: 'tiktok', label: 'TikTok', icon: Video, component: SEOMarketing }, // TikTok included here
-    { id: 'organization', label: 'Org', icon: Tag, component: () => <div className="p-10 text-center">Organisation (Coming Soon)</div> },
-    { id: 'configurator', label: 'Extras', icon: Wrench, component: () => <div className="p-10 text-center">Extras (Coming Soon)</div> },
+    { id: 'inventory', label: 'Lager', icon: Box, component: Inventory },
+    { id: 'shipping', label: 'Versand', icon: Truck, component: Shipping },
+    { id: 'tiktok', label: 'TikTok', icon: Video, component: SEOMarketing },
+    { id: 'organization', label: 'Org', icon: Tag, component: Organization },
+    { id: 'configurator', label: 'Extras', icon: Wrench, component: Configurator },
     { id: 'organization_channels', label: 'Kanäle', icon: Globe, component: ChannelsSync },
     { id: 'check', label: 'Prüfung', icon: ShieldCheck, component: PreviewSave },
 ];
