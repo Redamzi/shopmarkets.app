@@ -209,7 +209,7 @@ export const AIGenerator: React.FC = () => {
                         <label className="block text-sm font-medium mb-1">TikTok Hashtags</label>
                         <input
                             type="text"
-                            value={editableData.tiktok?.hashtags?.join(' ') || ''}
+                            value={Array.isArray(editableData.tiktok?.hashtags) ? editableData.tiktok?.hashtags?.join(' ') : (editableData.tiktok?.hashtags || '')}
                             onChange={(e) => setEditableData({
                                 ...editableData,
                                 tiktok: { ...editableData.tiktok, hashtags: e.target.value.split(' ').slice(0, 5) }
