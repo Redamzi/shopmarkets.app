@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useProductWizardStore } from '../store/productWizardStore';
+import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const AIGenerator: React.FC = () => {
     const { productType, aiOutput, setAIOutput, setStepData, completeStep, setCurrentStep } = useProductWizardStore();

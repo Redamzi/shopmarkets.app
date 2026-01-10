@@ -1,5 +1,5 @@
 import React from 'react';
-import { useProductWizardStore } from '../store/productWizardStore';
+import { useProductWizardStore } from '../../store/productWizardStore';
 
 const PRODUCT_TYPES = [
     { id: 'simple', name: 'Einfaches Produkt', description: 'Einzelartikel ohne Varianten', icon: '📦' },

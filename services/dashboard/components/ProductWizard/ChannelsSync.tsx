@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useProductWizardStore } from '../store/productWizardStore';
+import { useProductWizardStore } from '../../store/productWizardStore';
 
 const CHANNELS = [
     { id: 'shopify', name: 'Shopify', icon: '🛍️', requiredFields: ['title', 'price', 'stock'] },

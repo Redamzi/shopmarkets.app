@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useProductWizardStore } from '../store/productWizardStore';
+import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const AttributesVariants: React.FC = () => {
     const { productType, setStepData, completeStep, setCurrentStep } = useProductWizardStore();

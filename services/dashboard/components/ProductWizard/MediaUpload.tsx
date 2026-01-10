@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useProductWizardStore } from '../store/productWizardStore';
+import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const MediaUpload: React.FC = () => {
     const { setStepData, completeStep, setCurrentStep } = useProductWizardStore();

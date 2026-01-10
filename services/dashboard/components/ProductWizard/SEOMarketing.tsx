@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useProductWizardStore } from '../store/productWizardStore';
+import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const SEOMarketing: React.FC = () => {
     const { stepData, setStepData, completeStep, setCurrentStep } = useProductWizardStore();
