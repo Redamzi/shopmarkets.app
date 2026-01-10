@@ -7,7 +7,6 @@ import { StepDetails } from './ProductWizard/StepDetails'; // Step 3 Wrapper
 import { MediaUpload } from './ProductWizard/MediaUpload'; // Step 4
 import { StepPricing } from './ProductWizard/StepPricing'; // Step 5 Wrapper
 import { PreviewSave } from './ProductWizard/PreviewSave'; // Step 6
-import { ThemeToggle } from './ThemeToggle';
 import { ChannelsSync } from './ProductWizard/ChannelsSync'; // Step 7 (Sync)
 
 // Import Icons
@@ -166,15 +165,12 @@ export const ProductWizard: React.FC = () => {
                             <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-1">Neues Produkt</h2>
                             <p className="text-sm text-slate-500 dark:text-slate-400">Schritt {currentStep} von {WIZARD_STEPS.length}</p>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <ThemeToggle />
-                            <button
-                                onClick={handleClose}
-                                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors border border-gray-200 dark:border-slate-700 group"
-                            >
-                                <X size={20} className="text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
-                            </button>
-                        </div>
+                        <button
+                            onClick={handleClose}
+                            className="w-10 h-10 rounded-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors border border-gray-200 dark:border-slate-700 group"
+                        >
+                            <X size={20} className="text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+                        </button>
                     </div>
 
                     {/* Navigation Pills - Dynamic Theme */}

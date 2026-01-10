@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from './ThemeProvider';
 import { User, Bell, Lock, Globe, Moon, ChevronRight, Camera, Mail, Smartphone, Shield, Eye, EyeOff, Check, Laptop } from 'lucide-react';
 import { authService } from '../services/authService';
 
@@ -39,42 +40,10 @@ export const Settings: React.FC = () => {
         }
     };
 
-    // Theme State Management
-    const [theme, setTheme] = useState<'light' | 'dark' | 'system'>(() => {
-        if (typeof window !== 'undefined') {
-            return (localStorage.getItem('theme') as 'light' | 'dark' | 'system') || 'system';
-        }
-        return 'system';
-    });
+    // Theme State Management via Global Provider
+    const { theme, setTheme } = useTheme();
 
-    // Apply Theme Effect
-    useEffect(() => {
-        const root = window.document.documentElement;
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-        const applyTheme = () => {
-            root.classList.remove('light', 'dark');
-
-            if (theme === 'system') {
-                if (mediaQuery.matches) {
-                    root.classList.add('dark');
-                } else {
-                    root.classList.add('light');
-                }
-            } else {
-                root.classList.add(theme);
-            }
-        };
-
-        applyTheme();
-        localStorage.setItem('theme', theme);
-
-        // Listen for system changes if in system mode
-        if (theme === 'system') {
-            mediaQuery.addEventListener('change', applyTheme);
-            return () => mediaQuery.removeEventListener('change', applyTheme);
-        }
-    }, [theme]);
+    // Removed local useEffect for theme application as it is handled by ThemeProvider
 
 
     const tabs = [
