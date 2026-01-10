@@ -14,6 +14,7 @@ import billingRoutes from './routes/billing.js';
 import syncRoutes from './routes/sync.js';
 import categoryRoutes from './routes/categories.js';
 import mediaRoutes from './routes/media.js';
+import productWizardRoutes from './routes/productWizard.js';
 import pool from './utils/db.js';
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use('/api/billing', authenticateToken, billingRoutes);
 app.use('/api/sync', authenticateToken, syncRoutes);
 app.use('/api/categories', authenticateToken, categoryRoutes);
 app.use('/api/media', authenticateToken, mediaRoutes);
+app.use('/api/product-wizard', productWizardRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
