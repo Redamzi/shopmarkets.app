@@ -249,4 +249,3 @@ export const ProductWizard: React.FC = () => {
         </div>
     );
 };
-```
