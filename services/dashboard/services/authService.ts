@@ -4,7 +4,7 @@ import { User, AuthResponse } from '../types/auth';
 import { storage } from '../utils/storage';
 
 // URL zum neuen Auth-Microservice
-const AUTH_URL = 'https://security.shopmarkets.app/api/auth';
+const AUTH_URL = (import.meta.env.VITE_SECURITY_SERVICE_URL || 'https://security.shopmarkets.app') + '/api/auth';
 
 // Token Handling Helper
 const setToken = (token: string) => {
