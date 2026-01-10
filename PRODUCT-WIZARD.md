@@ -1,88 +1,125 @@
 # PRODUCT WIZARD 3.0 - PRODUCTION-ONLY
 
-## Übersicht
+## Rolle
 
-Vollständiger Step-basierter Wizard für Produkterstellung mit AI-Unterstützung, Preis-Radar, TikTok Integration und Channel Sync.
+AI-gestützter Assistent für neue Produkte im Dashboard. Prüft, ergänzt fehlende Felder, macht Produkte Production-Ready.
+
+**Wichtig:**
+- Nur neue Produkte (keine Imports)
+- Nur relevante Steps pro Produktart
+- Step 2 = AI-Generator
+- Hauptbild = Titelbild + SEO
 
 ---
 
 ## Step 1 – Produktart wählen
 
-**Frontend:**
-- User wählt Produktart
-- Dynamische Steps werden geladen
-
-**Backend:**
-- Speichert `product_type` in DB
-- Gibt relevante Steps zurück
+**Prüfung:** `product_type` gesetzt?
 
 **Produktarten:**
-1. Einfaches Produkt
-2. Konfigurierbares Produkt
-3. Gruppiertes Produkt
-4. Virtuelles Produkt
-5. Bündelprodukt
-6. Herunterladbares Produkt
-7. Abo-Produkt
-8. Personalisiertes Produkt
-9. Buchbares Produkt
+1. Simple Product
+2. Configurable Product
+3. Grouped Product
+4. Virtual Product
+5. Bundle Product
+6. Downloadable Product
+7. Subscription Product
+8. Personalized Product
+9. Bookable Product
+
+**Action:** Speichere `product_type`
 
 ---
 
-## Step 2 – Grundinformationen
+## Step 2 – AI-Generator
 
-**Felder:**
-- Titel (required)
+**Prüfung:** Titel, Beschreibung, SEO, TikTok, Attribute vorhanden?
+
+**AI-Generierung (Claude 3.5 Sonnet):**
+
+**Input:** Bild Upload
+
+**Analyse:**
+- Titel
 - Beschreibung
-- Kurzbeschreibung (max 160 chars)
-- SKU (required, unique)
-- Kategorie
-- Hersteller (optional)
-- Tags
+- SEO Meta
+- TikTok Caption/Hashtags
+- Attribute
+- Varianten (falls relevant)
 
-**Validation:**
-- Title: min 3 chars
-- SKU: unique, alphanumerisch
-- Kategorie: existierend
+**Hauptbild:**
+- Automatisch als Titelbild
+- SEO-Image Description
+
+**Output JSON:**
+```json
+{
+  "title": "string",
+  "short_description": "string (max 160)",
+  "description": "string HTML",
+  "category": "string",
+  "manufacturer": "string",
+  "tags": "string",
+  "sku": "string",
+  "attributes": {
+    "material": "string",
+    "color": "string",
+    "size": "string",
+    "weight": "string"
+  },
+  "variants": [
+    { "name": "string", "values": ["string"] }
+  ],
+  "seo": {
+    "title": "string",
+    "description": "string",
+    "image_alt": "string"
+  },
+  "tiktok": {
+    "caption": "string (max 150)",
+    "hashtags": ["#tag1", "#tag2"]
+  },
+  "images": ["main_url", "additional_urls"]
+}
+```
+
+**Editierbar:** Ja
 
 ---
 
 ## Step 3 – Medien
 
 **Upload:**
-- Hauptbild (required)
 - Zusätzliche Bilder (max 5)
 - CDN Storage
-
-**AI-Generator:**
-- Bild-Analyse via Claude 3.5 Sonnet
-- Generiert: title, description, seo, tiktok, attributes
+- Validation: max 5MB, jpg/png/webp
 
 ---
 
 ## Step 4 – Preise & Inventar
 
 **Felder:**
-- Preis (required)
+- Preis (required, > 0)
 - Vergleichspreis (optional)
-- Bestand (required)
+- Bestand (required, >= 0)
 - Bestandswarnung (optional)
 
-**Preis-Radar:**
-- Findet günstigstes Konkurrenzangebot
-- Dynamische Preisanpassung (optional)
-- Web-Scraping Integration
+**Preis-Radar (optional):**
+- Konkurrenzanalyse
+- Preisempfehlung
+- Dynamische Anpassung
 
 ---
 
 ## Step 5 – Attribute & Varianten
+
+**Nur laden wenn:** Configurable, Bundle, Personalized
 
 **Attribute:**
 - Material, Farbe, Größe, Gewicht
 - Custom Fields (JSONB)
 
 **Varianten:**
-- Nur bei Configurable/Bundle
 - SKU pro Variante
 - Preis pro Variante
 
@@ -90,64 +127,54 @@ Vollständiger Step-basierter Wizard für Produkterstellung mit AI-Unterstützun
 
 ## Step 6 – SEO & Marketing
 
-**SEO:**
+**SEO (AI-generiert):**
 - Meta Title
 - Meta Description
-- URL Slug (auto-generated)
+- URL Slug (auto)
 
-**TikTok Integration:**
+**TikTok:**
 - Caption (max 150 chars)
 - Hashtags (max 5)
-- Video-Optimierung für Reels & TikTok
 
 ---
 
 ## Step 7 – Channels & Sync
 
-**Kanal-Auswahl:**
+**Kanäle:**
 - Shopify, WooCommerce, Amazon, eBay
 - TikTok Shop, Instagram Shopping
 - Otto Market, Zalando
 
-**Kanal-Check:**
-- ✅ Ready: Alle Pflichtfelder ausgefüllt
-- ⚠️ Missing: Fehlende Felder anzeigen
-
-**Sync:**
+**Pflichtfeld-Check:**
+- Pro Kanal validieren
 - Transform zu Channel-Format
-- POST zu Channel API
-- External ID speichern
-- Webhook registrieren
+- External IDs vorbereiten
+- Webhooks registrieren
 
 ---
 
 ## Step 8 – SEO-Vorschau
 
 **Checks:**
-- Titel-Länge: Optimal (50-60 chars)
-- Beschreibung: Perfekt (150-160 chars)
-- Bilder: Min 1 Bild
-
-**Status:**
-- ✅ Gut
-- ⚠️ Verbesserung möglich
-- ❌ Fehlt
+- Titel: 50-60 chars ✅/⚠️/❌
+- Beschreibung: 150-160 chars ✅/⚠️/❌
+- Bilder: Min 1 ✅/⚠️/❌
 
 ---
 
 ## Step 9 – Bereit für Sync
 
 **Validierung:**
-- Alle Pflichtfelder ausgefüllt
-- Min 1 Bild
-- Gültige SKU
-- Preis > 0
-- Bestand >= 0
+- Alle Pflichtfelder ✅
+- Min 1 Bild ✅
+- SKU unique ✅
+- Preis > 0 ✅
+- Bestand >= 0 ✅
 
 **Status:**
 ```
 🚀 Bereit für Sync
-Ihr Produkt ist optimal konfiguriert.
+Produkt optimal konfiguriert.
 Alle Pflichtfelder für X Kanäle ausgefüllt.
 ```
 
@@ -157,73 +184,45 @@ Alle Pflichtfelder für X Kanäle ausgefüllt.
 
 **Vorschau:**
 - Alle Daten zusammengefasst
-- AI-generierte Felder editierbar
+- AI-Felder editierbar
 
 **Speichern:**
 - DB Transaction
 - Channel Sync Trigger
-- Response: product_id + Status
-
----
-
-## Features
-
-### Preis-Radar
-- Automatische Konkurrenzanalyse
-- Web-Scraping
-- Dynamische Preisanpassung
-- Preisempfehlung
-
-### TikTok Integration
-- Caption-Generator
-- Hashtag-Vorschläge
-- Video-Optimierung
-- Reels-Format
-
-### Kanal-Check
-- Pflichtfeld-Validierung pro Channel
-- Ready-Status
-- Missing Fields Anzeige
-
-### SEO-Vorschau
-- Titel-Länge Check
-- Beschreibung Check
-- Bild-Anzahl Check
-- Optimierungsvorschläge
+- Response: `product_id` + Status
 
 ---
 
 ## Dynamische Steps
 
 **Simple Product:**
-- Steps: 1, 2, 3, 4, 6, 7, 8, 9, 10
+- 1, 2, 3, 4, 6, 7, 8, 9, 10
 
 **Configurable Product:**
-- Steps: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+- 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 
 **Downloadable Product:**
-- Steps: 1, 2, 3, 6, 7, 8, 9, 10
+- 1, 2, 3, 6, 7, 8, 9, 10
 
 ---
 
-## Backend Schema
+## Datenbankfelder
 
-```sql
-ALTER TABLE products ADD COLUMN product_type VARCHAR(50);
-ALTER TABLE products ADD COLUMN attributes JSONB;
-ALTER TABLE products ADD COLUMN seo JSONB;
-ALTER TABLE products ADD COLUMN tiktok JSONB;
-ALTER TABLE products ADD COLUMN channels JSONB;
-ALTER TABLE products ADD COLUMN price_radar JSONB;
+```
+product_type, title, description, short_description, 
+sku, category, manufacturer, tags, attributes, seo, 
+tiktok, channels, price, stock, variants, images, 
+price_radar
 ```
 
 ---
 
-## Validation Rules
+## Anforderungen
 
-**SKU:** Unique, A-Z 0-9 -, min 3 chars  
-**Preis:** > 0, max 2 decimals  
-**Bestand:** >= 0, integer  
-**Bilder:** Min 1, max 10, jpg/png/webp, max 5MB  
-**TikTok Caption:** Max 150 chars  
-**TikTok Hashtags:** Max 5
+1. Fehlende Felder automatisch ergänzen
+2. Nur relevante Steps laden
+3. Hauptbild = Titelbild + SEO
+4. AI Output editierbar
+5. Channel-Mapping vorbereiten
+6. JSON strukturiert für DB + Frontend
+
