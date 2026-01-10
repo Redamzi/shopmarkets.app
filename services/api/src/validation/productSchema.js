@@ -1,4 +1,4 @@
-const Joi = require('joi');
+import Joi from 'joi';
 
 const productTypeSchema = Joi.string().valid(
     'simple',
@@ -98,7 +98,7 @@ const aiGenerateSchema = Joi.object({
     product_type: productTypeSchema
 });
 
-module.exports = {
+export {
     createProductSchema,
     updateProductSchema,
     stepDataSchemas,

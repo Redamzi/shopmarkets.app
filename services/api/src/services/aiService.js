@@ -1,8 +1,8 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 const AI_GENERATOR_URL = process.env.AI_GENERATOR_URL || 'http://localhost:5005';
 
-async function generateProductFromImage(imageBase64, productType) {
+export async function generateProductFromImage(imageBase64, productType) {
     try {
         const response = await fetch(`${AI_GENERATOR_URL}/generate/product-from-image`, {
             method: 'POST',
@@ -48,13 +48,13 @@ async function generateProductFromImage(imageBase64, productType) {
     }
 }
 
-function generateSKU() {
+export function generateSKU() {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 7);
     return `SKU-${timestamp}-${random}`.toUpperCase();
 }
 
-function validateAIOutput(aiOutput) {
+export function validateAIOutput(aiOutput) {
     const errors = [];
 
     if (!aiOutput.title || aiOutput.title.length < 3) {
@@ -78,9 +78,3 @@ function validateAIOutput(aiOutput) {
         errors
     };
 }
-
-module.exports = {
-    generateProductFromImage,
-    validateAIOutput,
-    generateSKU
-};

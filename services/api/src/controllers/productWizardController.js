@@ -1,4 +1,4 @@
-const pool = require('../config/db');
+import pool from '../utils/db.js';
 
 const STEP_MAPPING = {
     simple: [1, 2, 3, 4, 6, 7, 8, 9, 10],
@@ -12,7 +12,7 @@ const STEP_MAPPING = {
     bookable: [1, 2, 3, 4, 6, 7, 8, 9, 10]
 };
 
-exports.getSteps = (req, res) => {
+export const getSteps = (req, res) => {
     const { product_type } = req.query;
 
     if (!product_type || !STEP_MAPPING[product_type]) {
@@ -25,7 +25,7 @@ exports.getSteps = (req, res) => {
     });
 };
 
-exports.createProduct = async (req, res) => {
+export const createProduct = async (req, res) => {
     const { product_type, title, sku } = req.body;
     const user_id = req.user.id;
 
@@ -47,7 +47,7 @@ exports.createProduct = async (req, res) => {
     }
 };
 
-exports.getProduct = async (req, res) => {
+export const getProduct = async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -67,7 +67,7 @@ exports.getProduct = async (req, res) => {
     }
 };
 
-exports.updateProduct = async (req, res) => {
+export const updateProduct = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
@@ -88,7 +88,7 @@ exports.updateProduct = async (req, res) => {
     }
 };
 
-exports.getStepData = async (req, res) => {
+export const getStepData = async (req, res) => {
     const { id, stepNumber } = req.params;
 
     try {
@@ -111,7 +111,7 @@ exports.getStepData = async (req, res) => {
     }
 };
 
-exports.saveStepData = async (req, res) => {
+export const saveStepData = async (req, res) => {
     const { id, stepNumber } = req.params;
     const stepData = req.body;
 
@@ -134,17 +134,17 @@ exports.saveStepData = async (req, res) => {
     }
 };
 
-exports.aiGenerate = async (req, res) => {
+export const aiGenerate = async (req, res) => {
     const { image, product_type } = req.body;
 
     try {
-        const aiService = require('../services/aiService');
+        const { generateProductFromImage, validateAIOutput } = await import('../services/aiService.js');
 
         // Generate product data from image
-        const aiOutput = await aiService.generateProductFromImage(image, product_type);
+        const aiOutput = await generateProductFromImage(image, product_type);
 
         // Validate AI output
-        const validation = aiService.validateAIOutput(aiOutput);
+        const validation = validateAIOutput(aiOutput);
 
         if (!validation.valid) {
             return res.status(400).json({
@@ -239,3 +239,13 @@ function mapStepDataToFields(stepNumber, stepData) {
             return stepData;
     }
 }
+
+export default {
+    getSteps,
+    createProduct,
+    getProduct,
+    updateProduct,
+    getStepData,
+    saveStepData,
+    aiGenerate
+};
