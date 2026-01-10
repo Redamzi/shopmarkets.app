@@ -69,7 +69,8 @@ export const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen
                     title: `${selectedChannel.label} Product ${current - nextBatchSize + i + 1}`,
                     price: parseFloat((Math.random() * 100).toFixed(2)),
                     stock: Math.floor(Math.random() * 50),
-                    imageUrl: `https://picsum.photos/200?random=${Math.random()}`,
+                    image_url: '',
+                    currency: 'EUR',
                     channels: [selectedChannel.id as Platform],
                     lastSync: new Date().toISOString(),
                     category: 'Imported',
@@ -273,8 +274,8 @@ export const ImportProductsModal: React.FC<ImportProductsModalProps> = ({ isOpen
                                 disabled={!canAfford}
                                 onClick={handleStartImport}
                                 className={`px-8 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2 transition-all ${canAfford
-                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/20'
-                                        : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-600/20'
+                                    : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
                                     }`}
                             >
                                 <Download size={18} />

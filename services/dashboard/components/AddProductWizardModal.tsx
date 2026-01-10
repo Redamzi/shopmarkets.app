@@ -428,8 +428,9 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                 title: formData.title || 'Neues Produkt',
                 sku: formData.sku,
                 price: parseFloat(formData.price) || 0,
+                currency: 'EUR',
                 stock: parseInt(formData.stock) || 0,
-                image_url: initialProduct?.image_url || `https://picsum.photos/400/400?random=${Date.now()}`,
+                image_url: initialProduct?.image_url || '',
                 channels: formData.channels,
                 lastSync: new Date().toISOString(),
                 category: formData.category,
@@ -579,7 +580,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                 </div>
                             </div>
                             <div className="grid grid-cols-4 gap-3 mt-4">
-                                {formData.image_url && !formData.image_url.includes('picsum') && (
+                                {formData.image_url && (
                                     <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-300 border border-slate-100 dark:border-slate-700 relative overflow-hidden group">
                                         <img src={formData.image_url} className="w-full h-full object-cover" />
                                         <button onClick={() => setFormData({ ...formData, image_url: '' })} className="absolute top-1 right-1 bg-black/50 p-1 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
