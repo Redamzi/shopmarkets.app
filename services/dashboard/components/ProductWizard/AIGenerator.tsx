@@ -12,39 +12,54 @@ export const AIGenerator: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Preview
         const reader = new FileReader();
         reader.onloadend = () => {
             const base64 = reader.result as string;
             setImage(base64);
-            generateWithAI(base64);
         };
         reader.readAsDataURL(file);
+
+        // Generate directly
+        generateWithAI(file);
     };
 
-    const generateWithAI = async (imageBase64: string) => {
+    const generateWithAI = async (file: File) => {
         setIsProcessing(true);
         try {
-            const response = await fetch('/api/product-wizard/ai-generate', {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Allow override via Env, default to local microservice
+            const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:5005';
+
+            // Legacy Logic: Direct call to Microservice (bypassing Main API)
+            const response = await fetch(`${AI_SERVICE_URL}/generate`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({
-                    image: imageBase64,
-                    product_type: productType
-                })
+                // Content-Type is set automatically for FormData
+                body: formData
             });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`AI Service Error: ${response.status} ${errText}`);
+            }
 
             const result = await response.json();
 
-            if (result.success) {
-                setAIOutput(result.data);
-                setEditableData(result.data);
+            // Legacy Response structure: { data: { ... } }
+            const data = result.data;
+
+            if (data) {
+                setAIOutput(data);
+                setEditableData(data);
                 setIsEditing(true);
+            } else {
+                throw new Error('No data received from AI Service');
             }
         } catch (error) {
             console.error('AI Generation failed:', error);
+            alert('Fehler bei der AI Generierung. Bitte sicherstellen, dass der AI Service (Port 5005) läuft.');
         } finally {
             setIsProcessing(false);
         }
