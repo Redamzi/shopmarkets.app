@@ -153,63 +153,100 @@ export const ProductWizard: React.FC = () => {
     const CurrentComponent = WIZARD_STEPS[currentStepIndex]?.component || (() => <div>Step not found</div>);
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-gray-100">
-            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={handleClose} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
 
-            <div className="relative w-full max-w-6xl bg-white dark:bg-slate-950 rounded-none md:rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-full md:h-[90vh] border border-white/20">
+            {/* Main Modal Container - Matches Legacy Rounding and Shadow */}
+            <div className="relative w-full max-w-7xl bg-[#0F172A] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[90vh] border border-white/10 ring-1 ring-white/5">
 
-                {/* Header with 7 Steps */}
-                <div className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl z-20 flex flex-col gap-3">
-                    <div className="flex justify-between items-center w-full">
-                        <div className="flex items-center gap-4">
-                            <button onClick={handleClose} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
-                                <X size={16} className="text-slate-600" />
-                            </button>
-                            <h2 className="text-lg font-bold">Neues Produkt</h2>
+                {/* Header - Legacy Gradient & Spacing */}
+                <div className="px-8 py-6 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 z-20 flex flex-col gap-6">
+                    <div className="flex justify-between items-start w-full">
+                        <div>
+                            <h2 className="text-2xl font-display font-bold text-white mb-1">Neues Produkt</h2>
+                            <p className="text-sm text-slate-400">Schritt {currentStep} von {WIZARD_STEPS.length}</p>
                         </div>
-                        <div className="text-xs text-indigo-500 font-mono">FLOW: 7-STEPS v3</div>
+                        <button
+                            onClick={handleClose}
+                            className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-colors border border-slate-700 group"
+                        >
+                            <X size={20} className="text-slate-400 group-hover:text-white transition-colors" />
+                        </button>
                     </div>
 
-                    <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1" ref={navRef}>
-                        {WIZARD_STEPS.map((step, idx) => (
-                            <button
-                                key={step.id}
-                                onClick={() => { if (idx < 6 || isProductSaved) setCurrentStep(idx + 1) }}
-                                className={`flex items - center gap - 2 px - 3 py - 1.5 rounded - full text - xs font - bold transition - all border ${currentStepIndex === idx
-                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                                        : idx < currentStepIndex
-                                            ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
-                                            : 'bg-white text-gray-400 border-gray-100'
-                                    } `}
-                            >
-                                <span>{idx + 1}</span>
-                                <span className={currentStepIndex === idx ? 'inline' : 'hidden md:inline'}>{step.label}</span>
-                            </button>
-                        ))}
+                    {/* Navigation Pills - Legacy Style */}
+                    <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-2" ref={navRef}>
+                        {WIZARD_STEPS.map((step, idx) => {
+                            const isActive = currentStepIndex === idx;
+                            const isCompleted = idx < currentStepIndex;
+
+                            // Legacy Pill Logic
+                            let iconColor = 'text-slate-400';
+                            let bgClass = 'bg-slate-800/50 border-slate-800 text-slate-400';
+
+                            if (isActive) {
+                                iconColor = 'text-indigo-400';
+                                bgClass = 'bg-indigo-500/10 border-indigo-500/50 text-indigo-400 shadow-lg shadow-indigo-500/10';
+                            } else if (isCompleted) {
+                                iconColor = 'text-green-400';
+                                bgClass = 'bg-slate-800/50 border-green-900/30 text-slate-300';
+                            }
+
+                            return (
+                                <button
+                                    key={step.id}
+                                    onClick={() => { if (idx < 6 || isProductSaved) setCurrentStep(idx + 1) }}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all text-sm font-medium whitespace-nowrap group hover:bg-slate-800 ${bgClass}`}
+                                >
+                                    {isCompleted ? (
+                                        <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
+                                            <Check size={12} className="text-green-400" />
+                                        </div>
+                                    ) : (
+                                        React.createElement(step.icon, { size: 18, className: iconColor })
+                                    )}
+                                    <span>{step.label}</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#f8f9fc] dark:bg-[#0b0f19] p-8">
-                    <div className="max-w-4xl mx-auto">
+                {/* Content Body - Dark Mode Default */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0B0F19] relative">
+                    <div className="max-w-5xl mx-auto p-8 lg:p-12">
                         <CurrentComponent />
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-between">
-                    <button onClick={handlePrevStep} disabled={currentStepIndex === 0 || isSaving} className="px-6 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Zurück</button>
-
+                {/* Footer - Legacy Style */}
+                <div className="px-8 py-5 border-t border-slate-800 bg-slate-900/90 backdrop-blur-md flex justify-between items-center z-20">
                     <button
-                        onClick={currentStepIndex === 5 ? handleSaveProduct : handleNextStep} // Step 6 (Index 5) is Save
-                        disabled={isSaving}
-                        className="px-8 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-lg flex items-center gap-2 disabled:opacity-50"
+                        onClick={handlePrevStep}
+                        disabled={currentStepIndex === 0 || isSaving}
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
-                        {isSaving ? <Loader2 className="animate-spin" /> : null}
-                        {currentStepIndex === 5 ? 'Produkt Speichern' : currentStepIndex === 6 ? 'Fertigstellen' : 'Weiter'}
+                        <ChevronRight className="rotate-180" size={18} /> Zurück
                     </button>
+
+                    <div className="flex items-center gap-4">
+                        {/* Optional Info Text */}
+                        <span className="text-xs text-slate-500 hidden sm:inline-block">
+                            {isProductSaved ? 'Gespeichert' : 'Änderungen werden geprüft'}
+                        </span>
+
+                        <button
+                            onClick={currentStepIndex === 5 ? handleSaveProduct : handleNextStep}
+                            disabled={isSaving}
+                            className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-70 disabled:transform-none"
+                        >
+                            {isSaving ? <Loader2 className="animate-spin" size={20} /> : null}
+                            <span>{currentStepIndex === 5 ? 'Produkt Speichern' : currentStepIndex === 6 ? 'Fertigstellen' : 'Weiter'}</span>
+                            {!isSaving && <ChevronRight size={18} />}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
+```
