@@ -8,6 +8,10 @@ import { AttributesVariants } from './ProductWizard/AttributesVariants';
 import { PriceRadar } from './ProductWizard/PriceRadar';
 import { PricingInventory } from './ProductWizard/PricingInventory';
 import { SEOMarketing } from './ProductWizard/SEOMarketing';
+import { ChannelsSync } from './ProductWizard/ChannelsSync';
+import { SEOPreview } from './ProductWizard/SEOPreview';
+import { ReadyCheck } from './ProductWizard/ReadyCheck';
+import { PreviewSave } from './ProductWizard/PreviewSave';
 
 // Import Icons
 import {
