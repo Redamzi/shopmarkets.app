@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
-const WIZARD_VERSION = 'W 0.01';
+// Versioning for easy check
+const WIZARD_VERSION = 'W 0.02';
 const WIZARD_STEPS = [
     { id: 'type', label: 'Produktart', icon: Layers, component: ProductTypeSelector },
     { id: 'ai', label: 'AI-Generator', icon: Sparkles, component: AIGenerator },
