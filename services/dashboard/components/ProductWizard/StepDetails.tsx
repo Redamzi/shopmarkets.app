@@ -5,7 +5,7 @@ import { AttributesVariants } from './AttributesVariants';
 import { Organization } from './Organization';
 import { Configurator } from './Configurator';
 import { SEOMarketing } from './SEOMarketing';
-import { Layers, SlidersHorizontal, Tag, Wrench, Video } from 'lucide-react';
+import { Layers, SlidersHorizontal, Tag, Wrench, Video, Globe } from 'lucide-react';
 
 export const StepDetails: React.FC = () => {
     const { productType } = useProductWizardStore();
@@ -17,7 +17,7 @@ export const StepDetails: React.FC = () => {
         { id: 'variants', label: 'Attribute', icon: SlidersHorizontal, component: AttributesVariants, show: productType === 'configurable' || productType === 'variable' || productType === 'personalized' },
         { id: 'org', label: 'Organisation', icon: Tag, component: Organization, show: true },
         { id: 'extras', label: 'Konfigurator', icon: Wrench, component: Configurator, show: productType === 'simple' || productType === 'configurable' || productType === 'personalized' }, // Includes Personalization
-        { id: 'tiktok', label: 'TikTok/SEO', icon: Video, component: SEOMarketing, show: true },
+        { id: 'tiktok', label: 'SEO & Sichtbarkeit', icon: Globe, component: SEOMarketing, show: true }, // TikTok moved to Media
     ].filter(t => t.show);
 
     // Reset subTab if not available (e.g. switching types)

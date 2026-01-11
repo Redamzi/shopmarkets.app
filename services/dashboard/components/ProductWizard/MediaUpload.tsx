@@ -1,24 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
-import { UploadCloud, Image as ImageIcon, Video, X, Star, FolderOpen, Plus, PlayCircle } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Video, X, Star, FolderOpen, Plus, PlayCircle, Share2, Hash, Music, Repeat, Scissors } from 'lucide-react';
 import { MediaLibrary } from '../MediaLibrary';
 
 export const MediaUpload: React.FC = () => {
     const { setStepData, stepData } = useProductWizardStore();
-    // HARDCODED KEY 3 for Media to avoid conflicts
+    // Key 3 for Media
     const savedData = stepData[3] || {};
+    // Key 9 for TikTok (as per Controller expectation)
+    const savedTiktok = stepData[9]?.tiktok || {};
+    // AI Fallback
+    const aiData = stepData[2] || {};
 
     const [images, setImages] = useState<string[]>(savedData.images || []);
     const [video, setVideo] = useState<string | null>(savedData.video || null);
+
+    // TikTok State
+    const [tiktok, setTiktok] = useState({
+        caption: savedTiktok.caption || aiData.tiktok?.caption || '',
+        hashtags: Array.isArray(savedTiktok.hashtags)
+            ? savedTiktok.hashtags.join(' ')
+            : (savedTiktok.hashtags || aiData.tiktok?.hashtags || ''),
+        sound: savedTiktok.sound || '',
+        duet: savedTiktok.duet !== false,
+        stitch: savedTiktok.stitch !== false
+    });
 
     const [uploading, setUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
-    // Auto-Sync to Store Key 3
+    // Sync Effects
     useEffect(() => {
         setStepData(3, { images, video });
     }, [images, video, setStepData]);
+
+    useEffect(() => {
+        setStepData(9, {
+            ...stepData[9], // Preserve other Step 9 data (SEO)
+            tiktok: {
+                ...tiktok,
+                hashtags: tiktok.hashtags.split(' ').filter((h: string) => h.startsWith('#')).slice(0, 5)
+            }
+        });
+    }, [tiktok, setStepData]);
 
     const handleFileUpload = async (files: FileList) => {
         if (images.length + files.length > 5) {
@@ -61,9 +86,6 @@ export const MediaUpload: React.FC = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 newImages.push(reader.result as string);
-                if (newImages.length + (video ? 0 : 0) === files.length - (files[i].type.startsWith('video/') ? 1 : 0)) {
-                    // This logic is tricky with mixed files. Simplified:
-                }
                 // Just force update
                 setImages(prev => [...prev, reader.result as string].slice(0, 5));
                 setUploading(false);
@@ -92,8 +114,6 @@ export const MediaUpload: React.FC = () => {
         e.preventDefault();
         setIsDragging(false);
 
-        // Split logic based on drop target or file type?
-        // Let's filter by file type and target
         const files = Array.from(e.dataTransfer.files);
 
         if (type === 'video') {
@@ -108,9 +128,6 @@ export const MediaUpload: React.FC = () => {
 
         const imgs = files.filter(f => f.type.startsWith('image/'));
         if (imgs.length > 0) {
-            // Use existing loader
-            // Needs FileList, create one or reuse logic
-            // Adapting logic for array
             imgs.forEach(file => {
                 if (inputImagesCount(files.length) > 5) return;
                 const reader = new FileReader();
@@ -161,17 +178,18 @@ export const MediaUpload: React.FC = () => {
 
 
     return (
-        <div className="max-w-4xl mx-auto p-2 md:p-6">
+        <div className="max-w-4xl mx-auto p-2 md:p-6 space-y-8">
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
                     <ImageIcon size={28} strokeWidth={1.5} />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">Medien Upload</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg">Bilder und Videos für Ihr Produkt hochladen.</p>
+                    <h2 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">Medien Upload & TikTok</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg">Bilder, Videos und Social Media Einstellungen.</p>
                 </div>
             </div>
 
+            {/* Media Uploads */}
             <div className="space-y-8">
                 {/* Image Section */}
                 <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
@@ -187,12 +205,12 @@ export const MediaUpload: React.FC = () => {
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
                         className={`
-                            relative border-2 border-dashed rounded-[2rem] p-8 md:p-12 text-center transition-all duration-300
-                            ${isDragging
+                                relative border-2 border-dashed rounded-[2rem] p-8 md:p-12 text-center transition-all duration-300
+                                ${isDragging
                                 ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 scale-[1.02]'
                                 : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }
-                        `}
+                            `}
                     >
                         <input
                             type="file"
@@ -314,6 +332,109 @@ export const MediaUpload: React.FC = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* TikTok Integration Section */}
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800 animate-in slide-in-from-bottom-6 duration-500">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Share2 size={20} className="text-pink-500" />
+                        TikTok Einstellungen
+                    </h3>
+
+                    <div className="space-y-6">
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Caption</label>
+                            <div className="relative">
+                                <textarea
+                                    value={tiktok.caption}
+                                    onChange={(e) => setTiktok({ ...tiktok, caption: e.target.value })}
+                                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all outline-none min-h-[80px]"
+                                    maxLength={150}
+                                    placeholder="Spannende Caption für TikTok..."
+                                />
+                                <span className="absolute right-4 bottom-4 text-xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                                    {tiktok.caption.length}/150
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                <Hash size={16} className="text-pink-500" />
+                                Hashtags
+                            </label>
+                            <input
+                                type="text"
+                                value={tiktok.hashtags}
+                                onChange={(e) => setTiktok({ ...tiktok, hashtags: e.target.value })}
+                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all outline-none"
+                                placeholder="#fashion #style #trending"
+                            />
+                            <p className="text-xs text-slate-400 mt-2 px-1">Maximal 5 Hashtags, beginnend mit #</p>
+                        </div>
+
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                <Music size={16} className="text-pink-500" />
+                                Sound / Audio (Link oder Name)
+                            </label>
+                            <input
+                                type="text"
+                                value={tiktok.sound}
+                                onChange={(e) => setTiktok({ ...tiktok, sound: e.target.value })}
+                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all outline-none"
+                                placeholder="z.B. Trending Sound - Artist"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Duet Toggle */}
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-pink-200 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center text-pink-500 shadow-sm border border-slate-100 dark:border-slate-600">
+                                        <Repeat size={20} />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="duet" className="block text-lg font-bold text-slate-900 dark:text-white cursor-pointer">Duet erlauben</label>
+                                    </div>
+                                </div>
+                                <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id="duet"
+                                        className="absolute w-12 h-6 opacity-0 cursor-pointer z-10"
+                                        checked={tiktok.duet}
+                                        onChange={(e) => setTiktok({ ...tiktok, duet: e.target.checked })}
+                                    />
+                                    <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${tiktok.duet ? 'bg-pink-600' : 'bg-slate-300'}`}></div>
+                                    <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${tiktok.duet ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                </div>
+                            </div>
+
+                            {/* Stitch Toggle */}
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-pink-200 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center text-pink-500 shadow-sm border border-slate-100 dark:border-slate-600">
+                                        <Scissors size={20} />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="stitch" className="block text-lg font-bold text-slate-900 dark:text-white cursor-pointer">Stitch erlauben</label>
+                                    </div>
+                                </div>
+                                <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id="stitch"
+                                        className="absolute w-12 h-6 opacity-0 cursor-pointer z-10"
+                                        checked={tiktok.stitch}
+                                        onChange={(e) => setTiktok({ ...tiktok, stitch: e.target.checked })}
+                                    />
+                                    <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${tiktok.stitch ? 'bg-pink-600' : 'bg-slate-300'}`}></div>
+                                    <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${tiktok.stitch ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

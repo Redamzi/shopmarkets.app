@@ -1,28 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
-import { Search, Share2, Globe, Hash, Music, Repeat, Scissors } from 'lucide-react';
+import { Search, Globe, Tag, PenTool } from 'lucide-react';
 
 export const SEOMarketing: React.FC = () => {
     const { stepData, setStepData } = useProductWizardStore();
-    // Key 9 is SEO/TikTok
+    // Key 9 is SEO/Marketing Step
     const savedData = stepData[9] || {};
-    // Fallback to AI data from Key 2 if Key 9 is empty
+    // Fallback to AI data from Key 2
     const aiData = stepData[2] || {};
 
     const [seo, setSeo] = useState({
         title: savedData.seo?.title || aiData.seo?.title || '',
         description: savedData.seo?.description || aiData.seo?.description || '',
         slug: savedData.seo?.slug || ''
-    });
-
-    const [tiktok, setTiktok] = useState({
-        caption: savedData.tiktok?.caption || aiData.tiktok?.caption || '',
-        hashtags: Array.isArray(savedData.tiktok?.hashtags)
-            ? savedData.tiktok.hashtags.join(' ')
-            : (savedData.tiktok?.hashtags || aiData.tiktok?.hashtags || ''),
-        sound: savedData.tiktok?.sound || '',
-        duet: savedData.tiktok?.duet !== false, // Default true
-        stitch: savedData.tiktok?.stitch !== false // Default true
     });
 
     const generateSlug = (title: string) => {
@@ -32,26 +22,23 @@ export const SEOMarketing: React.FC = () => {
     // Auto-Sync to Key 9
     useEffect(() => {
         setStepData(9, {
+            ...savedData,
             seo: {
                 ...seo,
                 slug: seo.slug || generateSlug(seo.title || '')
-            },
-            tiktok: {
-                ...tiktok,
-                hashtags: tiktok.hashtags.split(' ').filter((h: string) => h.startsWith('#')).slice(0, 5)
             }
         });
-    }, [seo, tiktok, setStepData]);
+    }, [seo, setStepData]); // Exclude savedData to prevent loop, rely on state
 
     return (
         <div className="max-w-4xl mx-auto p-2 md:p-6">
             <div className="flex items-center gap-4 mb-8">
                 <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
-                    <Share2 size={28} strokeWidth={1.5} />
+                    <Globe size={28} strokeWidth={1.5} />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">SEO & Marketing</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg">Optimieren Sie Ihr Produkt für Suchmaschinen und Social Media.</p>
+                    <h2 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">SEO & Sichtbarkeit</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg">Optimieren Sie Ihr Produkt für Suchmaschinen.</p>
                 </div>
             </div>
 
@@ -60,12 +47,27 @@ export const SEOMarketing: React.FC = () => {
                 <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                         <Search size={20} className="text-indigo-500" />
-                        Suchmaschinenoptimierung (SEO)
+                        Google Vorschau (SERP)
                     </h3>
+
+                    <div className="mb-8 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <div className="font-sans">
+                            <div className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200 mb-1">
+                                <span className="bg-slate-200 dark:bg-slate-600 rounded-full w-6 h-6 flex items-center justify-center text-xs">S</span>
+                                <span className="truncate">shop-markets.com › {seo.slug || 'produkt-url'}</span>
+                            </div>
+                            <h4 className="text-xl text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer truncate">
+                                {seo.title || 'Produkt Titel hier...'}
+                            </h4>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                                {seo.description || 'Hier steht die Beschreibung, die Kunden in den Google-Suchergebnissen sehen werden. Sie sollte ansprechend sein und zum Klicken anregen.'}
+                            </p>
+                        </div>
+                    </div>
 
                     <div className="space-y-6">
                         <div className="group">
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Meta Title</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Meta Title (Seitentitel)</label>
                             <div className="relative">
                                 <input
                                     type="text"
@@ -73,25 +75,25 @@ export const SEOMarketing: React.FC = () => {
                                     onChange={(e) => setSeo({ ...seo, title: e.target.value })}
                                     className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                     maxLength={60}
-                                    placeholder="Optimierter Titel"
+                                    placeholder="Kurz, prägnant, inkl. Keywords"
                                 />
-                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                                <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-1 rounded ${seo.title.length > 50 ? 'text-amber-500 bg-amber-50' : 'text-slate-400 bg-slate-100'}`}>
                                     {seo.title.length}/60
                                 </span>
                             </div>
                         </div>
 
                         <div className="group">
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Meta Description</label>
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Meta Description (Beschreibung)</label>
                             <div className="relative">
                                 <textarea
                                     value={seo.description}
                                     onChange={(e) => setSeo({ ...seo, description: e.target.value })}
                                     className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none min-h-[100px]"
                                     maxLength={160}
-                                    placeholder="Beschreibung für Suchergebnisse"
+                                    placeholder="Fassen Sie den Inhalt zusammen und nutzen Sie Keywords."
                                 />
-                                <span className="absolute right-4 bottom-4 text-xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
+                                <span className={`absolute right-4 bottom-4 text-xs font-bold px-2 py-1 rounded ${seo.description.length > 150 ? 'text-amber-500 bg-amber-50' : 'text-slate-400 bg-slate-100'}`}>
                                     {seo.description.length}/160
                                 </span>
                             </div>
@@ -99,126 +101,27 @@ export const SEOMarketing: React.FC = () => {
 
                         <div className="group">
                             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                <Globe size={16} className="text-indigo-500" />
-                                URL Slug
+                                <Tag size={16} className="text-indigo-500" />
+                                URL Slug (Pfad)
                             </label>
                             <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={seo.slug}
-                                    onChange={(e) => setSeo({ ...seo, slug: e.target.value })}
-                                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
-                                    placeholder="produkt-url-slug"
-                                />
+                                <div className="flex-1 relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 select-none">/product/</span>
+                                    <input
+                                        type="text"
+                                        value={seo.slug}
+                                        onChange={(e) => setSeo({ ...seo, slug: e.target.value })}
+                                        className="w-full pl-20 px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                                        placeholder="produkt-name"
+                                    />
+                                </div>
                                 <button
                                     onClick={() => setSeo({ ...seo, slug: generateSlug(seo.title) })}
                                     className="px-6 py-4 bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 font-bold rounded-xl hover:bg-indigo-100 dark:hover:bg-slate-700 transition"
+                                    title="Automatisch generieren"
                                 >
-                                    Auto
+                                    <PenTool size={20} />
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* TikTok Section */}
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                        <Share2 size={20} className="text-pink-500" />
-                        TikTok Integration
-                    </h3>
-
-                    <div className="space-y-6">
-                        <div className="group">
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Caption</label>
-                            <div className="relative">
-                                <textarea
-                                    value={tiktok.caption}
-                                    onChange={(e) => setTiktok({ ...tiktok, caption: e.target.value })}
-                                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all outline-none min-h-[80px]"
-                                    maxLength={150}
-                                    placeholder="Spannende Caption für TikTok..."
-                                />
-                                <span className="absolute right-4 bottom-4 text-xs font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                                    {tiktok.caption.length}/150
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="group">
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                <Hash size={16} className="text-pink-500" />
-                                Hashtags
-                            </label>
-                            <input
-                                type="text"
-                                value={tiktok.hashtags}
-                                onChange={(e) => setTiktok({ ...tiktok, hashtags: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all outline-none"
-                                placeholder="#fashion #style #trending"
-                            />
-                            <p className="text-xs text-slate-400 mt-2 px-1">Maximal 5 Hashtags, beginnend mit #</p>
-                        </div>
-
-                        <div className="group">
-                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                                <Music size={16} className="text-pink-500" />
-                                Sound / Audio (Link oder Name)
-                            </label>
-                            <input
-                                type="text"
-                                value={tiktok.sound}
-                                onChange={(e) => setTiktok({ ...tiktok, sound: e.target.value })}
-                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all outline-none"
-                                placeholder="z.B. Trending Sound - Artist"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Duet Toggle */}
-                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-pink-200 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center text-pink-500 shadow-sm border border-slate-100 dark:border-slate-600">
-                                        <Repeat size={20} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="duet" className="block text-lg font-bold text-slate-900 dark:text-white cursor-pointer">Duet erlauben</label>
-                                    </div>
-                                </div>
-                                <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        id="duet"
-                                        className="absolute w-12 h-6 opacity-0 cursor-pointer z-10"
-                                        checked={tiktok.duet}
-                                        onChange={(e) => setTiktok({ ...tiktok, duet: e.target.checked })}
-                                    />
-                                    <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${tiktok.duet ? 'bg-pink-600' : 'bg-slate-300'}`}></div>
-                                    <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${tiktok.duet ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                </div>
-                            </div>
-
-                            {/* Stitch Toggle */}
-                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-pink-200 transition-colors">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center text-pink-500 shadow-sm border border-slate-100 dark:border-slate-600">
-                                        <Scissors size={20} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="stitch" className="block text-lg font-bold text-slate-900 dark:text-white cursor-pointer">Stitch erlauben</label>
-                                    </div>
-                                </div>
-                                <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        id="stitch"
-                                        className="absolute w-12 h-6 opacity-0 cursor-pointer z-10"
-                                        checked={tiktok.stitch}
-                                        onChange={(e) => setTiktok({ ...tiktok, stitch: e.target.checked })}
-                                    />
-                                    <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${tiktok.stitch ? 'bg-pink-600' : 'bg-slate-300'}`}></div>
-                                    <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${tiktok.stitch ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                </div>
                             </div>
                         </div>
                     </div>
