@@ -73,6 +73,32 @@ Bevor du irgendetwas neu erstellst oder änderst:
     *   Bookable
 👉 Nur relevante Steps laden
 
+**Step Logic Matrix (Dynamisches Laden je Typ)**
+| Produkttyp | Relevante Steps | Besonderheiten |
+|---|---|---|
+| **Simple** | Type, AI, Basis, Attribute, Media, Price, Channels, Shipping, Org, Sync | Standard-Ablauf |
+| **Configurable** | Type, AI, Basis, Attribute, **Variants**, Media, Price, Channels, Shipping, Org, Sync | Varianten-Editor aktiv |
+| **Personalized** | Type, AI, Basis, Attribute, **Configurator**, Media, Price, Channels, Shipping, Org, Sync | Gravur/Text-Optionen |
+| **Virtual** | Type, AI, Basis, Media, Price, Channels, Org, Sync | ❌ Kein Versand |
+| **Downloadable** | Type, AI, Basis, Media, Price, Channels, Org, Sync | ❌ Kein Versand, ➕ Datei-Upload |
+| **Bundle** | Type, AI, Basis, Media, Price, Channels, Shipping, Org, Sync | Auswahl verknüpfter Produkte |
+| **Subscription** | Type, AI, Basis, Media, Price, Channels, Org, Sync | ➕ Intervall-Einstellungen |
+| **Bookable** | Type, AI, Basis, Media, Price, Channels, Org, Sync | ➕ Kalender/Slot-Logik |
+
+**Legende der Steps:**
+*   **Type:** Produkttyp wählen
+*   **AI:** Magic Creator
+*   **Basis:** Titel, Beschreibung
+*   **Attribute:** Material, Farbe (Single)
+*   **Variants:** Größen, Farben (Complex)
+*   **Configurator:** Personalisierung (Gravur)
+*   **Media:** Bilder, Video, TikTok
+*   **Price:** Preise, Radar, Credits
+*   **Channels:** Marktplätze wählen
+*   **Shipping:** Versand & Lager
+*   **Org:** Tags, EAN, Vendor
+*   **Sync:** Prüfung & Speichern
+
 **Step 2 – Magic Product Creator (AI)**
 *   Funktion
     *   Foto hochladen
