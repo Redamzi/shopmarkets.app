@@ -14,9 +14,9 @@ export const StepDetails: React.FC = () => {
     // Dynamic Tabs based on Product Type
     const tabs = [
         { id: 'general', label: 'Basis', icon: Layers, component: GeneralInfo, show: true },
-        { id: 'variants', label: 'Varianten', icon: SlidersHorizontal, component: AttributesVariants, show: productType === 'configurable' || productType === 'variable' },
+        { id: 'variants', label: 'Attribute', icon: SlidersHorizontal, component: AttributesVariants, show: productType === 'configurable' || productType === 'variable' || productType === 'personalized' },
         { id: 'org', label: 'Organisation', icon: Tag, component: Organization, show: true },
-        { id: 'extras', label: 'Extras', icon: Wrench, component: Configurator, show: productType === 'simple' || productType === 'configurable' }, // Extras usually for physical
+        { id: 'extras', label: 'Konfigurator', icon: Wrench, component: Configurator, show: productType === 'simple' || productType === 'configurable' || productType === 'personalized' }, // Includes Personalization
         { id: 'tiktok', label: 'TikTok/SEO', icon: Video, component: SEOMarketing, show: true },
     ].filter(t => t.show);
 
