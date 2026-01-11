@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
+const WIZARD_VERSION = 'W 0.01';
 const WIZARD_STEPS = [
     { id: 'type', label: 'Produktart', icon: Layers, component: ProductTypeSelector },
     { id: 'ai', label: 'AI-Generator', icon: Sparkles, component: AIGenerator },
@@ -164,7 +165,12 @@ export const ProductWizard: React.FC = () => {
                 <div className="px-8 py-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 z-20 flex flex-col gap-6 transition-colors duration-300">
                     <div className="flex justify-between items-start w-full">
                         <div>
-                            <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-1">Neues Produkt</h2>
+                            <div className="flex items-center gap-3 mb-1">
+                                <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white">Neues Produkt</h2>
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-mono text-slate-500 border border-slate-200 dark:border-slate-700">
+                                    {WIZARD_VERSION}
+                                </span>
+                            </div>
                             <p className="text-sm text-slate-500 dark:text-slate-400">Schritt {currentStep} von {WIZARD_STEPS.length}</p>
                         </div>
                         <button
