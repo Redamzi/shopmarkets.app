@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const AIGenerator: React.FC = () => {
-    const { productType, aiOutput, setAIOutput, setStepData, completeStep, setCurrentStep } = useProductWizardStore();
+    const { productType, aiOutput, setAIOutput, setStepData, completeStep, setCurrentStep, stepData } = useProductWizardStore();
+    // Initialize from store if already present (Key 2)
     const [image, setImage] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editableData, setEditableData] = useState<any>(null);
+    const [isEditing, setIsEditing] = useState(!!stepData[2]?.title);
+    const [editableData, setEditableData] = useState<any>(stepData[2] || null);
+
+    // Sync to store on change
+    useEffect(() => {
+        if (editableData) {
+            setStepData(2, editableData);
+        }
+    }, [editableData, setStepData]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -31,7 +39,7 @@ export const AIGenerator: React.FC = () => {
             formData.append('image', file);
 
             // Allow override via Env, default to local microservice
-            const AI_SERVICE_URL = import.meta.env.VITE_AI_SERVICE_URL || 'http://localhost:5005';
+            const AI_SERVICE_URL = (import.meta as any).env.VITE_AI_SERVICE_URL || 'http://localhost:5005';
 
             // Legacy Logic: Direct call to Microservice (bypassing Main API)
             const response = await fetch(`${AI_SERVICE_URL}/generate`, {
@@ -65,12 +73,6 @@ export const AIGenerator: React.FC = () => {
         }
     };
 
-    const handleSave = () => {
-        setStepData(2, editableData);
-        completeStep(2);
-        setCurrentStep(3);
-    };
-
     const handleSkip = () => {
         setCurrentStep(3);
     };
@@ -80,7 +82,7 @@ export const AIGenerator: React.FC = () => {
             <h2 className="text-2xl font-bold mb-2">AI Produkt-Generator</h2>
             <p className="text-gray-600 mb-6">Laden Sie ein Produktbild hoch und lassen Sie die KI die Details generieren</p>
 
-            {!image && (
+            {!image && !isEditing && (
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
                     <input
                         type="file"
@@ -94,6 +96,12 @@ export const AIGenerator: React.FC = () => {
                         <p className="text-lg font-semibold mb-2">Bild hochladen</p>
                         <p className="text-sm text-gray-600">Klicken Sie hier oder ziehen Sie ein Bild</p>
                     </label>
+                    <button
+                        onClick={handleSkip}
+                        className="mt-6 text-gray-500 hover:text-gray-700 underline"
+                    >
+                        Überspringen
+                    </button>
                 </div>
             )}
 
@@ -108,7 +116,7 @@ export const AIGenerator: React.FC = () => {
                 <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                         <div>
-                            <img src={image!} alt="Uploaded" className="w-full rounded-lg" />
+                            {image && <img src={image} alt="Uploaded" className="w-full rounded-lg" />}
                         </div>
                         <div className="space-y-4">
                             <div>
@@ -219,31 +227,7 @@ export const AIGenerator: React.FC = () => {
                         />
                         <p className="text-xs text-gray-500 mt-1">Max 5 Hashtags</p>
                     </div>
-
-                    <div className="flex gap-4">
-                        <button
-                            onClick={handleSave}
-                            className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600"
-                        >
-                            Speichern & Weiter
-                        </button>
-                        <button
-                            onClick={handleSkip}
-                            className="px-6 py-3 border rounded-lg hover:bg-gray-50"
-                        >
-                            Überspringen
-                        </button>
-                    </div>
                 </div>
-            )}
-
-            {!image && !isProcessing && (
-                <button
-                    onClick={handleSkip}
-                    className="mt-4 text-blue-500 hover:underline"
-                >
-                    AI-Generator überspringen
-                </button>
             )}
         </div>
     );

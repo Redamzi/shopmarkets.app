@@ -12,7 +12,7 @@ const PLATFORM_FEES: Record<string, { fee: number, name: string, icon: any, colo
 
 export const PriceRadar: React.FC = () => {
     const { stepData, setStepData, completeStep, setCurrentStep } = useProductWizardStore();
-    const [basePrice, setBasePrice] = useState<number>(stepData[4]?.price || 0); // Get price from Pricing step if set
+    const [basePrice, setBasePrice] = useState<number>(stepData[6]?.price || 0); // Get price from Pricing step (Key 6)
     const [autoCalc, setAutoCalc] = useState<boolean>(true);
 
     const calculateChannelPrice = (base: number, feePercent: number) => {

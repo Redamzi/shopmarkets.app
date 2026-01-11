@@ -1,10 +1,11 @@
 import React from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
+import { ClipboardCheck, Package, ShoppingBag, Image, Share2, AlertCircle } from 'lucide-react';
 
 export const PreviewSave: React.FC = () => {
     const { productType, stepData } = useProductWizardStore();
 
-    // Correct Data Mapping for 13 Steps
+    // Correct Data Mapping based on recent refactors
     const allData = {
         title: stepData[2]?.title || stepData[1]?.title || 'Unbenanntes Produkt',
         product_type: productType,
@@ -18,81 +19,111 @@ export const PreviewSave: React.FC = () => {
 
     return (
         <div className="max-w-4xl mx-auto p-2 md:p-6">
-            <h2 className="text-2xl font-bold mb-2 font-serif-display">Prüfung & Abschluss</h2>
-            <p className="text-gray-600 mb-6">Bitte überprüfen Sie Ihre Eingaben vor dem Speichern.</p>
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 bg-emerald-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
+                    <ClipboardCheck size={28} strokeWidth={1.5} />
+                </div>
+                <div>
+                    <h2 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">Prüfung & Abschluss</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg">Bitte überprüfen Sie Ihre Eingaben vor dem Speichern.</p>
+                </div>
+            </div>
 
             <div className="space-y-6">
-                <div className="border rounded-2xl p-6 bg-white shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Produktinformationen</h3>
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                        <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Titel</span>
-                            <span className="font-medium text-slate-800 text-lg">{allData.title}</span>
+                {/* Product Info */}
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Package size={20} className="text-indigo-500" />
+                        Produktinformationen
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Titel</span>
+                            <span className="font-bold text-slate-900 dark:text-white text-lg">{allData.title}</span>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Produktart</span>
-                            <span className="font-medium text-slate-800">{allData.product_type}</span>
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Produktart</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg inline-block capitalize">{allData.product_type}</span>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">SKU</span>
-                            <span className="font-medium text-slate-800">{allData.sku}</span>
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">SKU</span>
+                            <span className="font-mono text-slate-700 dark:text-slate-300">{allData.sku}</span>
                         </div>
-                        <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Kategorie</span>
-                            <span className="font-medium text-slate-800">{allData.category}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="border rounded-2xl p-6 bg-white shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Preis & Lager</h3>
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm">
-                        <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Preis (Netto)</span>
-                            <span className="font-medium text-emerald-600 text-xl">€ {allData.price}</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-gray-500 text-xs uppercase tracking-wider font-semibold">Verfügbarer Bestand</span>
-                            <span className="font-medium text-slate-800">{allData.stock} Stück</span>
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Kategorie</span>
+                            <span className="font-medium text-slate-700 dark:text-slate-300 capitalize">{allData.category}</span>
                         </div>
                     </div>
                 </div>
 
-                <div className="border rounded-2xl p-6 bg-white shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Medien ({allData.images.length})</h3>
-                    <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                {/* Price & Stock */}
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <ShoppingBag size={20} className="text-indigo-500" />
+                        Preis & Lager
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Preis (Netto)</span>
+                            <span className="font-bold text-emerald-600 text-3xl">€ {allData.price}</span>
+                        </div>
+                        <div>
+                            <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Verfügbarer Bestand</span>
+                            <span className="font-bold text-slate-900 dark:text-white text-xl">{allData.stock} <span className="text-sm font-normal text-slate-500">Stück</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Images */}
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Image size={20} className="text-indigo-500" />
+                        Medien <span className="text-slate-400 text-sm font-normal ml-2">({allData.images.length})</span>
+                    </h3>
+                    <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
                         {allData.images.length > 0 ? (
                             allData.images.map((img: string, i: number) => (
-                                <img key={i} src={img} alt={`Product ${i + 1}`} className="w-full aspect-square object-cover rounded-lg border border-slate-100" />
+                                <div key={i} className="aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm relative group">
+                                    <img src={img} alt={`Product ${i + 1}`} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                                </div>
                             ))
                         ) : (
-                            <span className="text-gray-400 italic">Keine Bilder hochgeladen</span>
+                            <div className="col-span-full py-8 text-center text-slate-400 italic bg-slate-50 dark:bg-slate-800 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                                Keine Bilder hochgeladen
+                            </div>
                         )}
                     </div>
                 </div>
 
-                <div className="border rounded-2xl p-6 bg-white shadow-sm">
-                    <h3 className="font-bold text-lg mb-4 text-indigo-900">Aktive Kanäle</h3>
-                    <div className="flex flex-wrap gap-2">
+                {/* Channels */}
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Share2 size={20} className="text-indigo-500" />
+                        Aktive Kanäle
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
                         {allData.channels.length > 0 ? (
                             allData.channels.map((channel: string) => (
-                                <span key={channel} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium border border-indigo-100">
+                                <span key={channel} className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-bold border border-indigo-100 dark:border-indigo-800 capitalize">
                                     {channel}
                                 </span>
                             ))
                         ) : (
-                            <span className="text-gray-400 italic">Keine Kanäle ausgewählt</span>
+                            <span className="text-slate-400 italic">Keine Kanäle ausgewählt (Nur lokal)</span>
                         )}
                     </div>
                 </div>
             </div>
 
-            <div className="mt-8 p-4 bg-blue-50 text-blue-800 rounded-xl text-sm flex items-start gap-3">
-                <span className="text-xl">💡</span>
-                <p>
-                    Klicken Sie unten rechts auf <strong>"Speichern & Fertig"</strong>, um das Produkt zu erstellen.
-                    Es wird anschließend in Ihrer Produktübersicht erscheinen.
-                </p>
+            <div className="mt-8 p-6 bg-blue-50 dark:bg-slate-800 border-l-4 border-blue-500 dark:border-blue-400 rounded-r-xl flex items-start gap-4">
+                <AlertCircle size={24} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-900 dark:text-blue-100 leading-relaxed">
+                    <p className="font-bold mb-1">Fast fertig!</p>
+                    <p>
+                        Klicken Sie unten rechts auf <strong>"Speichern & Fertig"</strong> (oder den Haken), um das Produkt final zu erstellen.
+                        Das Produkt wird anschließend in Ihrer Übersicht erscheinen und – falls gewählt – an die Marktplätze gesendet.
+                    </p>
+                </div>
             </div>
         </div>
     );

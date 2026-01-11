@@ -1,32 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const PricingInventory: React.FC = () => {
-    const { setStepData, completeStep, setCurrentStep } = useProductWizardStore();
-    const [price, setPrice] = useState('');
-    const [comparePrice, setComparePrice] = useState('');
-    const [stock, setStock] = useState('');
-    const [stockAlert, setStockAlert] = useState('');
+    const { setStepData, stepData } = useProductWizardStore();
 
-    const handleNext = () => {
-        if (!price || parseFloat(price) <= 0) {
-            alert('Preis muss größer als 0 sein');
-            return;
-        }
-        if (!stock || parseInt(stock) < 0) {
-            alert('Bestand muss mindestens 0 sein');
-            return;
-        }
+    // Load initial data from Store Key 6 (Price) and Key 7 (Stock)
+    const priceData = stepData[6] || {};
+    const stockData = stepData[7] || {};
 
-        setStepData(4, {
-            price: parseFloat(price),
-            compare_price: comparePrice ? parseFloat(comparePrice) : null,
-            stock: parseInt(stock),
-            stock_alert: stockAlert ? parseInt(stockAlert) : null
+    const [price, setPrice] = useState(priceData.price || '');
+    const [comparePrice, setComparePrice] = useState(priceData.compare_price || '');
+    const [stock, setStock] = useState(stockData.quantity || '');
+    const [stockAlert, setStockAlert] = useState(stockData.lowStockThreshold || '');
+
+    // Sync Price to Key 6
+    useEffect(() => {
+        setStepData(6, {
+            ...priceData,
+            price: parseFloat(price) || 0,
+            compare_price: comparePrice ? parseFloat(comparePrice) : null
         });
-        completeStep(4);
-        setCurrentStep(5);
-    };
+    }, [price, comparePrice, setStepData]);
+
+    // Sync Stock to Key 7
+    useEffect(() => {
+        setStepData(7, {
+            ...stockData,
+            quantity: parseInt(stock) || 0,
+            lowStockThreshold: stockAlert ? parseInt(stockAlert) : null
+        });
+    }, [stock, stockAlert, setStepData]);
 
     return (
         <div className="max-w-4xl mx-auto p-6">
@@ -104,15 +107,6 @@ export const PricingInventory: React.FC = () => {
                     <p className="text-sm text-gray-700">Konkurrenzanalyse läuft...</p>
                     <p className="text-sm text-gray-600 mt-1">Empfohlener Preis: €{price || '0.00'}</p>
                 </div>
-            </div>
-
-            <div className="flex gap-4 mt-8">
-                <button
-                    onClick={handleNext}
-                    className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600"
-                >
-                    Weiter
-                </button>
             </div>
         </div>
     );

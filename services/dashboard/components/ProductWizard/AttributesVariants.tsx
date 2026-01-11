@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
+import { Tags, Palette, Ruler, Scale, Plus, Trash2, Sliders } from 'lucide-react';
 
 export const AttributesVariants: React.FC = () => {
-    const { productType, setStepData, completeStep, setCurrentStep } = useProductWizardStore();
+    const { productType, stepData, setStepData } = useProductWizardStore();
+    const savedData = stepData[4] || {};
+
     const [attributes, setAttributes] = useState({
-        material: '',
-        color: '',
-        size: '',
-        weight: ''
+        material: savedData.attributes?.material || '',
+        color: savedData.attributes?.color || '',
+        size: savedData.attributes?.size || '',
+        weight: savedData.attributes?.weight || ''
     });
-    const [variants, setVariants] = useState<any[]>([]);
+
+    const [variants, setVariants] = useState<any[]>(savedData.variants || []);
 
     const needsVariants = ['configurable', 'bundle', 'personalized'].includes(productType || '');
 
@@ -27,150 +31,176 @@ export const AttributesVariants: React.FC = () => {
         setVariants(variants.filter((_, i) => i !== index));
     };
 
-    const handleNext = () => {
-        setStepData(5, {
+    // Auto-Sync to Key 4
+    useEffect(() => {
+        setStepData(4, {
             attributes,
-            variants: variants.map(v => ({
+            variants: variants.map((v: any) => ({
                 name: v.name,
-                values: v.values.split(',').map((s: string) => s.trim()),
+                values: typeof v.values === 'string' ? v.values.split(',').map((s: string) => s.trim()) : v.values,
                 sku: v.sku,
                 price: parseFloat(v.price) || 0
             }))
         });
-        completeStep(5);
-        setCurrentStep(6);
-    };
+    }, [attributes, variants, setStepData]);
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h2 className="text-2xl font-bold mb-2">Attribute & Varianten</h2>
-            <p className="text-gray-600 mb-6">Produkteigenschaften und Varianten definieren</p>
-
-            <div className="space-y-6">
+        <div className="max-w-4xl mx-auto p-2 md:p-6">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-600/20">
+                    <Sliders size={28} strokeWidth={1.5} />
+                </div>
                 <div>
-                    <h3 className="font-semibold mb-4">Attribute</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Material</label>
+                    <h2 className="text-2xl font-bold font-serif-display text-slate-900 dark:text-white">Attribute & Varianten</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg">Produkteigenschaften und Varianten definieren.</p>
+                </div>
+            </div>
+
+            <div className="space-y-8">
+                {/* Attributes Section */}
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Tags size={20} className="text-indigo-500" />
+                        Basis Attribute
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                <Tags size={16} className="text-indigo-500" />
+                                Material
+                            </label>
                             <input
                                 type="text"
                                 value={attributes.material}
                                 onChange={(e) => setAttributes({ ...attributes, material: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
+                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                 placeholder="z.B. Baumwolle"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Farbe</label>
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                <Palette size={16} className="text-indigo-500" />
+                                Farbe
+                            </label>
                             <input
                                 type="text"
                                 value={attributes.color}
                                 onChange={(e) => setAttributes({ ...attributes, color: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
+                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                 placeholder="z.B. Schwarz"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Größe</label>
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                <Ruler size={16} className="text-indigo-500" />
+                                Größe
+                            </label>
                             <input
                                 type="text"
                                 value={attributes.size}
                                 onChange={(e) => setAttributes({ ...attributes, size: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
+                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                 placeholder="z.B. M, L, XL"
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Gewicht</label>
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                <Scale size={16} className="text-indigo-500" />
+                                Gewicht
+                            </label>
                             <input
                                 type="text"
                                 value={attributes.weight}
                                 onChange={(e) => setAttributes({ ...attributes, weight: e.target.value })}
-                                className="w-full px-3 py-2 border rounded-lg"
+                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                 placeholder="z.B. 1.2kg"
                             />
                         </div>
                     </div>
                 </div>
 
+                {/* Variants Section - Only if needed */}
                 {needsVariants && (
-                    <div>
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-semibold">Varianten</h3>
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-800">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Sliders size={20} className="text-indigo-500" />
+                                Varianten
+                            </h3>
                             <button
                                 onClick={addVariant}
-                                className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600"
+                                className="relative flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-600/30 active:scale-95"
                             >
-                                + Variante hinzufügen
+                                <Plus size={20} />
+                                Variante hinzufügen
                             </button>
                         </div>
 
-                        {variants.map((variant, index) => (
-                            <div key={index} className="border rounded-lg p-4 mb-4">
-                                <div className="grid grid-cols-4 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Name</label>
-                                        <input
-                                            type="text"
-                                            value={variant.name}
-                                            onChange={(e) => updateVariant(index, 'name', e.target.value)}
-                                            className="w-full px-3 py-2 border rounded-lg"
-                                            placeholder="z.B. Größe"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Werte</label>
-                                        <input
-                                            type="text"
-                                            value={variant.values}
-                                            onChange={(e) => updateVariant(index, 'values', e.target.value)}
-                                            className="w-full px-3 py-2 border rounded-lg"
-                                            placeholder="M, L, XL"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">SKU</label>
-                                        <input
-                                            type="text"
-                                            value={variant.sku}
-                                            onChange={(e) => updateVariant(index, 'sku', e.target.value)}
-                                            className="w-full px-3 py-2 border rounded-lg"
-                                            placeholder="SKU-001"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Preis</label>
-                                        <div className="flex gap-2">
+                        <div className="space-y-4">
+                            {variants.map((variant, index) => (
+                                <div key={index} className="border-2 border-slate-100 dark:border-slate-700 rounded-2xl p-6 bg-slate-50/50 dark:bg-slate-800/50 hover:border-indigo-200 transition-colors">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                                        <div className="group">
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Name</label>
                                             <input
-                                                type="number"
-                                                step="0.01"
-                                                value={variant.price}
-                                                onChange={(e) => updateVariant(index, 'price', e.target.value)}
-                                                className="flex-1 px-3 py-2 border rounded-lg"
-                                                placeholder="0.00"
+                                                type="text"
+                                                value={variant.name}
+                                                onChange={(e) => updateVariant(index, 'name', e.target.value)}
+                                                className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-indigo-500 outline-none"
+                                                placeholder="z.B. Größe"
                                             />
+                                        </div>
+                                        <div className="group">
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Werte</label>
+                                            <input
+                                                type="text"
+                                                value={variant.values}
+                                                onChange={(e) => updateVariant(index, 'values', e.target.value)}
+                                                className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-indigo-500 outline-none"
+                                                placeholder="M, L, XL"
+                                            />
+                                        </div>
+                                        <div className="group">
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">SKU</label>
+                                            <input
+                                                type="text"
+                                                value={variant.sku}
+                                                onChange={(e) => updateVariant(index, 'sku', e.target.value)}
+                                                className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-indigo-500 outline-none"
+                                                placeholder="SKU-001"
+                                            />
+                                        </div>
+                                        <div className="flex gap-2 items-end">
+                                            <div className="flex-1 group">
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Preis</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={variant.price}
+                                                    onChange={(e) => updateVariant(index, 'price', e.target.value)}
+                                                    className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:border-indigo-500 outline-none"
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
                                             <button
                                                 onClick={() => removeVariant(index)}
-                                                className="text-red-500 hover:text-red-700"
+                                                className="w-12 h-12 flex items-center justify-center bg-red-50 text-red-500 rounded-lg hover:bg-red-100 hover:text-red-600 transition border border-red-100"
+                                                title="Variante entfernen"
                                             >
-                                                ×
+                                                <Trash2 size={20} />
                                             </button>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                            {variants.length === 0 && (
+                                <div className="text-center py-8 text-slate-400 italic bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                                    Noch keine Varianten hinzugefügt.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
-            </div>
-
-            <div className="flex gap-4 mt-8">
-                <button
-                    onClick={handleNext}
-                    className="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600"
-                >
-                    Weiter
-                </button>
             </div>
         </div>
     );
