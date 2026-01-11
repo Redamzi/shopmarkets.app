@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
-import { Search, Share2, Globe, Hash } from 'lucide-react';
+import { Search, Share2, Globe, Hash, Music, Repeat, Scissors } from 'lucide-react';
 
 export const SEOMarketing: React.FC = () => {
     const { stepData, setStepData } = useProductWizardStore();
@@ -19,7 +19,10 @@ export const SEOMarketing: React.FC = () => {
         caption: savedData.tiktok?.caption || aiData.tiktok?.caption || '',
         hashtags: Array.isArray(savedData.tiktok?.hashtags)
             ? savedData.tiktok.hashtags.join(' ')
-            : (savedData.tiktok?.hashtags || aiData.tiktok?.hashtags || '')
+            : (savedData.tiktok?.hashtags || aiData.tiktok?.hashtags || ''),
+        sound: savedData.tiktok?.sound || '',
+        duet: savedData.tiktok?.duet !== false, // Default true
+        stitch: savedData.tiktok?.stitch !== false // Default true
     });
 
     const generateSlug = (title: string) => {
@@ -34,7 +37,7 @@ export const SEOMarketing: React.FC = () => {
                 slug: seo.slug || generateSlug(seo.title || '')
             },
             tiktok: {
-                caption: tiktok.caption,
+                ...tiktok,
                 hashtags: tiktok.hashtags.split(' ').filter((h: string) => h.startsWith('#')).slice(0, 5)
             }
         });
@@ -155,6 +158,68 @@ export const SEOMarketing: React.FC = () => {
                                 placeholder="#fashion #style #trending"
                             />
                             <p className="text-xs text-slate-400 mt-2 px-1">Maximal 5 Hashtags, beginnend mit #</p>
+                        </div>
+
+                        <div className="group">
+                            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                                <Music size={16} className="text-pink-500" />
+                                Sound / Audio (Link oder Name)
+                            </label>
+                            <input
+                                type="text"
+                                value={tiktok.sound}
+                                onChange={(e) => setTiktok({ ...tiktok, sound: e.target.value })}
+                                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all outline-none"
+                                placeholder="z.B. Trending Sound - Artist"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Duet Toggle */}
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-pink-200 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center text-pink-500 shadow-sm border border-slate-100 dark:border-slate-600">
+                                        <Repeat size={20} />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="duet" className="block text-lg font-bold text-slate-900 dark:text-white cursor-pointer">Duet erlauben</label>
+                                    </div>
+                                </div>
+                                <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id="duet"
+                                        className="absolute w-12 h-6 opacity-0 cursor-pointer z-10"
+                                        checked={tiktok.duet}
+                                        onChange={(e) => setTiktok({ ...tiktok, duet: e.target.checked })}
+                                    />
+                                    <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${tiktok.duet ? 'bg-pink-600' : 'bg-slate-300'}`}></div>
+                                    <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${tiktok.duet ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                </div>
+                            </div>
+
+                            {/* Stitch Toggle */}
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-pink-200 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-white dark:bg-slate-700 rounded-lg flex items-center justify-center text-pink-500 shadow-sm border border-slate-100 dark:border-slate-600">
+                                        <Scissors size={20} />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="stitch" className="block text-lg font-bold text-slate-900 dark:text-white cursor-pointer">Stitch erlauben</label>
+                                    </div>
+                                </div>
+                                <div className="relative inline-block w-12 h-6 transition duration-200 ease-in-out rounded-full cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        id="stitch"
+                                        className="absolute w-12 h-6 opacity-0 cursor-pointer z-10"
+                                        checked={tiktok.stitch}
+                                        onChange={(e) => setTiktok({ ...tiktok, stitch: e.target.checked })}
+                                    />
+                                    <div className={`w-12 h-6 rounded-full shadow-inner transition-colors ${tiktok.stitch ? 'bg-pink-600' : 'bg-slate-300'}`}></div>
+                                    <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transform transition-transform ${tiktok.stitch ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

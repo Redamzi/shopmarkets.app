@@ -26,24 +26,98 @@ export const getSteps = (req, res) => {
 };
 
 export const createProduct = async (req, res) => {
-    const { product_type, title, sku } = req.body;
+    const {
+        product_type, title, sku, description, short_description,
+        category, vendor, tags, price, stock, track_quantity, low_stock_threshold, barcode,
+        price_radar, shipping, attributes, variants, extras,
+        seo, tiktok, channels, images, video, is_ai_generated
+    } = req.body;
+
+    // Auth middleware ensures user exists
     const user_id = req.user.id;
 
     try {
+        // --- Credit Calculation (Server Side Validation) ---
+        let totalCredits = 0;
+
+        // 1. AI Usage
+        if (is_ai_generated) totalCredits += 1.00;
+
+        // 2. Channels (0.30 per channel)
+        if (channels && Array.isArray(channels) && channels.length > 0) {
+            totalCredits += (channels.length * 0.30);
+
+            // 3. Auto Price Calc (Check inside price_radar config)
+            // Assuming price_radar structure: { enabled: bool, autoCalc: bool, ... }
+            if (price_radar && price_radar.autoCalc) {
+                totalCredits += (channels.length * 0.10);
+            }
+        }
+
+        // TODO: Implement Billing Service Check
+        // const hasBalance = await billingService.checkBalance(user_id, totalCredits);
+        // if (!hasBalance) return res.status(402).json({ error: 'Insufficient credits' });
+        // await billingService.deductCredits(user_id, totalCredits, 'Product Creation');
+
+        console.log(`[ProductWiz] Creating product for User ${user_id}. Deducting ${totalCredits} Credits.`);
+
+        // --- Database Insert ---
+        // Ensure JSON objects are stringified if library doesn't handle JSONB automatically 
+        // (pg-pool usually handles string/object for JSONB if parameterized, but being explicit is safe for simple objects)
+
         const result = await pool.query(
-            `INSERT INTO products (user_id, product_type, title, sku, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW())
-       RETURNING id`,
-            [user_id, product_type, title, sku]
+            `INSERT INTO products (
+                user_id, product_type, title, sku, description, short_description,
+                category, vendor, tags, price, stock, track_quantity, low_stock_threshold, barcode,
+                price_radar, shipping, attributes, variants, extras,
+                seo, tiktok, channels, images, video, is_ai_generated,
+                created_at, updated_at
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6,
+                $7, $8, $9, $10, $11, $12, $13, $14,
+                $15, $16, $17, $18, $19,
+                $20, $21, $22, $23, $24, $25,
+                NOW(), NOW()
+            ) RETURNING id`,
+            [
+                user_id,
+                product_type || 'simple',
+                title,
+                sku,
+                description || '',
+                short_description || '',
+                category || '',
+                vendor || '',
+                tags || '',
+                price || 0,
+                stock || 0,
+                track_quantity || false,
+                low_stock_threshold || 0,
+                barcode || '',
+                price_radar || {},
+                shipping || {},
+                attributes || {},
+                variants || [],
+                extras || {}, // Personalization Config
+                seo || {},
+                tiktok || {},
+                channels || [],
+                images || [],
+                video || null,
+                is_ai_generated || false
+            ]
         );
 
         res.json({
             success: true,
-            product_id: result.rows[0].id
+            product_id: result.rows[0].id,
+            credits_deducted: totalCredits,
+            message: 'Product created successfully'
         });
+
     } catch (err) {
         console.error('createProduct error:', err);
-        res.status(500).json({ error: 'Failed to create product' });
+        res.status(500).json({ error: 'Failed to create product', details: err.message });
     }
 };
 

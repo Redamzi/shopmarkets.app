@@ -27,7 +27,7 @@ const WIZARD_STEPS = [
 
 export const ProductWizard: React.FC = () => {
     const navigate = useNavigate();
-    const { currentStep, setCurrentStep, stepData, reset, productType } = useProductWizardStore();
+    const { currentStep, setCurrentStep, stepData, reset, productType, isAIUsed } = useProductWizardStore();
     const navRef = useRef<HTMLDivElement>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isProductSaved, setIsProductSaved] = useState(false); // To enable Step 7
@@ -75,6 +75,7 @@ export const ProductWizard: React.FC = () => {
 
         const payload = {
             product_type: productType || 'simple',
+            is_ai_generated: isAIUsed, // Added Trigger for Credit Calculation
             // Basic Info (Key 2)
             title: stepData[2]?.title || 'Neues Produkt',
             description: stepData[2]?.description || '',
@@ -89,7 +90,8 @@ export const ProductWizard: React.FC = () => {
             // I MUST ENSURE COMPONENTS WRITE TO FIXED KEYS, NOT `currentStep`.
             // GeneralInfo: writes to 2. (Checked)
             // MediaUpload: writes to `currentStep`? I need to check.
-            images: stepData[3]?.images || [], // Let's Assume Media maps to 3
+            images: stepData[3]?.images || [],
+            video: stepData[3]?.video || null,
 
             attributes: stepData[4]?.attributes || {},
             variants: stepData[4]?.variants || [],

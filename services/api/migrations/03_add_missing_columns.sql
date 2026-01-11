@@ -1,0 +1,14 @@
+-- Fehlende Spalten basierend auf deinem Screenshot hinzufügen
+-- Einfach diesen kompletten Block kopieren und ausführen.
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS video TEXT;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS variants JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS price_radar JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS shipping JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS extras JSONB DEFAULT '{}'::jsonb;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS is_ai_generated BOOLEAN DEFAULT FALSE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS vendor VARCHAR(255);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS track_quantity BOOLEAN DEFAULT FALSE;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS low_stock_threshold INTEGER DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS barcode VARCHAR(255);
+ALTER TABLE products ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb;

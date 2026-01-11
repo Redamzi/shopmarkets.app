@@ -6,12 +6,14 @@ interface ProductWizardState {
     completedSteps: number[];
     stepData: Record<number, any>;
     aiOutput: any | null;
+    isAIUsed: boolean;
 
     setProductType: (type: string) => void;
     setCurrentStep: (step: number) => void;
     completeStep: (step: number) => void;
     setStepData: (step: number, data: any) => void;
     setAIOutput: (output: any) => void;
+    setAIUsed: (used: boolean) => void;
     reset: () => void;
 }
 
@@ -21,6 +23,7 @@ export const useProductWizardStore = create<ProductWizardState>((set) => ({
     completedSteps: [],
     stepData: {},
     aiOutput: null,
+    isAIUsed: false,
 
     setProductType: (type) => set({ productType: type }),
 
@@ -36,11 +39,14 @@ export const useProductWizardStore = create<ProductWizardState>((set) => ({
 
     setAIOutput: (output) => set({ aiOutput: output }),
 
+    setAIUsed: (used: boolean) => set({ isAIUsed: used }),
+
     reset: () => set({
         productType: null,
         currentStep: 1,
         completedSteps: [],
         stepData: {},
-        aiOutput: null
+        aiOutput: null,
+        isAIUsed: false
     })
 }));

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
 
 export const AIGenerator: React.FC = () => {
-    const { productType, aiOutput, setAIOutput, setStepData, completeStep, setCurrentStep, stepData } = useProductWizardStore();
+    const { productType, aiOutput, setAIOutput, setAIUsed, setStepData, completeStep, setCurrentStep, stepData } = useProductWizardStore();
     // Initialize from store if already present (Key 2)
     const [image, setImage] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -60,6 +60,7 @@ export const AIGenerator: React.FC = () => {
 
             if (data) {
                 setAIOutput(data);
+                setAIUsed(true); // Flag for Credit Calculation
                 setEditableData(data);
                 setIsEditing(true);
             } else {
