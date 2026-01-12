@@ -275,7 +275,7 @@ export const MediaUpload: React.FC = () => {
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                         <Video size={18} className="text-pink-500" />
-                        Social Media Video (9:16)
+                        Produktvideo
                     </h3>
 
                     <div
@@ -283,9 +283,8 @@ export const MediaUpload: React.FC = () => {
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => handleDrop(e, 'video')}
                     >
-                        {/* Upload Indicator specific to Video container if uploading video */}
+                        {/* Upload Indicator specific to Video container */}
                         {uploading && !images.some(img => img === video) && (
-                            // This is a simple heuristic - if uploading is true, show it here too just in case
                             <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center rounded-xl z-20">
                                 <div className="flex items-center gap-3 p-3 bg-pink-50 dark:bg-pink-900/30 text-pink-600 rounded-lg animate-pulse">
                                     <Loader2 size={18} className="animate-spin" />
@@ -295,8 +294,8 @@ export const MediaUpload: React.FC = () => {
                         )}
 
                         {video ? (
-                            <div className="relative w-full max-w-[200px] mx-auto aspect-[9/16] bg-black rounded-lg overflow-hidden shadow-md border border-slate-200 dark:border-slate-700">
-                                <video src={video} className="w-full h-full object-cover" controls playsInline />
+                            <div className="relative w-full max-w-md mx-auto aspect-video bg-black rounded-lg overflow-hidden shadow-md border border-slate-200 dark:border-slate-700">
+                                <video src={video} className="w-full h-full object-contain" controls playsInline />
                                 <button
                                     onClick={removeVideo}
                                     className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full hover:bg-red-50 transition shadow-md z-10 cursor-pointer"
@@ -309,20 +308,32 @@ export const MediaUpload: React.FC = () => {
                                 <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/20 text-pink-500 rounded-full flex items-center justify-center mb-3 shadow-sm">
                                     <PlayCircle size={24} />
                                 </div>
-                                <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">Video hochladen</h4>
-                                <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-4 text-xs">
-                                    Ideal für TikTok, Reels oder YouTube Shorts. Max 200MB.
+                                <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">Video hinzufügen</h4>
+                                <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-6 text-xs">
+                                    Lade ein Video hoch um dein Produkt zum Leben zu erwecken. Max 200MB.
                                 </p>
-                                <div className="relative">
-                                    <button className="px-5 py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition shadow-md shadow-pink-500/20 text-sm pointer-events-none">
-                                        Video auswählen
+
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <div className="relative">
+                                        <button className="w-full px-5 py-2 bg-pink-600 text-white rounded-lg font-bold hover:bg-pink-700 transition shadow-md shadow-pink-500/20 text-sm flex items-center justify-center gap-2">
+                                            <UploadCloud size={16} />
+                                            Vom Gerät laden
+                                        </button>
+                                        <input
+                                            type="file"
+                                            accept="video/*"
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                            onChange={handleVideoUpload}
+                                        />
+                                    </div>
+
+                                    <button
+                                        onClick={() => setIsLibraryOpen(true)}
+                                        className="px-5 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm text-sm flex items-center justify-center gap-2"
+                                    >
+                                        <FolderOpen size={16} />
+                                        Aus Mediathek
                                     </button>
-                                    <input
-                                        type="file"
-                                        accept="video/*"
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                        onChange={handleVideoUpload}
-                                    />
                                 </div>
                             </div>
                         )}
