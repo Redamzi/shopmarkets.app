@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
-import { Tags, Palette, Ruler, Scale, Plus, Trash2, Sliders } from 'lucide-react';
+import { Tags, Palette, Ruler, Scale, Plus, Trash2, Sliders, ListPlus } from 'lucide-react';
 
 export const AttributesVariants: React.FC = () => {
     const { productType, stepData, setStepData } = useProductWizardStore();
@@ -12,6 +12,11 @@ export const AttributesVariants: React.FC = () => {
         size: savedData.attributes?.size || '',
         weight: savedData.attributes?.weight || ''
     });
+
+    // Custom Attributes (Key/Value)
+    const [customAttributes, setCustomAttributes] = useState<{ name: string, value: string }[]>(
+        savedData.attributes?.custom || []
+    );
 
     const [variants, setVariants] = useState<any[]>(savedData.variants || []);
 
@@ -31,10 +36,29 @@ export const AttributesVariants: React.FC = () => {
         setVariants(variants.filter((_, i) => i !== index));
     };
 
+    // Custom Attributes Handlers
+    const addCustomAttribute = () => {
+        setCustomAttributes([...customAttributes, { name: '', value: '' }]);
+    };
+
+    const updateCustomAttribute = (index: number, field: 'name' | 'value', val: string) => {
+        const updated = [...customAttributes];
+        updated[index][field] = val;
+        setCustomAttributes(updated);
+    };
+
+    const removeCustomAttribute = (index: number) => {
+        setCustomAttributes(customAttributes.filter((_, i) => i !== index));
+    };
+
+
     // Auto-Sync to Key 4
     useEffect(() => {
         setStepData(4, {
-            attributes,
+            attributes: {
+                ...attributes,
+                custom: customAttributes
+            },
             variants: variants.map((v: any) => ({
                 name: v.name,
                 values: typeof v.values === 'string' ? v.values.split(',').map((s: string) => s.trim()) : v.values,
@@ -42,7 +66,7 @@ export const AttributesVariants: React.FC = () => {
                 price: parseFloat(v.price) || 0
             }))
         });
-    }, [attributes, variants, setStepData]);
+    }, [attributes, customAttributes, variants, setStepData]);
 
     return (
         <div className="max-w-4xl mx-auto p-2 md:p-6">
@@ -115,6 +139,51 @@ export const AttributesVariants: React.FC = () => {
                                 className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-xl text-lg font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                 placeholder="z.B. 1.2kg"
                             />
+                        </div>
+                    </div>
+
+                    {/* Custom Attributes */}
+                    <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <ListPlus size={20} className="text-indigo-500" />
+                                Weitere Eigenschaften
+                            </h3>
+                            <button
+                                onClick={addCustomAttribute}
+                                className="text-indigo-600 dark:text-indigo-400 font-bold text-sm bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition flex items-center gap-2"
+                            >
+                                <Plus size={16} />
+                                Eigenschaft hinzufügen
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {customAttributes.map((attr, index) => (
+                                <div key={index} className="flex gap-4 items-center animate-in slide-in-from-left-2 duration-300">
+                                    <input
+                                        placeholder="Name (z.B. Rahmen)"
+                                        value={attr.name}
+                                        onChange={(e) => updateCustomAttribute(index, 'name', e.target.value)}
+                                        className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-500"
+                                    />
+                                    <input
+                                        placeholder="Wert (z.B. Aluminium)"
+                                        value={attr.value}
+                                        onChange={(e) => updateCustomAttribute(index, 'value', e.target.value)}
+                                        className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-indigo-500"
+                                    />
+                                    <button
+                                        onClick={() => removeCustomAttribute(index)}
+                                        className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-red-500 transition"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+                            ))}
+                            {customAttributes.length === 0 && (
+                                <p className="text-sm text-slate-400 italic">Keine weiteren Eigenschaften.</p>
+                            )}
                         </div>
                     </div>
                 </div>
