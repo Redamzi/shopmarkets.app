@@ -1,23 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ProductList } from './ProductList';
 import { productService } from '../services/productService';
 import { connectionService, Connection } from '../services/connectionService';
 import { Product } from '../types';
-import { AddProductWizardModal } from './AddProductWizardModal';
 import { useAuthStore } from '../store/authStore';
 
 export const ProductsPage: React.FC = () => {
+    const navigate = useNavigate();
     const [products, setProducts] = useState<Product[]>([]);
     const [connections, setConnections] = useState<Connection[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Auth Store Access
     const { user } = useAuthStore();
-
-    // Wizard State
-    const [isWizardOpen, setIsWizardOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [mockCredits, setMockCredits] = useState(100); // TODO: Fetch real credits via billingService
 
     const loadData = async () => {
         setLoading(true);
@@ -43,45 +39,7 @@ export const ProductsPage: React.FC = () => {
         loadData();
     }, []);
 
-    const handleSaveProduct = async (productData: Product) => {
-        if (!user) {
-            alert('Fehler: Nicht eingeloggt!');
-            return;
-        }
 
-        try {
-            console.log('Current User:', user);
-            if (!user.id) {
-                alert('CRITICAL ERROR: User object has no ID!');
-                return;
-            }
-
-            const productToSave = {
-                ...productData,
-                userId: user.id
-            };
-
-            console.log('Sending Product:', productToSave);
-
-            if (editingProduct) {
-                // UPDATE existing product
-                await productService.updateProduct(editingProduct.id, productToSave);
-                alert('Produkt erfolgreich aktualisiert!');
-            } else {
-                // CREATE new product
-                await productService.createProduct(productToSave);
-                alert('Produkt erfolgreich angelegt!');
-            }
-
-            await loadData(); // Reload list
-            setIsWizardOpen(false);
-            setEditingProduct(null);
-        } catch (error: any) {
-            console.error(error);
-            const msg = error.response?.data?.error || error.message || 'Unbekannter Fehler';
-            alert(`Fehler beim Speichern: ${msg}`);
-        }
-    };
 
     if (loading) {
         return (
@@ -100,10 +58,7 @@ export const ProductsPage: React.FC = () => {
                 <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
                     <p className="text-slate-500 mb-4">Noch keine Produkte vorhanden.</p>
                     <button
-                        onClick={() => {
-                            setEditingProduct(null);
-                            setIsWizardOpen(true);
-                        }}
+                        onClick={() => navigate('/products/new')}
                         className="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700"
                     >
                         Erstes Produkt anlegen
@@ -112,13 +67,11 @@ export const ProductsPage: React.FC = () => {
             ) : (
                 <ProductList
                     products={products}
-                    onAddProduct={() => {
-                        setEditingProduct(null);
-                        setIsWizardOpen(true);
-                    }}
+                    onAddProduct={() => navigate('/products/new')}
                     onEditProduct={(p) => {
-                        setEditingProduct(p);
-                        setIsWizardOpen(true);
+                        // TODO: Implement edit mode in ProductWizard
+                        console.log('Edit product:', p);
+                        navigate('/products/new');
                     }}
                     onDeleteProduct={async (id) => {
                         try {
@@ -139,32 +92,10 @@ export const ProductsPage: React.FC = () => {
                             alert('Fehler beim Aktualisieren: ' + (e.message || 'Unbekannt'));
                         }
                     }}
-                    onDuplicateProduct={async (product) => {
-                        try {
-                            await productService.duplicateProduct(product);
-                            await loadData();
-                            alert('Produkt dupliziert!');
-                        } catch (e: any) {
-                            alert('Fehler beim Duplizieren: ' + (e.message || 'Unbekannt'));
-                        }
-                    }}
                 />
             )}
 
-            {isWizardOpen && (
-                <AddProductWizardModal
-                    isOpen={isWizardOpen}
-                    onClose={() => {
-                        setIsWizardOpen(false);
-                        setEditingProduct(null);
-                    }}
-                    onSave={handleSaveProduct}
-                    credits={mockCredits}
-                    setCredits={setMockCredits}
-                    initialProduct={editingProduct}
-                    connections={connections}
-                />
-            )}
+
         </div>
     );
 };
