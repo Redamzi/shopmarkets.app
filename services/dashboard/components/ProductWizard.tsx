@@ -184,7 +184,7 @@ export const ProductWizard: React.FC = () => {
             low_stock_threshold: stepData[7]?.lowStockThreshold,
             shipping: stepData[8],
             seo: stepData[9]?.seo,
-            tiktok: stepData[9]?.tiktok, // From MediaUpload or SEOMarketing (Key 9)
+            tiktok: stepData[20]?.tiktok, // Social Media Master Data (Key 20)
             category: stepData[10]?.category,
             vendor: stepData[10]?.vendor,
             tags: stepData[10]?.tags,
