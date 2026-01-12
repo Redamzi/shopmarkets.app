@@ -664,25 +664,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                 )
             }
 
-            {/* Header */}
-            {!isPicker && (
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v2.0</span></h1>
-                        <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleUploadClick}
-                            disabled={uploading}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-shadow shadow-lg shadow-indigo-200 dark:shadow-none font-medium disabled:opacity-50 disabled:cursor-wait"
-                        >
-                            {uploading ? <RefreshCw className="animate-spin" size={18} /> : <Upload size={18} />}
-                            <span>{uploading ? 'Lädt hoch...' : 'Hochladen'}</span>
-                        </button>
-                    </div>
-                </div>
-            )}
+
 
             {/* Main Layout */}
             <div className={`flex-1 overflow-hidden flex ${isPicker ? 'bg-white dark:bg-slate-900 rounded-2xl' : 'bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm'}`}>
