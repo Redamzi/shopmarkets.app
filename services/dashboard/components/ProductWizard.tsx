@@ -19,7 +19,7 @@ import {
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
 // Versioning for easy check
-const WIZARD_VERSION = 'W 0.03';
+const WIZARD_VERSION = 'W 0.04';
 
 interface WizardStepFn {
     id: string;
