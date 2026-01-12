@@ -21,6 +21,12 @@ export const productService = {
         return response.data;
     },
 
+    async getProductById(id: string): Promise<Product> {
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API_URL}/api/products/${id}`, { headers });
+        return response.data;
+    },
+
     async createProduct(product: Product): Promise<Product> {
         const headers = await getAuthHeaders();
         const response = await axios.post(`${API_URL}/api/products`, product, { headers });

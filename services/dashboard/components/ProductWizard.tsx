@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useProductWizardStore } from '../store/productWizardStore';
 import { ProductTypeSelector } from './ProductWizard/ProductTypeSelector';
 import { AIGenerator } from './ProductWizard/AIGenerator';
@@ -45,10 +45,69 @@ const ALL_WIZARD_STEPS: WizardStepFn[] = [
 
 export const ProductWizard: React.FC = () => {
     const navigate = useNavigate();
-    const { currentStep, setCurrentStep, stepData, reset, productType, isAIUsed } = useProductWizardStore();
+    const { id: productId } = useParams<{ id: string }>();
+    const { currentStep, setCurrentStep, stepData, reset, productType, isAIUsed, setStepData, setProductType } = useProductWizardStore();
     const navRef = useRef<HTMLDivElement>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [isProductSaved, setIsProductSaved] = useState(false);
+    const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
+
+    // Load product data if editing
+    useEffect(() => {
+        const loadProduct = async () => {
+            if (!productId) {
+                // New product mode - reset wizard
+                reset();
+                return;
+            }
+
+            setIsLoadingProduct(true);
+            try {
+                // Import productService dynamically to avoid circular dependencies
+                const { productService } = await import('../services/productService');
+                const product = await productService.getProductById(productId);
+
+                setEditingProduct(product);
+
+                // Populate wizard store with product data
+                if (product.product_type) {
+                    setProductType(product.product_type);
+                }
+
+                // Populate step data (using the same indices as in handleSaveProduct)
+                setStepData(2, {
+                    title: product.title || '',
+                    description: product.description || '',
+                    shortDescription: product.short_description || '',
+                });
+
+                setStepData(3, {
+                    images: product.images || [],
+                });
+
+                setStepData(4, {
+                    price: product.price || 0,
+                    compareAtPrice: product.compare_at_price || 0,
+                    costPerItem: product.cost_per_item || 0,
+                    stock: product.stock || 0,
+                    sku: product.sku || '',
+                    barcode: product.barcode || '',
+                });
+
+                // TODO: Add more step data population as needed
+
+            } catch (error: any) {
+                console.error('Failed to load product:', error);
+                alert(`Fehler beim Laden des Produkts: ${error.message || 'Unbekannt'}`);
+                navigate('/products');
+            } finally {
+                setIsLoadingProduct(false);
+            }
+        };
+
+        loadProduct();
+    }, [productId, reset, setProductType, setStepData, navigate]);
 
     // Filter Steps dynamically
     const visibleSteps = ALL_WIZARD_STEPS.filter(step => step.show(productType || 'simple'));

@@ -69,9 +69,7 @@ export const ProductsPage: React.FC = () => {
                     products={products}
                     onAddProduct={() => navigate('/products/new')}
                     onEditProduct={(p) => {
-                        // TODO: Implement edit mode in ProductWizard
-                        console.log('Edit product:', p);
-                        navigate('/products/new');
+                        navigate(`/products/edit/${p.id}`);
                     }}
                     onDeleteProduct={async (id) => {
                         try {

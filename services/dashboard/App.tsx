@@ -97,6 +97,7 @@ const AppContent: React.FC = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/new" element={<ProductWizard />} />
+          <Route path="products/edit/:id" element={<ProductWizard />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="media" element={<MediaLibrary />} />
           <Route path="connections" element={<Connections />} />
