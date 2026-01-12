@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
+// FORCE HARDCODED SECRET TO MATCH API & CONTROLLER (FIX 403)
+const JWT_SECRET = 'ShopMarkets_FORCE_SYNC_2026_V2_SECURE_KEY_123456789';
 
 export const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
