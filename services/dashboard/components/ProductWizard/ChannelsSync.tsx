@@ -1,4 +1,3 @@
-```
 import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
 import { Store, ShoppingCart, ShoppingBag, Video, Instagram, Globe, CheckCircle2, AlertTriangle, Layers, Share2 } from 'lucide-react';
@@ -50,12 +49,12 @@ export const ChannelsSync: React.FC = () => {
 
 
     const checkRequiredFields = (channel: typeof CHANNELS[0]) => {
-        const title = stepData[2]?.title; 
-        
+        const title = stepData[2]?.title;
+
         // Simple check
         const missing = [];
         if (channel.id === 'tiktok' && !productVideo) missing.push('Video');
-        
+
         return { ready: missing.length === 0, missing };
     };
 
@@ -82,12 +81,11 @@ export const ChannelsSync: React.FC = () => {
                             key={channel.id}
                             onClick={() => toggleChannel(channel.id)}
                             className={`
-                                relative p - 4 rounded - xl text - left transition - all duration - 300 group flex flex - col h - full border
-                                ${
-    isSelected
-        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 shadow-md ring-1 ring-indigo-600'
-        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-1'
-}
+                                relative p-4 rounded-xl text-left transition-all duration-300 group flex flex-col h-full border
+                                ${isSelected
+                                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 shadow-md ring-1 ring-indigo-600'
+                                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-1'
+                                }
 `}
                         >
                             {isSelected && (
@@ -97,17 +95,16 @@ export const ChannelsSync: React.FC = () => {
                             )}
 
                             <div className={`
-w - 10 h - 10 rounded - lg flex items - center justify - center mb - 3 transition - colors
-                                ${
-    isSelected
-        ? 'bg-indigo-600 text-white'
-        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'
-}
+w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-colors
+                                ${isSelected
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'
+                                }
 `}>
                                 {React.createElement(channel.icon, { size: 20, strokeWidth: 1.5 })}
                             </div>
 
-                            <h3 className={`font - bold text - sm mb - 1 ${ isSelected ? 'text-indigo-900 dark:text-indigo-300' : 'text-slate-900 dark:text-white' } `}>
+                            <h3 className={`font-bold text-sm mb-1 ${isSelected ? 'text-indigo-900 dark:text-indigo-300' : 'text-slate-900 dark:text-white'} `}>
                                 {channel.name}
                             </h3>
 
@@ -124,4 +121,3 @@ w - 10 h - 10 rounded - lg flex items - center justify - center mb - 3 transitio
         </div>
     );
 };
-```
