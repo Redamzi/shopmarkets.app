@@ -25,7 +25,7 @@ import {
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
 // Versioning for easy check
-const WIZARD_VERSION = 'W 0.08';
+const WIZARD_VERSION = 'W 0.09';
 
 interface WizardStepFn {
     id: string;
@@ -37,8 +37,8 @@ interface WizardStepFn {
 
 const ALL_WIZARD_STEPS: WizardStepFn[] = [
     { id: 'type', label: 'Produktart', icon: Layers, component: ProductTypeSelector, show: () => true },
-    { id: 'ai', label: 'AI-Generator', icon: Sparkles, component: AIGenerator, show: () => true },
     { id: 'channels', label: 'Kanäle', icon: Globe, component: ChannelsSync, show: () => true },
+    { id: 'ai', label: 'AI-Generator', icon: Sparkles, component: AIGenerator, show: () => true },
     { id: 'basis', label: 'Basis', icon: Layers, component: GeneralInfo, show: () => true },
     { id: 'attributes', label: 'Attribute', icon: SlidersHorizontal, component: AttributesVariants, show: (t) => !['virtual', 'downloadable', 'service'].includes(t) },
     { id: 'configurator', label: 'Konfigurator', icon: Wrench, component: Configurator, show: (t) => ['personalized', 'configurable', 'simple'].includes(t) },
