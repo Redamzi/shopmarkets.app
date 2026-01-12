@@ -15,49 +15,56 @@ const PRODUCT_TYPES = [
 ];
 
 export const ProductTypeSelector: React.FC = () => {
-    const { productType, setProductType } = useProductWizardStore();
+    const { productType, setProductType, setCurrentStep } = useProductWizardStore();
+
+    const handleSelect = (id: string) => {
+        setProductType(id);
+        // Automatisch zum Basis-Step (Step 3) springen, AI (Step 2) wird übersprungen aber bleibt sichtbar
+        setCurrentStep(3);
+    };
 
     return (
-        <div className="max-w-6xl mx-auto p-2 md:p-6">
-            <div className="text-center mb-10">
-                <h2 className="text-3xl font-bold mb-3 font-serif-display text-slate-900 dark:text-white">Produktart wählen</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-lg">Was möchten Sie heute verkaufen?</p>
+        <div className="max-w-7xl mx-auto p-2">
+            <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold mb-2 font-serif-display text-slate-900 dark:text-white">Produktart wählen</h2>
+                <p className="text-slate-500 dark:text-slate-400">Was möchten Sie heute verkaufen?</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {PRODUCT_TYPES.map((type) => {
                     const isSelected = productType === type.id;
                     return (
                         <button
                             key={type.id}
-                            onClick={() => setProductType(type.id)}
+                            onClick={() => handleSelect(type.id)}
                             className={`
-                                relative p-6 rounded-2xl text-left transition-all duration-300 group
-                                border-2 
+                                relative p-5 rounded-xl text-left transition-all duration-300 group
+                                border border-transparent
                                 ${isSelected
-                                    ? 'border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20 shadow-lg shadow-indigo-500/10 scale-[1.02]'
-                                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300 hover:shadow-md'
+                                    ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500 scale-[1.02] shadow-md'
+                                    : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-1'
                                 }
                             `}
                         >
-                            {isSelected && (
-                                <div className="absolute top-4 right-4 w-3 h-3 bg-indigo-600 rounded-full animate-pulse shadow-md shadow-indigo-400/50" />
-                            )}
-
-                            <div className={`
-                                w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-colors
-                                ${isSelected
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'
-                                }
-                            `}>
-                                {React.createElement(type.icon, { size: 28, strokeWidth: 1.5 })}
+                            <div className="flex items-start justify-between mb-3">
+                                <div className={`
+                                    p-3 rounded-lg transition-colors
+                                    ${isSelected
+                                        ? 'bg-indigo-600 text-white shadow-md'
+                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-600'
+                                    }
+                                `}>
+                                    {React.createElement(type.icon, { size: 22, strokeWidth: 1.5 })}
+                                </div>
+                                {isSelected && (
+                                    <span className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse" />
+                                )}
                             </div>
 
-                            <h3 className={`font-bold text-lg mb-2 transition-colors ${isSelected ? 'text-indigo-900 dark:text-indigo-300' : 'text-slate-900 dark:text-white'}`}>
+                            <h3 className={`font-bold text-base mb-1 transition-colors ${isSelected ? 'text-indigo-900' : 'text-slate-900 dark:text-white'}`}>
                                 {type.name}
                             </h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
                                 {type.description}
                             </p>
                         </button>

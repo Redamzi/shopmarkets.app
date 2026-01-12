@@ -23,7 +23,7 @@ import {
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
 // Versioning for easy check
-const WIZARD_VERSION = 'W 0.05';
+const WIZARD_VERSION = 'W 0.06';
 
 interface WizardStepFn {
     id: string;
@@ -113,8 +113,17 @@ export const ProductWizard: React.FC = () => {
         loadProduct();
     }, [productId, reset, setProductType, setStepData, navigate]);
 
-    // Filter Steps dynamically
-    const visibleSteps = ALL_WIZARD_STEPS.filter(step => step.show(productType || 'simple'));
+    // Eager loading - Always visible steps
+    const visibleSteps = ALL_WIZARD_STEPS.filter(step => {
+        // Always show Type and AI
+        if (step.id === 'type' || step.id === 'ai') return true;
+
+        // Hide other steps if no product type selected
+        if (!productType) return false;
+
+        // Otherwise use the step's specific show logic
+        return step.show(productType);
+    });
 
     // Map 1-based index to Array Index
     const currentStepIndex = currentStep - 1;
