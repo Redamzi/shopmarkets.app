@@ -41,6 +41,15 @@ export const AIGenerator: React.FC = () => {
             // Allow override via Env, default to local microservice
             const AI_SERVICE_URL = (import.meta as any).env.VITE_AI_SERVICE_URL || 'http://localhost:5005';
 
+            // ADDED: Context from selected channels (Step 2)
+            const channelsData = stepData[12] || {};
+            const selectedChannels = channelsData.channels || [];
+            if (selectedChannels.length > 0) {
+                formData.append('target_channels', JSON.stringify(selectedChannels));
+                // Add a human-readable hint used by some AI prompts
+                formData.append('context_hint', `Target Sales Channels: ${selectedChannels.join(', ')}`);
+            }
+
             // Legacy Logic: Direct call to Microservice (bypassing Main API)
             const response = await fetch(`${AI_SERVICE_URL}/generate`, {
                 method: 'POST',
