@@ -16,14 +16,16 @@ const Organization = lazy(() => import('./ProductWizard/Organization').then(m =>
 const SEOMarketing = lazy(() => import('./ProductWizard/SEOMarketing').then(m => ({ default: m.SEOMarketing })));
 const PreviewSave = lazy(() => import('./ProductWizard/PreviewSave').then(m => ({ default: m.PreviewSave })));
 const ChannelsSync = lazy(() => import('./ProductWizard/ChannelsSync').then(m => ({ default: m.ChannelsSync })));
+const SocialMediaMaster = lazy(() => import('./ProductWizard/SocialMediaMaster').then(m => ({ default: m.SocialMediaMaster })));
 
 import {
-    Sparkles, Layers, ImageIcon, DollarSign, ShieldCheck, X, ChevronRight, Check, Loader2, Globe, SlidersHorizontal, Wrench, Tag
+    Sparkles, Layers, ImageIcon, DollarSign, ShieldCheck, X, ChevronRight, Check, Loader2, Globe, SlidersHorizontal, Wrench, Tag, Video
 } from 'lucide-react';
+
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
 // Versioning for easy check
-const WIZARD_VERSION = 'W 0.07';
+const WIZARD_VERSION = 'W 0.08';
 
 interface WizardStepFn {
     id: string;
@@ -36,15 +38,16 @@ interface WizardStepFn {
 const ALL_WIZARD_STEPS: WizardStepFn[] = [
     { id: 'type', label: 'Produktart', icon: Layers, component: ProductTypeSelector, show: () => true },
     { id: 'ai', label: 'AI-Generator', icon: Sparkles, component: AIGenerator, show: () => true },
+    { id: 'channels', label: 'Kanäle', icon: Globe, component: ChannelsSync, show: () => true },
     { id: 'basis', label: 'Basis', icon: Layers, component: GeneralInfo, show: () => true },
     { id: 'attributes', label: 'Attribute', icon: SlidersHorizontal, component: AttributesVariants, show: (t) => !['virtual', 'downloadable', 'service'].includes(t) },
     { id: 'configurator', label: 'Konfigurator', icon: Wrench, component: Configurator, show: (t) => ['personalized', 'configurable', 'simple'].includes(t) },
     { id: 'media', label: 'Medien', icon: ImageIcon, component: MediaUpload, show: () => true },
+    { id: 'social', label: 'Social Video', icon: Video, component: SocialMediaMaster, show: () => true },
     { id: 'pricing', label: 'Preise & Lager', icon: DollarSign, component: StepPricing, show: () => true },
     { id: 'org', label: 'Organisation', icon: Tag, component: Organization, show: () => true },
     { id: 'seo', label: 'SEO & Sichtbarkeit', icon: Globe, component: SEOMarketing, show: () => true },
     { id: 'save', label: 'Speichern', icon: ShieldCheck, component: PreviewSave, show: () => true },
-    { id: 'sync', label: 'Channel Sync', icon: Globe, component: ChannelsSync, show: () => true },
 ];
 
 export const ProductWizard: React.FC = () => {
