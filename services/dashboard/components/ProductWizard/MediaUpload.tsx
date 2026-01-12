@@ -145,7 +145,12 @@ export const MediaUpload: React.FC = () => {
         let newVideo = video;
 
         selectedFiles.forEach(file => {
-            if (file.type === 'video' || file.mimeType?.startsWith('video/') || file.url?.endsWith('.mp4')) {
+            // Correctly detect video files based on MIME type in 'type' field or file extension
+            const isVideo = (file.type && file.type.startsWith('video/')) ||
+                (file.mime_type && file.mime_type.startsWith('video/')) ||
+                (file.url && (file.url.endsWith('.mp4') || file.url.endsWith('.mov') || file.url.endsWith('.webm')));
+
+            if (isVideo) {
                 newVideo = file.url;
             } else {
                 if (!newImages.includes(file.url) && newImages.length < 5) {
