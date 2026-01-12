@@ -98,6 +98,9 @@ const getStepsForProductType = (productType: ProductType | null): typeof ALL_WIZ
     return ALL_WIZARD_STEPS.filter(step => activeStepIds.includes(step.id));
 };
 
+// Wizard Version
+const WIZARD_VERSION = 'W 0.03';
+
 const AI_TONES = ['SEO-Optimiert 🚀', 'Locker & Cool 😎', 'Freundlich 😊', 'Witzig & Frech 😂'];
 
 // Estimated fees in percent
@@ -459,8 +462,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                         handleNextStep();
                                     }}
                                     className={`p-6 rounded-2xl border-2 text-left transition-all hover:scale-105 ${productType === type.id
-                                            ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 ring-2 ring-indigo-500'
-                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                                        ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 ring-2 ring-indigo-500'
+                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
                                         }`}
                                 >
                                     <div className="flex items-start gap-4">
@@ -1128,7 +1131,10 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                 <X size={20} className="text-slate-600 dark:text-slate-300" />
                             </button>
                             <div>
-                                <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">{initialProduct ? 'Produkt bearbeiten' : 'Neues Produkt'}</h2>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-xl font-display font-bold text-slate-900 dark:text-white">{initialProduct ? 'Produkt bearbeiten' : 'Neues Produkt'}</h2>
+                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full">{WIZARD_VERSION}</span>
+                                </div>
                                 <p className="text-xs text-slate-500 font-medium">
                                     {initialProduct ? 'Änderungen vornehmen' : `Schritt ${currentStepIndex + 1} von ${WIZARD_STEPS.length}`}
                                 </p>
