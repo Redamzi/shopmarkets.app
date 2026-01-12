@@ -4,9 +4,10 @@ import pool from '../utils/db.js';
 import { sendVerificationEmail, send2FACode } from '../utils/email.js';
 import { generateCode } from '../utils/helpers.js';
 
-const FALLBACK_SECRET = 'ShopMarkets_JWT_Secret_2026_a8f3e9d2c1b4f7a6e5d8c3b2a1f9e7d6c5b4a3f2e1d9c8b7a6f5e4d3c2b1a0';
+const FALLBACK_SECRET = 'ShopMarkets_FORCE_SYNC_2026_V2_SECURE_KEY_123456789';
 // FORCE HARDCODED SECRET TO FIX 403 ERROR
-const JWT_SECRET = 'ShopMarkets_JWT_Secret_2026_a8f3e9d2c1b4f7a6e5d8c3b2a1f9e7d6c5b4a3f2e1d9c8b7a6f5e4d3c2b1a0';
+const JWT_SECRET = 'ShopMarkets_FORCE_SYNC_2026_V2_SECURE_KEY_123456789';
+console.log('🔐 [SEC] JWT Secret configured. Hash hint:', JWT_SECRET.substring(0, 10));
 const JWT_EXPIRES_IN = '24h';
 
 // Register
