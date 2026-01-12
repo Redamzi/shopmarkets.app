@@ -1,17 +1,21 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useProductWizardStore } from '../store/productWizardStore';
+
+// Eager loading - Always visible steps
 import { ProductTypeSelector } from './ProductWizard/ProductTypeSelector';
 import { AIGenerator } from './ProductWizard/AIGenerator';
-import { GeneralInfo } from './ProductWizard/GeneralInfo';
-import { AttributesVariants } from './ProductWizard/AttributesVariants';
-import { Configurator } from './ProductWizard/Configurator';
-import { MediaUpload } from './ProductWizard/MediaUpload';
-import { StepPricing } from './ProductWizard/StepPricing';
-import { Organization } from './ProductWizard/Organization';
-import { SEOMarketing } from './ProductWizard/SEOMarketing';
-import { PreviewSave } from './ProductWizard/PreviewSave';
-import { ChannelsSync } from './ProductWizard/ChannelsSync';
+
+// Lazy loading - Load on demand
+const GeneralInfo = lazy(() => import('./ProductWizard/GeneralInfo').then(m => ({ default: m.GeneralInfo })));
+const AttributesVariants = lazy(() => import('./ProductWizard/AttributesVariants').then(m => ({ default: m.AttributesVariants })));
+const Configurator = lazy(() => import('./ProductWizard/Configurator').then(m => ({ default: m.Configurator })));
+const MediaUpload = lazy(() => import('./ProductWizard/MediaUpload').then(m => ({ default: m.MediaUpload })));
+const StepPricing = lazy(() => import('./ProductWizard/StepPricing').then(m => ({ default: m.StepPricing })));
+const Organization = lazy(() => import('./ProductWizard/Organization').then(m => ({ default: m.Organization })));
+const SEOMarketing = lazy(() => import('./ProductWizard/SEOMarketing').then(m => ({ default: m.SEOMarketing })));
+const PreviewSave = lazy(() => import('./ProductWizard/PreviewSave').then(m => ({ default: m.PreviewSave })));
+const ChannelsSync = lazy(() => import('./ProductWizard/ChannelsSync').then(m => ({ default: m.ChannelsSync })));
 
 import {
     Sparkles, Layers, ImageIcon, DollarSign, ShieldCheck, X, ChevronRight, Check, Loader2, Globe, SlidersHorizontal, Wrench, Tag
@@ -19,7 +23,7 @@ import {
 
 // NEW: 7-Step Structure based on PRODUCT-CREATION-FLOW.md
 // Versioning for easy check
-const WIZARD_VERSION = 'W 0.04';
+const WIZARD_VERSION = 'W 0.05';
 
 interface WizardStepFn {
     id: string;
@@ -283,7 +287,14 @@ export const ProductWizard: React.FC = () => {
                 {/* Content Body */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-[#0B0F19] relative transition-colors duration-300">
                     <div className="max-w-5xl mx-auto p-8 lg:p-12">
-                        <CurrentComponent />
+                        <Suspense fallback={
+                            <div className="flex items-center justify-center py-20">
+                                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                                <span className="ml-3 text-slate-500">Lade Step...</span>
+                            </div>
+                        }>
+                            <CurrentComponent />
+                        </Suspense>
                     </div>
                 </div>
 
