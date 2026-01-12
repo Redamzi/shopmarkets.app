@@ -237,9 +237,10 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             await mediaService.upload(formData);
             console.log('Upload successful');
             await loadData();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Upload failed:', error);
-            alert('Upload fehlgeschlagen. Bitte versuchen Sie es erneut.');
+            const msg = error?.response?.data?.error || error?.message || 'Unbekannter Fehler';
+            alert(`Upload fehlgeschlagen: ${msg} (Status: ${error?.response?.status})`);
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -431,7 +432,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             {!isPicker && (
                 <div className="flex justify-between items-center mb-6 shrink-0">
                     <div>
-                        <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v2.0</span></h1>
+                        <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v.m 0.01</span></h1>
                         <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                     </div>
                     <div className="flex gap-2">
