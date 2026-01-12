@@ -13,6 +13,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, '.'),
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Cache busting: Add timestamp to filenames
+        entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`
+      }
+    }
+  },
   // Vite automatically loads VITE_ prefixed env vars from process.env
   // No need to manually define them
 });
