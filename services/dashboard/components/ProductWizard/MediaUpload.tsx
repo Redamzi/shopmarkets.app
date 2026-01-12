@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useProductWizardStore } from '../../store/productWizardStore';
-import { UploadCloud, Image as ImageIcon, Video, X, Star, FolderOpen, Plus, PlayCircle } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Video, X, Star, FolderOpen, Plus, PlayCircle, Loader2 } from 'lucide-react';
 import { MediaLibrary } from '../MediaLibrary';
+import { mediaService } from '../../services/mediaService'; // Import Service
 
 export const MediaUpload: React.FC = () => {
     const { setStepData, stepData } = useProductWizardStore();
@@ -20,6 +21,29 @@ export const MediaUpload: React.FC = () => {
         setStepData(3, { images, video });
     }, [images, video, setStepData]);
 
+    const uploadFile = async (file: File): Promise<string | null> => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Call Media Service
+            // Response typically contains { url: '...', ... }
+            const response = await mediaService.upload(formData);
+
+            // Robust check for URL in response
+            if (response && response.url) return response.url;
+            if (response && response.data && response.data.url) return response.data.url;
+            if (typeof response === 'string' && response.startsWith('http')) return response;
+
+            console.error('Upload successful but no URL returned', response);
+            return null;
+        } catch (error) {
+            console.error('Upload failed', error);
+            alert(`Upload fehlgeschlagen für ${file.name}`);
+            return null;
+        }
+    };
+
     const handleFileUpload = async (files: FileList) => {
         if (images.length + files.length > 5) {
             alert('Maximal 5 Bilder erlaubt');
@@ -27,92 +51,76 @@ export const MediaUpload: React.FC = () => {
         }
 
         setUploading(true);
-        const newImages: string[] = [];
 
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
 
-            // Check if Video
+            // Video Handling
             if (file.type.startsWith('video/')) {
                 if (video) {
                     alert('Nur 1 Video erlaubt (bereits vorhanden).');
                     continue;
                 }
-                if (file.size > 50 * 1024 * 1024) {
-                    alert(`${file.name} ist zu groß (max 50MB)`);
+                if (file.size > 200 * 1024 * 1024) { // Increased limit for server upload (200MB)
+                    alert(`${file.name} ist zu groß (max 200MB)`);
                     continue;
                 }
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setVideo(reader.result as string);
-                    // If only video uploaded, stop loading spinner
-                    if (files.length === 1) setUploading(false);
-                };
-                reader.readAsDataURL(file);
+
+                const url = await uploadFile(file);
+                if (url) setVideo(url);
                 continue;
             }
 
             // Image Handler
-            if (file.size > 5 * 1024 * 1024) {
-                alert(`${file.name} ist zu groß (max 5MB)`);
+            if (file.size > 10 * 1024 * 1024) {
+                alert(`${file.name} ist zu groß (max 10MB)`);
                 continue;
             }
 
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                newImages.push(reader.result as string);
-                // Just force update
-                setImages(prev => [...prev, reader.result as string].slice(0, 5));
-                setUploading(false);
-            };
-            reader.readAsDataURL(file);
+            const url = await uploadFile(file);
+            if (url) {
+                setImages(prev => [...prev, url].slice(0, 5));
+            }
         }
-        setUploading(false); // Safety
+        setUploading(false);
     };
 
-    const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 50 * 1024 * 1024) {
-                alert(`${file.name} ist zu groß (max 50MB)`);
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setVideo(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            setUploading(true);
+            const url = await uploadFile(file);
+            if (url) setVideo(url);
+            setUploading(false);
         }
     };
 
-    const handleDrop = (e: React.DragEvent, type: 'image' | 'video' = 'image') => {
+    const handleDrop = async (e: React.DragEvent, type: 'image' | 'video' = 'image') => {
         e.preventDefault();
         setIsDragging(false);
 
         const files = Array.from(e.dataTransfer.files);
+        if (files.length === 0) return;
+
+        setUploading(true);
 
         if (type === 'video') {
             const vid = files.find(f => f.type.startsWith('video/'));
             if (vid) {
-                const reader = new FileReader();
-                reader.onloadend = () => setVideo(reader.result as string);
-                reader.readAsDataURL(vid);
+                const url = await uploadFile(vid);
+                if (url) setVideo(url);
             }
-            return;
+        } else {
+            const imgs = files.filter(f => f.type.startsWith('image/'));
+            for (const file of imgs) {
+                if (images.length >= 5) break;
+                const url = await uploadFile(file);
+                if (url) setImages(prev => [...prev, url]);
+            }
         }
-
-        const imgs = files.filter(f => f.type.startsWith('image/'));
-        if (imgs.length > 0) {
-            imgs.forEach(file => {
-                if (inputImagesCount(files.length) > 5) return;
-                const reader = new FileReader();
-                reader.onloadend = () => setImages(prev => [...prev, reader.result as string].slice(0, 5));
-                reader.readAsDataURL(file);
-            });
-        }
+        setUploading(false);
     };
 
-    const inputImagesCount = (newCount: number) => images.length + newCount;
 
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
@@ -137,7 +145,7 @@ export const MediaUpload: React.FC = () => {
         let newVideo = video;
 
         selectedFiles.forEach(file => {
-            if (file.type === 'video' || file.mimeType?.startsWith('video/')) {
+            if (file.type === 'video' || file.mimeType?.startsWith('video/') || file.url?.endsWith('.mp4')) {
                 newVideo = file.url;
             } else {
                 if (!newImages.includes(file.url) && newImages.length < 5) {
@@ -227,10 +235,10 @@ export const MediaUpload: React.FC = () => {
                         </div>
 
                         {uploading && (
-                            <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center rounded-xl">
+                            <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center rounded-xl z-20">
                                 <div className="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-lg animate-pulse">
-                                    <UploadCloud size={18} className="animate-bounce" />
-                                    <span className="font-bold text-sm">Verarbeitung...</span>
+                                    <Loader2 size={18} className="animate-spin" />
+                                    <span className="font-bold text-sm">Upload läuft...</span>
                                 </div>
                             </div>
                         )}
@@ -245,7 +253,7 @@ export const MediaUpload: React.FC = () => {
 
                                     <button
                                         onClick={() => removeImage(index)}
-                                        className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm translate-y-1 group-hover:translate-y-0"
+                                        className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center bg-white/90 text-red-500 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm translate-y-1 group-hover:translate-y-0 cursor-pointer z-10"
                                         title="Entfernen"
                                     >
                                         <X size={14} />
@@ -271,16 +279,27 @@ export const MediaUpload: React.FC = () => {
                     </h3>
 
                     <div
-                        className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center hover:border-pink-500 transition-colors bg-pink-50/10 dark:bg-pink-900/10"
+                        className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center hover:border-pink-500 transition-colors bg-pink-50/10 dark:bg-pink-900/10 relative"
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => handleDrop(e, 'video')}
                     >
+                        {/* Upload Indicator specific to Video container if uploading video */}
+                        {uploading && !images.some(img => img === video) && (
+                            // This is a simple heuristic - if uploading is true, show it here too just in case
+                            <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center rounded-xl z-20">
+                                <div className="flex items-center gap-3 p-3 bg-pink-50 dark:bg-pink-900/30 text-pink-600 rounded-lg animate-pulse">
+                                    <Loader2 size={18} className="animate-spin" />
+                                    <span className="font-bold text-sm">Video Upload...</span>
+                                </div>
+                            </div>
+                        )}
+
                         {video ? (
                             <div className="relative w-full max-w-[200px] mx-auto aspect-[9/16] bg-black rounded-lg overflow-hidden shadow-md border border-slate-200 dark:border-slate-700">
-                                <video src={video} className="w-full h-full object-cover" controls />
+                                <video src={video} className="w-full h-full object-cover" controls playsInline />
                                 <button
                                     onClick={removeVideo}
-                                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full hover:bg-red-50 transition shadow-md z-10"
+                                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full hover:bg-red-50 transition shadow-md z-10 cursor-pointer"
                                 >
                                     <X size={16} />
                                 </button>
@@ -292,10 +311,10 @@ export const MediaUpload: React.FC = () => {
                                 </div>
                                 <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">Video hochladen</h4>
                                 <p className="text-slate-500 dark:text-slate-400 max-w-sm mb-4 text-xs">
-                                    Ideal für TikTok, Reels oder YouTube Shorts. Max 50MB.
+                                    Ideal für TikTok, Reels oder YouTube Shorts. Max 200MB.
                                 </p>
                                 <div className="relative">
-                                    <button className="px-5 py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition shadow-md shadow-pink-500/20 text-sm">
+                                    <button className="px-5 py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition shadow-md shadow-pink-500/20 text-sm pointer-events-none">
                                         Video auswählen
                                     </button>
                                     <input
