@@ -44,13 +44,28 @@ interface ConfigGroup {
     options: ConfigOption[];
 }
 
-// Wizard Steps Definition - TikTok is now a standalone step
-const WIZARD_STEPS = [
+// Product Types
+type ProductType = 'simple' | 'configurable' | 'grouped' | 'bundle' | 'virtual' | 'downloadable' | 'subscription' | 'personalized' | 'bookable';
+
+const PRODUCT_TYPES = [
+    { id: 'simple' as ProductType, label: 'Einfaches Produkt', icon: Package, description: 'Standard-Produkt ohne Varianten' },
+    { id: 'configurable' as ProductType, label: 'Variables Produkt', icon: SlidersHorizontal, description: 'Mit Größen, Farben etc.' },
+    { id: 'personalized' as ProductType, label: 'Personalisierbar', icon: Wrench, description: 'Mit Gravur, Text-Optionen' },
+    { id: 'virtual' as ProductType, label: 'Virtuell', icon: Globe, description: 'Kein physischer Versand' },
+    { id: 'downloadable' as ProductType, label: 'Download', icon: Database, description: 'Digitale Dateien' },
+    { id: 'bundle' as ProductType, label: 'Bundle', icon: Box, description: 'Mehrere Produkte zusammen' },
+    { id: 'subscription' as ProductType, label: 'Abo', icon: RefreshCw, description: 'Wiederkehrende Zahlung' },
+    { id: 'bookable' as ProductType, label: 'Buchbar', icon: Clock, description: 'Termine, Slots' },
+];
+
+// All possible wizard steps
+const ALL_WIZARD_STEPS = [
+    { id: 'product_type', label: 'Typ', icon: Package },
     { id: 'ai', label: 'AI Start', icon: Sparkles },
     { id: 'price_check', label: 'Preis Radar', icon: TrendingDown },
     { id: 'general', label: 'Basis', icon: Layers },
     { id: 'media', label: 'Medien', icon: ImageIcon },
-    { id: 'tiktok', label: 'TikTok', icon: Video }, // Standalone Step
+    { id: 'tiktok', label: 'TikTok', icon: Video },
     { id: 'organization', label: 'Org', icon: Tag },
     { id: 'pricing', label: 'Preise', icon: DollarSign },
     { id: 'inventory', label: 'Lager', icon: Box },
@@ -60,6 +75,28 @@ const WIZARD_STEPS = [
     { id: 'organization_channels', label: 'Kanäle', icon: Globe },
     { id: 'check', label: 'Prüfung', icon: ShieldCheck },
 ];
+
+// Dynamic step filtering based on product type
+const getStepsForProductType = (productType: ProductType | null): typeof ALL_WIZARD_STEPS => {
+    if (!productType) return [ALL_WIZARD_STEPS[0]]; // Only show type selector
+
+    const baseSteps = ['product_type', 'ai', 'price_check', 'general', 'media', 'organization', 'pricing', 'organization_channels', 'check'];
+
+    const stepMap: Record<ProductType, string[]> = {
+        simple: [...baseSteps.slice(0, 6), 'inventory', ...baseSteps.slice(6)],
+        configurable: [...baseSteps.slice(0, 6), 'inventory', 'variants', 'shipping', ...baseSteps.slice(6)],
+        personalized: [...baseSteps.slice(0, 6), 'inventory', 'configurator', 'shipping', ...baseSteps.slice(6)],
+        virtual: baseSteps, // No shipping, no inventory
+        downloadable: baseSteps, // No shipping, no inventory
+        bundle: [...baseSteps.slice(0, 6), 'shipping', ...baseSteps.slice(6)],
+        subscription: baseSteps,
+        grouped: baseSteps,
+        bookable: baseSteps,
+    };
+
+    const activeStepIds = stepMap[productType] || baseSteps;
+    return ALL_WIZARD_STEPS.filter(step => activeStepIds.includes(step.id));
+};
 
 const AI_TONES = ['SEO-Optimiert 🚀', 'Locker & Cool 😎', 'Freundlich 😊', 'Witzig & Frech 😂'];
 
@@ -115,7 +152,11 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
     const [loadingChannelId, setLoadingChannelId] = useState<string | null>(null);
     const [autoCalcFees, setAutoCalcFees] = useState(false);
     const [isPriceMonitorActive, setIsPriceMonitorActive] = useState(false);
+    const [productType, setProductType] = useState<ProductType | null>(null);
     const navRef = useRef<HTMLDivElement>(null);
+
+    // Compute visible steps based on product type
+    const WIZARD_STEPS = getStepsForProductType(productType);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -180,6 +221,7 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                 setCurrentStepIndex(2);
             } else {
                 setCurrentStepIndex(0);
+                setProductType(null); // Reset product type
                 setFormData({
                     title: '', description: '', status: 'active', sku: '', barcode: '', price: '', comparePrice: '', costPerItem: '',
                     stock: '', weight: '', length: '', width: '', height: '', shippingProfile: 'standard', channels: ['shopify'] as Platform[],
@@ -401,7 +443,40 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
     // --- RENDER CONTENT ---
     const renderContent = () => {
         switch (WIZARD_STEPS[currentStepIndex].id) {
-            // ... (Rest of switch case logic remains identical to previous version, ensuring no code loss)
+            case 'product_type':
+                return (
+                    <div className="space-y-6 animate-in slide-in-from-right-8 duration-300">
+                        <div className="text-center mb-8">
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Welchen Produkttyp möchten Sie anlegen?</h3>
+                            <p className="text-slate-500 dark:text-slate-400">Wählen Sie den passenden Typ für Ihr Produkt</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {PRODUCT_TYPES.map(type => (
+                                <button
+                                    key={type.id}
+                                    onClick={() => {
+                                        setProductType(type.id);
+                                        handleNextStep();
+                                    }}
+                                    className={`p-6 rounded-2xl border-2 text-left transition-all hover:scale-105 ${productType === type.id
+                                            ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 ring-2 ring-indigo-500'
+                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                                        }`}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                                            <type.icon size={24} />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-slate-900 dark:text-white mb-1">{type.label}</h4>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400">{type.description}</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                );
             case 'ai':
                 return (
                     <div className="flex flex-col items-center justify-center h-full py-4 sm:py-8 text-center space-y-6 sm:space-y-8 animate-in zoom-in-95 duration-300 -mt-[30px] sm:mt-0">
@@ -463,8 +538,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                             </div>
                             <button
                                 className={`w-full mt-6 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 relative z-10 ${isPriceMonitorActive
-                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500/50 shadow-none'
-                                        : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5'
+                                    ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500/50 shadow-none'
+                                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5'
                                     }`}
                                 onClick={() => {
                                     if (isPriceMonitorActive) {
@@ -1068,8 +1143,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                 key={step.id}
                                 onClick={() => setCurrentStepIndex(idx)}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap border ${currentStepIndex === idx
-                                        ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 shadow-sm'
-                                        : 'bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
+                                    ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 shadow-sm'
+                                    : 'bg-transparent border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
                                     }`}
                             >
                                 {React.createElement(step.icon, { size: 16, className: currentStepIndex === idx ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400' })}
@@ -1104,8 +1179,8 @@ export const AddProductWizardModal: React.FC<AddProductWizardModalProps> = ({ is
                                         key={step.id}
                                         onClick={() => setCurrentStepIndex(idx)}
                                         className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center border transition-all ${currentStepIndex === idx
-                                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                                : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                                            ? 'bg-indigo-600 text-white border-indigo-600'
+                                            : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
                                             }`}
                                     >
                                         <step.icon size={18} />
