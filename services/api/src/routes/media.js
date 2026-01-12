@@ -55,8 +55,10 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
 
         // Construct the relative path (stored in DB) and full Public URL
         const filename = req.file.filename;
+        // relativePath on disk relative to UPLOAD_ROOT is just userId/filename
+        // BUT public URL needs 'uploads/' prefix if CDN serves from root
         const relativePath = `${userId}/${filename}`;
-        const publicUrl = `${CDN_BASE_URL}/${relativePath}`;
+        const publicUrl = `${CDN_BASE_URL}/uploads/${relativePath}`;
         const fileSize = req.file.size;
         const mimeType = req.file.mimetype;
 
