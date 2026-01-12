@@ -29,6 +29,9 @@ app.use(cors({
     origin: function (origin, callback) {
         const allowedOrigins = [
             'https://start.shopmarkets.app',
+            'https://shopmarkets.app',
+            'https://dashboard.shopmarkets.app',
+            'https://www.shopmarkets.app',
             'http://localhost:5173',
             'http://localhost:3000'
         ];
