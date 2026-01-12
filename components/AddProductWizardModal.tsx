@@ -99,7 +99,7 @@ const getStepsForProductType = (productType: ProductType | null): typeof ALL_WIZ
 };
 
 // Wizard Version
-const WIZARD_VERSION = 'W 0.03';
+const WIZARD_VERSION = 'W 0.04';
 
 const AI_TONES = ['SEO-Optimiert 🚀', 'Locker & Cool 😎', 'Freundlich 😊', 'Witzig & Frech 😂'];
 
