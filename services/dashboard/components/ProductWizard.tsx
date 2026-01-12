@@ -158,11 +158,12 @@ export const ProductWizard: React.FC = () => {
         }
     }, [currentStepIndex]);
 
+
     const CurrentComponent = visibleSteps[currentStepIndex]?.component || (() => <div>Step not found</div>);
     const saveStepIndex = visibleSteps.findIndex(s => s.id === 'save');
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+        <div className="w-full h-full flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900">
             <div className="relative w-full max-w-7xl bg-white dark:bg-[#0F172A] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col h-[90vh] border border-gray-200 dark:border-white/10 ring-1 ring-black/5 dark:ring-white/5 transition-colors duration-300">
 
                 {/* Header */}
