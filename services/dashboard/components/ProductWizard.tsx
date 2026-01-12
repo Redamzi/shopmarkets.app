@@ -142,9 +142,8 @@ export const ProductWizard: React.FC = () => {
     };
 
     const handleClose = () => {
-        if (confirm('Möchten Sie den Wizard wirklich verlassen? Ihre Daten gehen verloren.')) {
-            navigate('/products');
-        }
+        reset(); // Reset wizard state
+        navigate('/products');
     };
 
     const handleSaveProduct = async () => {
