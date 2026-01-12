@@ -82,8 +82,7 @@ export const ChannelsSync: React.FC = () => {
                             key={channel.id}
                             onClick={() => toggleChannel(channel.id)}
                             className={`
-                                relative p - 4 rounded - xl text - left transition - all duration - 300 group flex flex - col h - full
-border 
+                                relative p - 4 rounded - xl text - left transition - all duration - 300 group flex flex - col h - full border
                                 ${
     isSelected
         ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 shadow-md ring-1 ring-indigo-600'
