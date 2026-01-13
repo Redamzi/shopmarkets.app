@@ -5,11 +5,10 @@ import { sendVerificationEmail, send2FACode } from '../utils/email.js';
 import { generateCode } from '../utils/helpers.js';
 
 const FALLBACK_SECRET = 'ShopMarkets_FORCE_SYNC_2026_V2_SECURE_KEY_123456789';
-// Use Environment Variable OR Fallback
-const JWT_SECRET = process.env.JWT_SECRET || FALLBACK_SECRET;
-console.log('🔐 [SEC] JWT Secret configured. Hash hint:', JWT_SECRET ? JWT_SECRET.substring(0, 10) + '...' : 'UNDEFINED');
+// FORCE HARDCODED SECRET TO FIX 403 ERROR
+const JWT_SECRET = 'ShopMarkets_FORCE_SYNC_2026_V2_SECURE_KEY_123456789';
+console.log('🔐 [SEC] JWT Secret configured. Hash hint:', JWT_SECRET.substring(0, 10));
 const JWT_EXPIRES_IN = '24h';
-
 
 // Register
 export const register = async (req, res, next) => {
