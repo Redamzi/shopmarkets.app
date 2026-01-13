@@ -103,7 +103,11 @@ const getPublicUrl = (key) => {
  */
 router.get('/', async (req, res) => {
     try {
-        const userId = req.user?.userId || '0eae9e61-8051-40c2-b5e9-d3493836a935'; // Hardcoded ID for testing (Amzi) if no auth
+        let userId = req.user?.userId;
+        if (!userId) {
+            const userRes = await pool.query('SELECT id FROM auth.users LIMIT 1');
+            userId = userRes.rows[0]?.id || '00000000-0000-0000-0000-000000000000';
+        }
 
         const result = await pool.query(
             `SELECT * FROM public.media_files 
@@ -124,7 +128,11 @@ router.get('/', async (req, res) => {
  */
 router.get('/folders', async (req, res) => {
     try {
-        const userId = req.user?.userId || '0eae9e61-8051-40c2-b5e9-d3493836a935';
+        let userId = req.user?.userId;
+        if (!userId) {
+            const userRes = await pool.query('SELECT id FROM auth.users LIMIT 1');
+            userId = userRes.rows[0]?.id || '00000000-0000-0000-0000-000000000000';
+        }
         const result = await pool.query(
             `SELECT * FROM public.media_folders 
              WHERE user_id = $1 
@@ -150,8 +158,23 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const client = await pool.connect();
 
     try {
-        const userId = req.user?.userId || '0eae9e61-8051-40c2-b5e9-d3493836a935'; // Hardcoded Test ID
-        const folderId = req.body.folderId || null; // Optional folder
+        // 🔍 FIX: Finde einen echten User, damit Foreign Key Constraints nicht knallen
+        let userId;
+        if (req.user && req.user.userId) {
+            userId = req.user.userId;
+        } else {
+            // Notfall-Modus: Hole irgendeinen User (z.B. den Admin)
+            const userRes = await client.query('SELECT id FROM auth.users LIMIT 1');
+            if (userRes.rows.length > 0) {
+                userId = userRes.rows[0].id;
+                console.log('⚠️ Debug-Modus: Benutze User-ID aus DB:', userId);
+            } else {
+                // Fallback, falls DB leer (unwahrscheinlich)
+                userId = '00000000-0000-0000-0000-000000000000';
+            }
+        }
+
+        const folderId = req.body.folderId || null;
 
         // Generate unique key: userId/year/month/uuid-filename
         const date = new Date();
