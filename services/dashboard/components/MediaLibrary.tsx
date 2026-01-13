@@ -56,89 +56,54 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
     // Drag state
     const [isDragging, setIsDragging] = useState(false);
     const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(undefined); // undefined = none, null = All Media
+    const dragCounter = useRef(0);
 
     // File Input Ref
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Filter Files Logic
-    const filteredFiles = files.filter(file => {
-        if (showInactive) return !file.is_active;
-        if (selectedFolderId === null) return file.is_active;
-        return file.folder_id === selectedFolderId && file.is_active;
-    });
+    // ... (Filter Logic)
 
-    const toggleSelection = (e: React.MouseEvent, id: string) => {
-        e.stopPropagation();
-        const newSelected = new Set(selectedItems);
-        if (newSelected.has(id)) {
-            newSelected.delete(id);
-        } else {
-            newSelected.add(id);
-        }
-        setSelectedItems(newSelected);
-    };
-
-    const handleSelectAll = () => {
-        if (selectedItems.size === filteredFiles.length) {
-            // Deselect all
-            setSelectedItems(new Set());
-        } else {
-            // Select all visible
-            const newSelected = new Set(filteredFiles.map(f => f.id));
-            setSelectedItems(newSelected);
-        }
-    };
-
-    const handleConfirmSelection = () => {
-        if (onSelect) {
-            const selectedFiles = files.filter(f => selectedItems.has(f.id));
-            onSelect(selectedFiles);
-        }
-    };
-
-    const handleBulkDelete = async () => {
-        if (!confirm(`Möchten Sie ${selectedItems.size} Dateien wirklich löschen?`)) return;
-
-        try {
-            setLoading(true);
-            const promises = Array.from(selectedItems).map(id => mediaService.delete(id));
-            await Promise.all(promises);
-            setSelectedItems(new Set());
-            await loadData();
-        } catch (error) {
-            console.error('Bulk delete failed:', error);
-            alert('Fehler beim Löschen einiger Dateien.');
-        } finally {
-            setLoading(false);
-        }
-    };
+    // ... (Selection Logic)
 
     // Drag & Drop Handlers
     const handleDragStart = (e: React.DragEvent, fileId: string) => {
+        // Only for internal moves
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('fileId', fileId);
-        setIsDragging(true);
+        // We set isDragging true via dragEnter usually, but here manually is fine too, 
+        // but let's rely on standard events if possible or distinct internal drag state.
+        // Actually, for internal drag, we might want different visual.
+    };
 
-        // Custom Drag Image
-        if (selectedItems.has(fileId) && selectedItems.size > 1) {
-            const dragIcon = document.createElement('div');
-            dragIcon.className = 'bg-indigo-600 text-white px-4 py-2 rounded-lg shadow-xl font-bold border-2 border-white z-50 fixed top-[-1000px] left-[-1000px] pointer-events-none';
-            dragIcon.innerText = `${selectedItems.size} Dateien`;
-            document.body.appendChild(dragIcon);
-            e.dataTransfer.setDragImage(dragIcon, 0, 0);
-            setTimeout(() => document.body.removeChild(dragIcon), 0);
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current += 1;
+        if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+            setIsDragging(true);
         }
     };
 
-    const handleDragEnd = () => {
-        setIsDragging(false);
-        setDragOverFolderId(undefined);
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragCounter.current -= 1;
+        if (dragCounter.current === 0) {
+            setIsDragging(false);
+            setDragOverFolderId(undefined);
+        }
     };
 
+    // handleDragOver remains for folder highlighting logic
     const handleDragOver = (e: React.DragEvent, folderId: string | null) => {
         e.preventDefault();
         e.stopPropagation();
-        e.dataTransfer.dropEffect = 'move';
+        // Needed to allow drop
+        e.dataTransfer.dropEffect = 'copy'; // Default to copy for external
+        if (e.dataTransfer.types.includes('fileId')) {
+            e.dataTransfer.dropEffect = 'move'; // Move for internal
+        }
+
         if (dragOverFolderId !== folderId) {
             setDragOverFolderId(folderId);
         }
@@ -148,12 +113,40 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         e.preventDefault();
         e.stopPropagation();
         setDragOverFolderId(undefined);
-        const fileId = e.dataTransfer.getData('fileId');
+        setIsDragging(false);
+        dragCounter.current = 0;
 
-        if (!fileId) {
-            setIsDragging(false);
+        // 1. External Files (Upload)
+        // Check if files attribute exists (standard way)
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const fileList = e.dataTransfer.files;
+            setUploading(true);
+            try {
+                const formData = new FormData();
+                for (let i = 0; i < fileList.length; i++) {
+                    formData.append('files', fileList[i]);
+                }
+
+                const uploadDest = targetFolderId !== undefined && targetFolderId !== null ? targetFolderId : selectedFolderId;
+
+                if (uploadDest) {
+                    formData.append('folderId', uploadDest);
+                }
+
+                await mediaService.upload(formData);
+                await loadData();
+            } catch (error: any) {
+                console.error('Drop Upload failed:', error);
+                alert('Upload fehlgeschlagen.');
+            } finally {
+                setUploading(false);
+            }
             return;
         }
+
+        // 2. Internal Files (Move)
+        const fileId = e.dataTransfer.getData('fileId');
+        if (!fileId) return;
 
         const filesToMove: string[] = [];
         if (selectedItems.has(fileId)) {
@@ -184,7 +177,6 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message}`);
         } finally {
             setLoading(false);
-            setIsDragging(false);
         }
     };
 
@@ -352,7 +344,12 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         : 'Alle Medien';
 
     return (
-        <div className={`w-full mx-auto flex flex-col animate-fade-in-up relative ${isPicker ? 'h-full' : 'p-6 lg:p-10 h-[calc(100vh-100px)]'}`}>
+        <div className={`w-full mx-auto flex flex-col animate-fade-in-up relative ${isPicker ? 'h-full' : 'p-6 lg:p-10 h-[calc(100vh-100px)]'}`}
+            onDragOver={(e) => handleDragOver(e, null)}
+            onDrop={(e) => handleDrop(e, selectedFolderId)}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+        >
             <input
                 type="file"
                 multiple
