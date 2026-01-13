@@ -103,11 +103,7 @@ const getPublicUrl = (key) => {
  */
 router.get('/', async (req, res) => {
     try {
-        let userId = req.user?.userId;
-        if (!userId) {
-            const userRes = await pool.query('SELECT id FROM auth.users LIMIT 1');
-            userId = userRes.rows[0]?.id || '00000000-0000-0000-0000-000000000000';
-        }
+        const userId = '00000000-0000-0000-0000-000000000000';
 
         const result = await pool.query(
             `SELECT * FROM public.media_files 
@@ -128,11 +124,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/folders', async (req, res) => {
     try {
-        let userId = req.user?.userId;
-        if (!userId) {
-            const userRes = await pool.query('SELECT id FROM auth.users LIMIT 1');
-            userId = userRes.rows[0]?.id || '00000000-0000-0000-0000-000000000000';
-        }
+        const userId = '00000000-0000-0000-0000-000000000000';
         const result = await pool.query(
             `SELECT * FROM public.media_folders 
              WHERE user_id = $1 
@@ -158,21 +150,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const client = await pool.connect();
 
     try {
-        // 🔍 FIX: Finde einen echten User, damit Foreign Key Constraints nicht knallen
-        let userId;
-        if (req.user && req.user.userId) {
-            userId = req.user.userId;
-        } else {
-            // Notfall-Modus: Hole irgendeinen User (z.B. den Admin)
-            const userRes = await client.query('SELECT id FROM auth.users LIMIT 1');
-            if (userRes.rows.length > 0) {
-                userId = userRes.rows[0].id;
-                console.log('⚠️ Debug-Modus: Benutze User-ID aus DB:', userId);
-            } else {
-                // Fallback, falls DB leer (unwahrscheinlich)
-                userId = '00000000-0000-0000-0000-000000000000';
-            }
-        }
+        // 🔍 FIX: Nutze harte ID, um DB-Fehler zu vermeiden
+        const userId = '00000000-0000-0000-0000-000000000000';
+        console.log('⚠️ Debug-Modus: Benutze statische User-ID:', userId);
 
         const folderId = req.body.folderId || null;
 
