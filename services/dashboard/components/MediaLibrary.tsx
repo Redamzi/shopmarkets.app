@@ -3,7 +3,7 @@ import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
     CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight, BookOpen, FileText, GripVertical,
-    CheckSquare, Square
+    SquareCheck as CheckSquare, Square
 } from 'lucide-react';
 import { mediaService } from '../services/mediaService';
 
@@ -428,7 +428,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             <div className={`flex-1 overflow-hidden flex ${isPicker ? 'bg-white dark:bg-slate-900 rounded-2xl' : 'bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm'}`}>
 
                 {/* Sidebar */}
-                <div className="w-64 bg-slate-50/50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-800 p-6 flex flex-col">
+                <div className="w-64 bg-slate-50/50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-slate-800 p-6 flex flex-col">
                     <button
                         onClick={() => setIsCreateFolderOpen(true)}
                         className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium hover:opacity-90 transition-all shadow-md"
