@@ -61,6 +61,28 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
     // File Input Ref
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Confirmation Dialog State
+    const [confirmDialog, setConfirmDialog] = useState<{
+        isOpen: boolean;
+        message: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        message: '',
+        onConfirm: () => { }
+    });
+
+    const showConfirmDialog = (message: string, onConfirm: () => void) => {
+        setConfirmDialog({ isOpen: true, message, onConfirm });
+    };
+
+    const handleConfirmDialogClose = (confirmed: boolean) => {
+        if (confirmed) {
+            confirmDialog.onConfirm();
+        }
+        setConfirmDialog({ isOpen: false, message: '', onConfirm: () => { } });
+    };
+
     // Filter Files Logic
     const filteredFiles = files.filter(file => {
         if (showInactive) return !file.is_active;
@@ -98,20 +120,23 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
     };
 
     const handleBulkDelete = async () => {
-        if (!confirm(`Möchten Sie ${selectedItems.size} Dateien wirklich löschen?`)) return;
-
-        try {
-            setLoading(true);
-            const promises = Array.from(selectedItems).map(id => mediaService.delete(id));
-            await Promise.all(promises);
-            setSelectedItems(new Set());
-            await loadData();
-        } catch (error) {
-            console.error('Bulk delete failed:', error);
-            alert('Fehler beim Löschen einiger Dateien.');
-        } finally {
-            setLoading(false);
-        }
+        showConfirmDialog(
+            `Möchten Sie ${selectedItems.size} Dateien wirklich löschen?`,
+            async () => {
+                try {
+                    setLoading(true);
+                    const promises = Array.from(selectedItems).map(id => mediaService.delete(id));
+                    await Promise.all(promises);
+                    setSelectedItems(new Set());
+                    await loadData();
+                } catch (error) {
+                    console.error('Bulk delete failed:', error);
+                    alert('Fehler beim Löschen einiger Dateien.');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        );
     };
 
     // Drag & Drop Handlers
@@ -294,16 +319,19 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
 
     const handleDelete = async (e: React.MouseEvent | null, id: string) => {
         if (e) e.stopPropagation();
-        if (!confirm('Möchten Sie diese Datei wirklich löschen?')) return;
-
-        try {
-            await mediaService.delete(id);
-            if (previewFile && previewFile.id === id) setPreviewFile(null);
-            await loadData();
-        } catch (error) {
-            console.error('Delete failed:', error);
-            alert('Löschen fehlgeschlagen.');
-        }
+        showConfirmDialog(
+            'Möchten Sie diese Datei wirklich löschen?',
+            async () => {
+                try {
+                    await mediaService.delete(id);
+                    if (previewFile && previewFile.id === id) setPreviewFile(null);
+                    await loadData();
+                } catch (error) {
+                    console.error('Delete failed:', error);
+                    alert('Löschen fehlgeschlagen.');
+                }
+            }
+        );
     };
 
     const handleCreateFolder = async () => {
@@ -321,15 +349,19 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
 
     const handleDeleteFolder = async (folderId: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!confirm('Ordner wirklich löschen? Inhalte werden NICHT gelöscht, sondern in "Alle Medien" verschoben.')) return;
-        try {
-            await mediaService.deleteFolder(folderId);
-            if (selectedFolderId === folderId) setSelectedFolderId(null);
-            await loadData();
-        } catch (error) {
-            console.error('Delete folder failed:', error);
-            alert('Ordner konnte nicht gelöscht werden.');
-        }
+        showConfirmDialog(
+            'Ordner wirklich löschen? Inhalte werden NICHT gelöscht, sondern in "Alle Medien" verschoben.',
+            async () => {
+                try {
+                    await mediaService.deleteFolder(folderId);
+                    if (selectedFolderId === folderId) setSelectedFolderId(null);
+                    await loadData();
+                } catch (error) {
+                    console.error('Delete folder failed:', error);
+                    alert('Ordner konnte nicht gelöscht werden.');
+                }
+            }
+        );
     };
 
     // Helper to format bytes
@@ -824,6 +856,30 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                         <div className="flex justify-end gap-2">
                             <button onClick={() => setIsCreateFolderOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Abbrechen</button>
                             <button onClick={handleCreateFolder} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Erstellen</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmation Dialog */}
+            {confirmDialog.isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 animate-scale-in">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Bestätigung</h3>
+                        <p className="text-slate-600 dark:text-slate-300 mb-6">{confirmDialog.message}</p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => handleConfirmDialogClose(false)}
+                                className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium"
+                            >
+                                Abbrechen
+                            </button>
+                            <button
+                                onClick={() => handleConfirmDialogClose(true)}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                            >
+                                Löschen
+                            </button>
                         </div>
                     </div>
                 </div>
