@@ -195,8 +195,43 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         setIsDragging(false);
         dragCounter.current = 0;
 
-        // 1. External Files (Upload)
-        // Check if files attribute exists (standard way)
+        // 1. Internal Files (Move) - Check FIRST to prevent upload modal on internal drag
+        const fileId = e.dataTransfer.getData('fileId');
+        if (fileId) {
+            const filesToMove: string[] = [];
+            if (selectedItems.has(fileId)) {
+                selectedItems.forEach(id => filesToMove.push(id));
+            } else {
+                filesToMove.push(fileId);
+            }
+
+            console.log(`📦 Moving ${filesToMove.length} files to folder:`, targetFolderId);
+
+            try {
+                setLoading(true);
+                const movePromises = filesToMove.map(id => {
+                    const file = files.find(f => f.id === id);
+                    if (file && file.folder_id === targetFolderId) return Promise.resolve();
+                    return mediaService.moveFile(id, targetFolderId);
+                });
+
+                await Promise.all(movePromises);
+
+                if (selectedItems.has(fileId)) {
+                    setSelectedItems(new Set());
+                    if (!isPicker) setSelectionMode(false);
+                }
+                await loadData();
+            } catch (error: any) {
+                console.error('Move failed:', error);
+                alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message}`);
+            } finally {
+                setLoading(false);
+            }
+            return; // Exit early for internal moves
+        }
+
+        // 2. External Files (Upload) - Only if no fileId (external drag from desktop)
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             const fileList = e.dataTransfer.files;
             setUploading(true);
@@ -220,42 +255,6 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             } finally {
                 setUploading(false);
             }
-            return;
-        }
-
-        // 2. Internal Files (Move)
-        const fileId = e.dataTransfer.getData('fileId');
-        if (!fileId) return;
-
-        const filesToMove: string[] = [];
-        if (selectedItems.has(fileId)) {
-            selectedItems.forEach(id => filesToMove.push(id));
-        } else {
-            filesToMove.push(fileId);
-        }
-
-        console.log(`📦 Moving ${filesToMove.length} files to folder:`, targetFolderId);
-
-        try {
-            setLoading(true);
-            const movePromises = filesToMove.map(id => {
-                const file = files.find(f => f.id === id);
-                if (file && file.folder_id === targetFolderId) return Promise.resolve();
-                return mediaService.moveFile(id, targetFolderId);
-            });
-
-            await Promise.all(movePromises);
-
-            if (selectedItems.has(fileId)) {
-                setSelectedItems(new Set());
-                if (!isPicker) setSelectionMode(false);
-            }
-            await loadData();
-        } catch (error: any) {
-            console.error('Move failed:', error);
-            alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message}`);
-        } finally {
-            setLoading(false);
         }
     };
 
