@@ -163,6 +163,7 @@ export const ProductWizard: React.FC = () => {
     };
 
     const handleSaveProduct = async () => {
+        console.log('🔵 handleSaveProduct called');
         setIsSaving(true);
         // Note: Components write to FIXED Store Keys (e.g. 2 for General, 3 for Media) regardless of UI Step Index.
         const payload = {
@@ -192,11 +193,50 @@ export const ProductWizard: React.FC = () => {
             channels: stepData[12]?.channels || []
         };
 
-        if (!payload.title || payload.title === 'Neues Produkt') { alert('Titel fehlt'); setIsSaving(false); return; }
-        if (!payload.price) { alert('Preis fehlt'); setIsSaving(false); return; }
-        if (!payload.sku) { alert('SKU fehlt'); setIsSaving(false); return; }
-        if (payload.stock === undefined) { alert('Bestand fehlt'); setIsSaving(false); return; }
-        if (!payload.images || payload.images.length === 0) { alert('Bilder fehlen'); setIsSaving(false); return; }
+        console.log('📦 Payload constructed:', payload);
+        console.log('📊 StepData:', stepData);
+
+        console.log('✅ Validation: Title =', payload.title);
+        if (!payload.title || payload.title === 'Neues Produkt') {
+            console.error('❌ Validation failed: Titel fehlt');
+            alert('Titel fehlt');
+            setIsSaving(false);
+            return;
+        }
+
+        console.log('✅ Validation: Price =', payload.price);
+        if (!payload.price) {
+            console.error('❌ Validation failed: Preis fehlt');
+            alert('Preis fehlt');
+            setIsSaving(false);
+            return;
+        }
+
+        console.log('✅ Validation: SKU =', payload.sku);
+        if (!payload.sku) {
+            console.error('❌ Validation failed: SKU fehlt');
+            alert('SKU fehlt');
+            setIsSaving(false);
+            return;
+        }
+
+        console.log('✅ Validation: Stock =', payload.stock);
+        if (payload.stock === undefined) {
+            console.error('❌ Validation failed: Bestand fehlt');
+            alert('Bestand fehlt');
+            setIsSaving(false);
+            return;
+        }
+
+        console.log('✅ Validation: Images =', payload.images);
+        if (!payload.images || payload.images.length === 0) {
+            console.error('❌ Validation failed: Bilder fehlen');
+            alert('Bilder fehlen');
+            setIsSaving(false);
+            return;
+        }
+
+        console.log('✅ All validations passed, sending API request...');
 
         try {
             const response = await fetch('/api/product-wizard', {
@@ -205,7 +245,10 @@ export const ProductWizard: React.FC = () => {
                 body: JSON.stringify(payload)
             });
 
+            console.log('📡 API Response status:', response.status);
             const result = await response.json();
+            console.log('📡 API Response data:', result);
+
             if (result.success) {
                 alert('Produkt gespeichert! Jetzt Sync starten.');
                 setIsProductSaved(true);
@@ -215,7 +258,7 @@ export const ProductWizard: React.FC = () => {
                 alert(`Fehler: ${result.message} `);
             }
         } catch (error) {
-            console.error(error);
+            console.error('❌ Network error:', error);
             alert('Netzwerkfehler');
         } finally {
             setIsSaving(false);
