@@ -37,7 +37,7 @@ const s3Client = new S3Client({
  * 🛠️ POST /api/media/setup
  * Manually init bucket and policy
  */
-router.post('/setup', async (req, res) => {
+router.get('/setup', async (req, res) => {
     try {
         console.log(`🛠️ Setup: Checking bucket '${BUCKET_NAME}' at ${S3_ENDPOINT}...`);
 
