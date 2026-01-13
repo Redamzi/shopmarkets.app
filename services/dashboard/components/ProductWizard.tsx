@@ -229,11 +229,9 @@ export const ProductWizard: React.FC = () => {
         }
 
         console.log('✅ Validation: Images =', payload.images);
+        // Images are now optional - if empty, frontend will show placeholder
         if (!payload.images || payload.images.length === 0) {
-            console.error('❌ Validation failed: Bilder fehlen');
-            alert('Bilder fehlen');
-            setIsSaving(false);
-            return;
+            console.warn('⚠️ No images uploaded - will use placeholder');
         }
 
         console.log('✅ All validations passed, sending API request...');

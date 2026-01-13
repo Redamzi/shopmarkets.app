@@ -163,9 +163,11 @@ export const ProductList: React.FC<ProductListProps> = ({ products, onAddProduct
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-300">
-                                            <ShoppingBag size={32} />
-                                        </div>
+                                        <img
+                                            src="/product-placeholder.png"
+                                            alt={product.title}
+                                            className="w-full h-full object-cover grayscale opacity-50 transition-transform duration-700 group-hover:scale-110"
+                                        />
                                     )}
 
                                     {/* Badges - Glassmorphism */}
@@ -297,7 +299,11 @@ export const ProductList: React.FC<ProductListProps> = ({ products, onAddProduct
                             {/* Product Info */}
                             <div className="flex items-center gap-4 w-full lg:col-span-5">
                                 <div className="w-16 h-16 lg:w-14 lg:h-14 rounded-xl bg-slate-50 dark:bg-slate-800 flex-shrink-0 overflow-hidden relative">
-                                    <img src={product.image_url} alt={product.title} className="w-full h-full object-cover" />
+                                    <img
+                                        src={product.image_url || '/product-placeholder.png'}
+                                        alt={product.title}
+                                        className={`w-full h-full object-cover ${!product.image_url && 'grayscale opacity-50'}`}
+                                    />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <h4 className="font-bold text-slate-900 dark:text-white text-sm lg:text-base truncate">{product.title}</h4>
