@@ -408,7 +408,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             {!isPicker && (
                 <div className="flex justify-between items-center mb-6 shrink-0">
                     <div>
-                        <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v.m 2.0</span></h1>
+                        <h1 className="text-3xl font-bold font-serif-display text-slate-900 dark:text-white">Medien <span className="text-xs text-slate-300 font-sans font-normal opacity-50">v.m 2.1</span></h1>
                         <p className="text-slate-500 mt-1">Verwalte Bilder, Videos und Dokumente.</p>
                     </div>
                     <div className="flex gap-2">
@@ -428,7 +428,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             <div className={`flex-1 overflow-hidden flex ${isPicker ? 'bg-white dark:bg-slate-900 rounded-2xl' : 'bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm'}`}>
 
                 {/* Sidebar */}
-                <div className="w-64 bg-slate-50/50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-slate-800 p-6 flex flex-col">
+                <div className="w-64 bg-slate-50/50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-800 p-6 flex flex-col">
                     <button
                         onClick={() => setIsCreateFolderOpen(true)}
                         className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium hover:opacity-90 transition-all shadow-md"
@@ -553,8 +553,25 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                         </div>
                     </div>
 
-                    {/* Files Grid/List */}
-                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                    {/* DROPZONE & Grid */}
+                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar relative">
+                        {/* Drag Overlay Hint */}
+                        {isDragging && (
+                            <div className="absolute inset-0 z-50 bg-indigo-50/90 dark:bg-slate-900/90 border-4 border-dashed border-indigo-500 m-4 rounded-2xl flex flex-col items-center justify-center animate-pulse pointer-events-none">
+                                <Upload size={64} className="text-indigo-600 dark:text-indigo-400 mb-4" />
+                                <h3 className="text-2xl font-bold text-indigo-900 dark:text-white">Dateien hier ablegen</h3>
+                            </div>
+                        )}
+
+                        {/* Explicit Dropzone visible when not dragging too, for user convenience */}
+                        <div
+                            onClick={handleUploadClick}
+                            className="mb-8 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-indigo-300 transition-all cursor-pointer group"
+                        >
+                            <Upload size={32} className="mb-2 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                            <p className="font-medium text-slate-600 dark:text-slate-300 text-sm">Upload per Klick oder Drag & Drop</p>
+                        </div>
+
                         {loading && (
                             <div className="flex items-center justify-center h-40">
                                 <RefreshCw className="animate-spin text-indigo-600" size={32} />
@@ -562,12 +579,8 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                         )}
 
                         {!loading && filteredFiles.length === 0 && (
-                            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                                <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-full mb-4">
-                                    <Upload size={32} className="opacity-50" />
-                                </div>
-                                <p className="text-lg font-medium">Keine Medien gefunden</p>
-                                <p className="text-sm">Laden Sie Dateien hoch per Drag & Drop oder Klick auf "Hochladen"</p>
+                            <div className="flex flex-col items-center justify-center h-40 text-slate-400">
+                                <p className="text-lg font-medium">Dieser Ordner ist noch leer</p>
                             </div>
                         )}
 

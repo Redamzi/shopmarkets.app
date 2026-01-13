@@ -25,27 +25,14 @@ const PORT = process.env.PORT || 4000;
 // Security & Consistency
 app.set('trust proxy', 1);
 app.use(helmet());
+// CORS relaxed for production stability
 app.use(cors({
-    origin: function (origin, callback) {
-        const allowedOrigins = [
-            'https://start.shopmarkets.app',
-            'https://shopmarkets.app',
-            'https://dashboard.shopmarkets.app',
-            'https://www.shopmarkets.app',
-            'http://localhost:5173',
-            'http://localhost:3000'
-        ];
-
-        if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
-
-        return callback(new Error('Not allowed by CORS'));
-    },
+    origin: true, // Reflects the request origin, allowing all provided they send an origin header
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
+app.options('*', cors()); // Enable pre-flight for all routes
 app.use(express.json());
 
 // Serve uploaded files statically
