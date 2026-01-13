@@ -56,6 +56,14 @@ export const mediaService = {
         return response.data;
     },
 
+    updateFolder: async (id: string, name: string) => {
+        const token = storage.getItem('auth_token');
+        const response = await axios.put(`${API_URL}/api/media/folders/${id}`, { name }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
     moveFile: async (fileId: string, folderId: string | null) => {
         const token = storage.getItem('auth_token');
         const response = await axios.put(`${API_URL}/api/media/${fileId}/move`, { folderId }, {

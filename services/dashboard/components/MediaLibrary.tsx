@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
-    MoreVertical, Folder, Star, Clock, FolderPlus, Search,
+    MoreVertical, Folder, Star, Clock, FolderPlus, Search, Pencil,
     CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight, BookOpen, FileText, GripVertical,
     Square
 } from 'lucide-react';
@@ -49,6 +49,9 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
     // Modals
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
+    const [isEditFolderOpen, setIsEditFolderOpen] = useState(false);
+    const [editingFolder, setEditingFolder] = useState<{ id: string; name: string } | null>(null);
+    const [editFolderName, setEditFolderName] = useState('');
     const [previewFile, setPreviewFile] = useState<MediaFile | null>(null);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
     const [selectionMode, setSelectionMode] = useState(isPicker); // Default to selection mode if picker
@@ -366,6 +369,28 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         }
     };
 
+    const handleEditFolder = (folderId: string, folderName: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingFolder({ id: folderId, name: folderName });
+        setEditFolderName(folderName);
+        setIsEditFolderOpen(true);
+    };
+
+    const handleUpdateFolder = async () => {
+        if (!editingFolder || !editFolderName.trim()) return;
+        try {
+            await mediaService.updateFolder(editingFolder.id, editFolderName);
+            setEditFolderName('');
+            setEditingFolder(null);
+            setIsEditFolderOpen(false);
+            await loadData();
+        } catch (error) {
+            console.error('Update folder failed:', error);
+            alert('Ordner konnte nicht umbenannt werden.');
+        }
+    };
+
+
     const handleDeleteFolder = async (folderId: string, e: React.MouseEvent) => {
         e.stopPropagation();
         showConfirmDialog(
@@ -582,11 +607,21 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                                     <span className="truncate">{folder.name}</span>
                                     <span className="ml-2 text-xs text-slate-400">({getFileCountForFolder(folder.id)})</span>
                                 </div>
-                                <div
-                                    onClick={(e) => handleDeleteFolder(folder.id, e)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 transition-opacity pointer-events-auto"
-                                >
-                                    <Trash2 size={14} />
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto">
+                                    <div
+                                        onClick={(e) => handleEditFolder(folder.id, folder.name, e)}
+                                        className="p-1 hover:text-indigo-500 transition-colors cursor-pointer"
+                                        title="Ordner umbenennen"
+                                    >
+                                        <Pencil size={14} />
+                                    </div>
+                                    <div
+                                        onClick={(e) => handleDeleteFolder(folder.id, e)}
+                                        className="p-1 hover:text-red-500 transition-colors cursor-pointer"
+                                        title="Ordner löschen"
+                                    >
+                                        <Trash2 size={14} />
+                                    </div>
                                 </div>
                             </button>
                         ))}
@@ -881,6 +916,29 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                     </div>
                 </div>
             )}
+
+            {/* Edit Folder Modal */}
+            {isEditFolderOpen && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={() => setIsEditFolderOpen(false)}>
+                    <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold mb-4 dark:text-white">Ordner umbenennen</h3>
+                        <input
+                            autoFocus
+                            type="text"
+                            placeholder="Neuer Ordnername..."
+                            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 mb-4 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                            value={editFolderName}
+                            onChange={(e) => setEditFolderName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleUpdateFolder()}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setIsEditFolderOpen(false)} className="px-4 py-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Abbrechen</button>
+                            <button onClick={handleUpdateFolder} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">Speichern</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* Confirmation Dialog */}
             {confirmDialog.isOpen && (
