@@ -174,40 +174,41 @@ router.delete('/:id', async (req, res) => {
 
         const file = fileResult.rows[0];
 
-        // Extract Key from URL since file_path is missing
-        // URL format: https://cdn.../uploads/KEY
-        // or http://minio.../uploads/KEY
-        let s3Key = null;
+        // Versuche S3 Datei zu löschen (Best Effort)
         if (file.url) {
             try {
-                // Split by bucket name to be safe
+                let s3Key = null;
+                // Versuch 1: Extrahiere Key aus URL
                 const parts = file.url.split(`/${BUCKET_NAME}/`);
                 if (parts.length > 1) {
-                    s3Key = parts[1]; // The part after bucket name
+                    s3Key = parts[1];
                 }
-            } catch (err) {
-                console.warn('Failed to parse Key from URL:', file.url);
+                // Versuch 2: Fallback für ältere URLs oder andere Formate?
+                // Hier könnten weitere Logiken stehen.
+
+                if (s3Key) {
+                    await s3Client.send(new DeleteObjectCommand({
+                        Bucket: BUCKET_NAME,
+                        Key: s3Key
+                    }));
+                    console.log('🗑️ S3 Deleted:', s3Key);
+                } else {
+                    console.warn('⚠️ Could not extract S3 Key from URL:', file.url);
+                }
+            } catch (s3Err) {
+                // S3 Fehler sollen das DB-Löschen nicht verhindern!
+                console.error('⚠️ S3 Delete Warning (ignoring):', s3Err.message);
             }
         }
 
-        if (s3Key) {
-            try {
-                await s3Client.send(new DeleteObjectCommand({
-                    Bucket: BUCKET_NAME,
-                    Key: s3Key
-                }));
-                console.log('🗑️ S3 Deleted:', s3Key);
-            } catch (err) {
-                console.warn('S3 Delete Warning:', err.message);
-            }
-        }
-
+        // DB Eintrag IMMER löschen, damit es aus der UI verschwindet
         await client.query('DELETE FROM public.media_files WHERE id = $1', [req.params.id]);
-        res.json({ message: 'File deleted' });
+
+        res.json({ message: 'File deleted successfully' });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Delete failed' });
+        console.error('Delete Critical Error:', error);
+        res.status(500).json({ error: 'Delete failed completely', details: error.message });
     } finally {
         client.release();
     }
@@ -220,6 +221,21 @@ router.post('/folders', async (req, res) => {
     } catch (e) { res.status(500).json({ error: 'Create folder failed' }); }
 });
 
+router.put('/folders/:id', async (req, res) => {
+    try {
+        console.log('✏️ Update folder request:', { folderId: req.params.id, newName: req.body.name });
+        const result = await pool.query('UPDATE public.media_folders SET name = $1 WHERE id = $2 RETURNING *', [req.body.name, req.params.id]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Folder not found' });
+        }
+        console.log('✅ Folder updated:', result.rows[0]);
+        res.json(result.rows[0]);
+    } catch (e) {
+        console.error('❌ Update folder failed:', e);
+        res.status(500).json({ error: 'Update folder failed' });
+    }
+});
+
 router.delete('/folders/:id', async (req, res) => {
     try {
         await pool.query('DELETE FROM public.media_folders WHERE id = $1', [req.params.id]);
@@ -227,11 +243,18 @@ router.delete('/folders/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: 'Delete folder failed' }); }
 });
 
+
 router.put('/:id/move', async (req, res) => {
     try {
-        await pool.query('UPDATE public.media_files SET folder_id = $1 WHERE id = $2', [req.body.folderId, req.params.id]);
+        console.log('📦 Move file request:', { fileId: req.params.id, targetFolderId: req.body.folderId });
+        const result = await pool.query('UPDATE public.media_files SET folder_id = $1 WHERE id = $2', [req.body.folderId, req.params.id]);
+        console.log('✅ Move successful, rows affected:', result.rowCount);
         res.json({ message: 'Moved' });
-    } catch (e) { res.status(500).json({ error: 'Move failed' }); }
+    } catch (e) {
+        console.error('❌ Move failed:', e);
+        res.status(500).json({ error: 'Move failed' });
+    }
 });
+
 
 export default router;
