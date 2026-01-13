@@ -90,6 +90,12 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         return file.folder_id === selectedFolderId && file.is_active;
     });
 
+    // Count files in each folder
+    const getFileCountForFolder = (folderId: string | null) => {
+        return files.filter(file => file.folder_id === folderId && file.is_active).length;
+    };
+
+
     const toggleSelection = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         const newSelected = new Set(selectedItems);
@@ -543,7 +549,8 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                                 }`}
                         >
                             <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
-                            Alle Medien
+                            <span>Alle Medien</span>
+                            <span className="ml-auto text-xs text-slate-400">({getFileCountForFolder(null)})</span>
                         </button>
 
                         {/* Folder List */}
@@ -564,6 +571,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                                 <div className="flex items-center gap-3 overflow-hidden pointer-events-none">
                                     <Folder size={18} className={selectedFolderId === folder.id && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
                                     <span className="truncate">{folder.name}</span>
+                                    <span className="ml-2 text-xs text-slate-400">({getFileCountForFolder(folder.id)})</span>
                                 </div>
                                 <div
                                     onClick={(e) => handleDeleteFolder(folder.id, e)}
