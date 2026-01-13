@@ -208,6 +208,8 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
 
         // 1. Internal Files (Move) - Check FIRST to prevent upload modal on internal drag
         const fileId = e.dataTransfer.getData('fileId');
+        console.log('🔍 handleDrop - fileId:', fileId);
+
         if (fileId) {
             const filesToMove: string[] = [];
             if (selectedItems.has(fileId)) {
@@ -217,16 +219,22 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
             }
 
             console.log(`📦 Moving ${filesToMove.length} files to folder:`, targetFolderId);
+            console.log('Files to move:', filesToMove);
 
             try {
                 setLoading(true);
                 const movePromises = filesToMove.map(id => {
                     const file = files.find(f => f.id === id);
-                    if (file && file.folder_id === targetFolderId) return Promise.resolve();
+                    console.log(`Moving file ${id}:`, file?.filename, `from folder ${file?.folder_id} to ${targetFolderId}`);
+                    if (file && file.folder_id === targetFolderId) {
+                        console.log(`⏭️ Skipping ${file.filename} - already in target folder`);
+                        return Promise.resolve();
+                    }
                     return mediaService.moveFile(id, targetFolderId);
                 });
 
                 await Promise.all(movePromises);
+                console.log('✅ Move completed successfully');
 
                 if (selectedItems.has(fileId)) {
                     setSelectedItems(new Set());
@@ -234,7 +242,8 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                 }
                 await loadData();
             } catch (error: any) {
-                console.error('Move failed:', error);
+                console.error('❌ Move failed:', error);
+                console.error('Error details:', error?.response?.data);
                 alert(`Fehler beim Verschieben: ${error?.response?.data?.error || error.message}`);
             } finally {
                 setLoading(false);
