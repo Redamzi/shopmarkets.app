@@ -219,13 +219,17 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
     };
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+        const fileList = event.target.files;
+        if (!fileList || fileList.length === 0) return;
 
         setUploading(true);
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            // Append all files with key 'files' (matching backend multer.array('files'))
+            for (let i = 0; i < fileList.length; i++) {
+                formData.append('files', fileList[i]);
+            }
+
             if (selectedFolderId) {
                 formData.append('folderId', selectedFolderId);
             }
@@ -351,6 +355,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         <div className={`w-full mx-auto flex flex-col animate-fade-in-up relative ${isPicker ? 'h-full' : 'p-6 lg:p-10 h-[calc(100vh-100px)]'}`}>
             <input
                 type="file"
+                multiple
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleFileChange}

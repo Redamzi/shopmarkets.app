@@ -96,43 +96,62 @@ router.get('/folders', async (req, res) => {
     }
 });
 
-// POST /api/media/upload
-router.post('/upload', upload.single('file'), async (req, res) => {
-    if (!req.file) return res.status(400).json({ error: 'No file' });
+// 📤 POST /api/media/upload (Multi-File Support)
+router.post('/upload', upload.array('files'), async (req, res) => {
+    // If single file comes as 'file' field, handle it too via req.files check
+    const files = req.files || (req.file ? [req.file] : []);
+
+    if (!files || files.length === 0) {
+        return res.status(400).json({ error: 'No files uploaded' });
+    }
 
     const client = await pool.connect();
+
     try {
         const folderId = req.body.folderId || null;
-        const date = new Date();
-        const uniqueId = uuidv4();
-        const sanitizeFilename = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const uploadedFiles = [];
 
-        // Use SYSTEM_USER_ID for path
-        const key = `${SYSTEM_USER_ID}/${date.getFullYear()}/${uniqueId}-${sanitizeFilename}`;
+        await client.query('BEGIN'); // Transaction
 
-        const s3Upload = new Upload({
-            client: s3Client,
-            params: {
-                Bucket: BUCKET_NAME,
-                Key: key,
-                Body: req.file.buffer,
-                ContentType: req.file.mimetype,
-            },
-        });
+        for (const file of files) {
+            const date = new Date();
+            const uniqueId = uuidv4();
+            const sanitizeFilename = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
 
-        await s3Upload.done();
-        const publicUrl = getPublicUrl(key);
+            // SYSTEM_USER_ID for path
+            const key = `${SYSTEM_USER_ID}/${date.getFullYear()}/${uniqueId}-${sanitizeFilename}`;
 
-        const result = await client.query(
-            `INSERT INTO public.media_files 
-             (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, external_id) 
-             VALUES ($1, $2, $3, $4, $5, $6, true, $7) 
-             RETURNING *`,
-            [SYSTEM_USER_ID, folderId, req.file.originalname, publicUrl, req.file.mimetype, req.file.size, uniqueId]
-        );
+            const s3Upload = new Upload({
+                client: s3Client,
+                params: {
+                    Bucket: BUCKET_NAME,
+                    Key: key,
+                    Body: file.buffer,
+                    ContentType: file.mimetype,
+                },
+            });
 
-        res.status(201).json(result.rows[0]);
+            await s3Upload.done();
+            const publicUrl = getPublicUrl(key);
+
+            const result = await client.query(
+                `INSERT INTO public.media_files 
+                 (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, external_id) 
+                 VALUES ($1, $2, $3, $4, $5, $6, true, $7) 
+                 RETURNING *`,
+                [SYSTEM_USER_ID, folderId, file.originalname, publicUrl, file.mimetype, file.size, uniqueId]
+            );
+            uploadedFiles.push(result.rows[0]);
+        }
+
+        await client.query('COMMIT');
+
+        // Return array if multiple, or single object if logic expects (adapt to frontend)
+        // Standard API practice: return array for array upload
+        res.status(201).json(uploadedFiles);
+
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error('Upload Error:', error);
         res.status(500).json({ error: 'Upload failed', details: error.message });
     } finally {
@@ -140,12 +159,58 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     }
 });
 
-// DELETE, FOLDERS POST/DELETE - All using SYSTEM_USER_ID
+// 🗑️ DELETE /:id
 router.delete('/:id', async (req, res) => {
+    const client = await pool.connect();
     try {
-        await pool.query('DELETE FROM public.media_files WHERE id = $1', [req.params.id]);
-        res.json({ message: 'Deleted' });
-    } catch (e) { res.status(500).json({ error: 'Delete failed' }); }
+        const fileResult = await client.query(
+            'SELECT * FROM public.media_files WHERE id = $1',
+            [req.params.id]
+        );
+
+        if (fileResult.rows.length === 0) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        const file = fileResult.rows[0];
+
+        // Extract Key from URL since file_path is missing
+        // URL format: https://cdn.../uploads/KEY
+        // or http://minio.../uploads/KEY
+        let s3Key = null;
+        if (file.url) {
+            try {
+                // Split by bucket name to be safe
+                const parts = file.url.split(`/${BUCKET_NAME}/`);
+                if (parts.length > 1) {
+                    s3Key = parts[1]; // The part after bucket name
+                }
+            } catch (err) {
+                console.warn('Failed to parse Key from URL:', file.url);
+            }
+        }
+
+        if (s3Key) {
+            try {
+                await s3Client.send(new DeleteObjectCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: s3Key
+                }));
+                console.log('🗑️ S3 Deleted:', s3Key);
+            } catch (err) {
+                console.warn('S3 Delete Warning:', err.message);
+            }
+        }
+
+        await client.query('DELETE FROM public.media_files WHERE id = $1', [req.params.id]);
+        res.json({ message: 'File deleted' });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Delete failed' });
+    } finally {
+        client.release();
+    }
 });
 
 router.post('/folders', async (req, res) => {
