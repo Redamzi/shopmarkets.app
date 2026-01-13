@@ -18,3 +18,7 @@ supabase/supabase-env-variables.md
 # Database credentials (NEVER COMMIT!)
 .env.db
 .migration-log
+
+# Media Uploads (nicht in Git committen)
+uploads/
+services/api/uploads/
