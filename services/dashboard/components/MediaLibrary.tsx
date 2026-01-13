@@ -158,7 +158,12 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         e.preventDefault();
         e.stopPropagation();
         dragCounter.current += 1;
-        if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+
+        // Only show drag overlay for EXTERNAL files (from desktop), not internal drags
+        // External drags have "Files" type, internal drags have "fileId" type
+        const isExternalDrag = e.dataTransfer.types.includes('Files');
+
+        if (isExternalDrag && e.dataTransfer.items && e.dataTransfer.items.length > 0) {
             setIsDragging(true);
         }
     };
