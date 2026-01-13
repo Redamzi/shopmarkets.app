@@ -3,7 +3,7 @@ import {
     Image as ImageIcon, Film, File, Trash2, Upload, Grid, List,
     MoreVertical, Folder, Star, Clock, FolderPlus, Search,
     CheckCircle, AlertCircle, RefreshCw, X, Download, ChevronLeft, ChevronRight, BookOpen, FileText, GripVertical,
-    SquareCheck as CheckSquare, Square
+    Square
 } from 'lucide-react';
 import { mediaService } from '../services/mediaService';
 
@@ -393,7 +393,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         : 'Alle Medien';
 
     return (
-        <div className={`w-full mx-auto flex flex-col animate-fade-in-up relative ${isPicker ? 'h-full' : 'p-6 lg:p-10 h-[calc(100vh-100px)]'}`}
+        <div className={`w-full mx-auto flex flex-col relative ${isPicker ? 'h-full' : 'p-6 lg:p-10 h-[calc(100vh-100px)]'}`}
             onDragOver={(e) => handleDragOver(e, null)}
             onDrop={(e) => handleDrop(e, selectedFolderId)}
             onDragEnter={handleDragEnter}
@@ -546,7 +546,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                                 className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                             >
                                 {selectedItems.size === filteredFiles.length && filteredFiles.length > 0 ? (
-                                    <CheckSquare size={20} className="text-indigo-600" />
+                                    <CheckCircle size={20} className="text-indigo-600" />
                                 ) : (
                                     <Square size={20} />
                                 )}
