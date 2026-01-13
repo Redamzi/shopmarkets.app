@@ -125,10 +125,10 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
         const result = await client.query(
             `INSERT INTO public.media_files 
-             (user_id, folder_id, filename, url, size_bytes, is_active, external_id) 
-             VALUES ($1, $2, $3, $4, $5, true, $6) 
+             (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, external_id) 
+             VALUES ($1, $2, $3, $4, $5, $6, true, $7) 
              RETURNING *`,
-            [SYSTEM_USER_ID, folderId, req.file.originalname, publicUrl, req.file.size, uniqueId]
+            [SYSTEM_USER_ID, folderId, req.file.originalname, publicUrl, req.file.mimetype, req.file.size, uniqueId]
         );
 
         res.status(201).json(result.rows[0]);
