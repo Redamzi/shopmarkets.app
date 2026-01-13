@@ -61,9 +61,58 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
     // File Input Ref
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // ... (Filter Logic)
+    // Filter Files Logic
+    const filteredFiles = files.filter(file => {
+        if (showInactive) return !file.is_active;
+        if (selectedFolderId === null) return file.is_active;
+        return file.folder_id === selectedFolderId && file.is_active;
+    });
 
-    // ... (Selection Logic)
+    const toggleSelection = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        const newSelected = new Set(selectedItems);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedItems(newSelected);
+    };
+
+    const handleSelectAll = () => {
+        if (selectedItems.size === filteredFiles.length) {
+            // Deselect all
+            setSelectedItems(new Set());
+        } else {
+            // Select all visible
+            const newSelected = new Set(filteredFiles.map(f => f.id));
+            setSelectedItems(newSelected);
+        }
+    };
+
+    const handleConfirmSelection = () => {
+        if (onSelect) {
+            const selectedFiles = files.filter(f => selectedItems.has(f.id));
+            onSelect(selectedFiles);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`Möchten Sie ${selectedItems.size} Dateien wirklich löschen?`)) return;
+
+        try {
+            setLoading(true);
+            const promises = Array.from(selectedItems).map(id => mediaService.delete(id));
+            await Promise.all(promises);
+            setSelectedItems(new Set());
+            await loadData();
+        } catch (error) {
+            console.error('Bulk delete failed:', error);
+            alert('Fehler beim Löschen einiger Dateien.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // Drag & Drop Handlers
     const handleDragStart = (e: React.DragEvent, fileId: string) => {
