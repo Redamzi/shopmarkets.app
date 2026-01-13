@@ -43,7 +43,7 @@ const ALL_WIZARD_STEPS: WizardStepFn[] = [
     { id: 'attributes', label: 'Attribute', icon: SlidersHorizontal, component: AttributesVariants, show: (t) => !['virtual', 'downloadable', 'service'].includes(t) },
     { id: 'configurator', label: 'Konfigurator', icon: Wrench, component: Configurator, show: (t) => ['personalized', 'configurable', 'simple'].includes(t) },
     { id: 'media', label: 'Medien', icon: ImageIcon, component: MediaUpload, show: () => true },
-    // Social Video removed - merged into Media
+    { id: 'social', label: 'Soziale Plattformen', icon: Video, component: SocialMediaMaster, show: () => true },
     { id: 'pricing', label: 'Preise & Lager', icon: DollarSign, component: StepPricing, show: () => true },
     { id: 'org', label: 'Organisation', icon: Tag, component: Organization, show: () => true },
     { id: 'seo', label: 'SEO & Sichtbarkeit', icon: Globe, component: SEOMarketing, show: () => true },
