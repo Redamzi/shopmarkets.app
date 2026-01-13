@@ -148,7 +148,12 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         res.status(201).json(result.rows[0]);
 
     } catch (error) {
-        console.error('Upload Error:', error);
+        console.error('❌ Upload Error Details:', error);
+        console.error('❌ S3 Config:', {
+            bucket: BUCKET_NAME,
+            region: S3_REGION,
+            endpoint: S3_ENDPOINT
+        });
         res.status(500).json({ error: 'Upload failed', details: error.message });
     } finally {
         client.release();
