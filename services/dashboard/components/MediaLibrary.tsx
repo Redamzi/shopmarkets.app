@@ -124,6 +124,11 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
         // Actually, for internal drag, we might want different visual.
     };
 
+    const handleDragEnd = () => {
+        setIsDragging(false);
+        setDragOverFolderId(undefined);
+    };
+
     const handleDragEnter = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
