@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+// Import additional commands
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CreateBucketCommand, PutBucketPolicyCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import pool from '../utils/db.js';
@@ -12,27 +13,72 @@ const router = express.Router();
 
 /**
  * 🛠️ CONFIGURATION
- * Loads from ENV or uses defaults for local MinIO
  */
-const S3_ENDPOINT = process.env.S3_ENDPOINT || 'http://minio:9000'; // Internal Docker Link
-const S3_PUBLIC_ENDPOINT = process.env.S3_PUBLIC_ENDPOINT || 'https://cdn.shopmarkets.app'; // Public URL
+const S3_ENDPOINT = process.env.S3_ENDPOINT || 'http://minio:9000';
+const S3_PUBLIC_ENDPOINT = process.env.S3_PUBLIC_ENDPOINT || 'https://cdn.shopmarkets.app';
 const S3_REGION = process.env.S3_REGION || 'us-east-1';
 const S3_KEY = process.env.S3_ACCESS_KEY || 'admin';
 const S3_SECRET = process.env.S3_SECRET_KEY || 'shopmarkets_minio_secret_2026';
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'uploads';
 
 console.log('🚀 [MEDIA] Initializing S3/MinIO Client...');
-console.log(`   Endpoint: ${S3_ENDPOINT}`);
-console.log(`   Bucket:   ${BUCKET_NAME}`);
 
-// Initialize S3 Client
 const s3Client = new S3Client({
     region: S3_REGION,
     endpoint: S3_ENDPOINT,
-    forcePathStyle: true, // Required for MinIO
+    forcePathStyle: true,
     credentials: {
         accessKeyId: S3_KEY,
         secretAccessKey: S3_SECRET
+    }
+});
+
+/**
+ * 🛠️ POST /api/media/setup
+ * Manually init bucket and policy
+ */
+router.post('/setup', async (req, res) => {
+    try {
+        console.log(`🛠️ Setup: Checking bucket '${BUCKET_NAME}' at ${S3_ENDPOINT}...`);
+
+        // 1. Check if exists
+        try {
+            await s3Client.send(new HeadBucketCommand({ Bucket: BUCKET_NAME }));
+            console.log('✅ Bucket exists.');
+        } catch (err) {
+            if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
+                console.log('⚠️ Bucket missing. Creating...');
+                await s3Client.send(new CreateBucketCommand({ Bucket: BUCKET_NAME }));
+                console.log('✅ Bucket created.');
+            } else {
+                throw err;
+            }
+        }
+
+        // 2. Set Public Policy
+        const policy = {
+            Version: "2012-10-17",
+            Statement: [
+                {
+                    Effect: "Allow",
+                    Principal: { AWS: ["*"] },
+                    Action: ["s3:GetObject"],
+                    Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`]
+                }
+            ]
+        };
+
+        await s3Client.send(new PutBucketPolicyCommand({
+            Bucket: BUCKET_NAME,
+            Policy: JSON.stringify(policy)
+        }));
+        console.log('✅ Public Policy set.');
+
+        res.json({ message: 'MinIO Bucket setup complete!', bucket: BUCKET_NAME });
+
+    } catch (error) {
+        console.error('❌ Setup Failed:', error);
+        res.status(500).json({ error: 'Setup failed', details: error.message });
     }
 });
 
