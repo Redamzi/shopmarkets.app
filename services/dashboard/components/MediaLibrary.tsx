@@ -584,7 +584,7 @@ export const MediaLibrary: React.FC<MediaLibraryProps> = ({ isPicker = false, on
                         >
                             <Folder size={18} className={selectedFolderId === null && !showInactive ? 'fill-indigo-200 text-indigo-500' : 'text-slate-400'} />
                             <span>Alle Medien</span>
-                            <span className="ml-auto text-xs text-slate-400">({getFileCountForFolder(null)})</span>
+                            <span className="ml-auto text-xs text-slate-400">({files.filter(f => f.is_active).length})</span>
                         </button>
 
                         {/* Folder List */}
