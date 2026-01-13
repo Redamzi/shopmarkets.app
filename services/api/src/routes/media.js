@@ -1,235 +1,172 @@
 import express from 'express';
+import multer from 'multer';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { Upload } from '@aws-sdk/lib-storage';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import pool from '../utils/db.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
-import multer from 'multer';
 import path from 'path';
-import fs from 'fs-extra';
+import { v4 as uuidv4 } from 'uuid';
 
 const router = express.Router();
 
-// Configuration
-// In Production/Coolify: Mount a persistent volume to /app/uploads
-const UPLOAD_ROOT = process.env.UPLOAD_DIR || 'uploads';
-const CDN_BASE_URL = process.env.CDN_URL || 'https://cdn.shopmarkets.app';
+/**
+ * 🛠️ CONFIGURATION
+ * Loads from ENV or uses defaults for local MinIO
+ */
+const S3_ENDPOINT = process.env.S3_ENDPOINT || 'http://minio:9000'; // Internal Docker Link
+const S3_PUBLIC_ENDPOINT = process.env.S3_PUBLIC_ENDPOINT || 'https://cdn.shopmarkets.app'; // Public URL
+const S3_REGION = process.env.S3_REGION || 'us-east-1';
+const S3_KEY = process.env.S3_ACCESS_KEY || 'admin';
+const S3_SECRET = process.env.S3_SECRET_KEY || 'shopmarkets_minio_secret_2026';
+const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'uploads';
 
-// Ensure root upload dir exists
-fs.ensureDirSync(UPLOAD_ROOT);
+console.log('🚀 [MEDIA] Initializing S3/MinIO Client...');
+console.log(`   Endpoint: ${S3_ENDPOINT}`);
+console.log(`   Bucket:   ${BUCKET_NAME}`);
 
-// Configure Multer for Local Disk Storage
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Organize files by User ID
-        const userId = req.user.userId;
-        const userDir = path.join(UPLOAD_ROOT, userId);
-
-        // Ensure user directory exists
-        fs.ensureDirSync(userDir);
-
-        cb(null, userDir);
-    },
-    filename: (req, file, cb) => {
-        // Generate secure unique filename
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        // Clean filename (remove special chars)
-        const cleanName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9]/g, '_');
-
-        cb(null, `${cleanName}-${uniqueSuffix}${ext}`);
+// Initialize S3 Client
+const s3Client = new S3Client({
+    region: S3_REGION,
+    endpoint: S3_ENDPOINT,
+    forcePathStyle: true, // Required for MinIO
+    credentials: {
+        accessKeyId: S3_KEY,
+        secretAccessKey: S3_SECRET
     }
 });
 
+// Configure Multer (Memory Storage so we can stream to S3)
 const upload = multer({
-    storage: storage,
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 500 * 1024 * 1024 } // 500MB Limit
 });
 
-// POST /api/media/upload - Handle file upload locally
-router.post('/upload', authenticateToken, upload.single('file'), async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
-        }
-
-        const userId = req.user.userId;
-        const { folderId } = req.body;
-
-        // Construct the relative path (stored in DB) and full Public URL
-        const filename = req.file.filename;
-        // relativePath on disk relative to UPLOAD_ROOT is just userId/filename
-        // Nginx root is set to /uploads, so URL should NOT include /uploads/
-        const relativePath = `${userId}/${filename}`;
-        const publicUrl = `${CDN_BASE_URL}/${relativePath}`;
-        const fileSize = req.file.size;
-        const mimeType = req.file.mimetype;
-
-        console.log(`✅ File saved locally: ${relativePath}`);
-        console.log(`📍 Public URL: ${publicUrl}`);
-
-        // Save metadata to DB
-        const result = await pool.query(
-            `INSERT INTO public.media_files 
-            (user_id, folder_id, filename, url, mime_type, size_bytes, is_active, source, external_id)
-            VALUES ($1, $2, $3, $4, $5, $6, true, 'local', $7)
-            RETURNING *`,
-            [userId, folderId || null, req.file.originalname, publicUrl, mimeType, fileSize, relativePath]
-        );
-
-        res.json({
-            ...result.rows[0],
-            _performance: {
-                duration_ms: 0, // Not measured for local upload
-                speed_mbps: 0
-            }
-        });
-
-    } catch (error) {
-        console.error('❌ Upload Error:', error);
-        res.status(500).json({ error: 'Failed to upload file', details: error.message });
+// Helper: Get Public URL
+const getPublicUrl = (key) => {
+    // Falls custom domain konfiguriert
+    if (S3_PUBLIC_ENDPOINT) {
+        return `${S3_PUBLIC_ENDPOINT}/${BUCKET_NAME}/${key}`;
     }
-});
+    return `${S3_ENDPOINT}/${BUCKET_NAME}/${key}`;
+};
 
-// GET all media files
+/**
+ * 📂 GET /api/media
+ * List files for the specific user/folder
+ */
 router.get('/', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { folderId } = req.query;
-
-        let query = `SELECT * FROM public.media_files WHERE user_id = $1`;
-        const params = [userId];
-
-        if (folderId) {
-            query += ` AND folder_id = $2`;
-            params.push(folderId);
-        }
-
-        query += ` ORDER BY created_at DESC`;
-
-        const result = await pool.query(query, params);
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Error fetching media:', error);
-        res.status(500).json({ error: 'Failed to fetch media', details: error.message });
-    }
-});
-
-// GET folders
-router.get('/folders', authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.userId;
         const result = await pool.query(
-            `SELECT * FROM public.media_folders WHERE user_id = $1 ORDER BY name ASC`,
+            `SELECT * FROM public.media_files 
+             WHERE user_id = $1 AND is_active = true 
+             ORDER BY created_at DESC`,
             [userId]
         );
         res.json(result.rows);
     } catch (error) {
-        console.error('Error fetching folders:', error);
-        res.status(500).json({ error: 'Failed to fetch folders' });
+        console.error('List Files Error:', error);
+        res.status(500).json({ error: 'Failed to list files' });
     }
 });
 
-// POST /api/media/folders - Create new folder
-router.post('/folders', authenticateToken, async (req, res) => {
+/**
+ * 📁 GET /api/media/folders
+ * List folders for the user
+ */
+router.get('/folders', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { name } = req.body;
-
-        if (!name) {
-            return res.status(400).json({ error: 'Folder name is required' });
-        }
-
         const result = await pool.query(
-            `INSERT INTO public.media_folders (user_id, name) VALUES ($1, $2) RETURNING *`,
-            [userId, name]
+            `SELECT * FROM public.media_folders 
+             WHERE user_id = $1 
+             ORDER BY created_at DESC`,
+            [userId]
         );
-
-        res.json(result.rows[0]);
+        res.json(result.rows);
     } catch (error) {
-        console.error('Error creating folder:', error);
-        res.status(500).json({ error: 'Failed to create folder' });
+        console.error('List Folders Error:', error);
+        res.status(500).json({ error: 'Failed to list folders' });
     }
 });
 
-// DELETE /api/media/folders/:id - Delete folder
-router.delete('/folders/:id', authenticateToken, async (req, res) => {
+/**
+ * 📤 POST /api/media/upload
+ * Upload file to S3/MinIO
+ */
+router.post('/upload', authenticateToken, upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const client = await pool.connect();
+
     try {
         const userId = req.user.userId;
-        const folderId = req.params.id;
+        const folderId = req.body.folderId || null; // Optional folder
 
-        // Verify ownership
-        const check = await pool.query(
-            `SELECT * FROM public.media_folders WHERE id = $1 AND user_id = $2`,
-            [folderId, userId]
+        // Generate unique key: userId/year/month/uuid-filename
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const uniqueId = uuidv4();
+        const ext = path.extname(req.file.originalname);
+        const sanitizeFilename = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+        const key = `${userId}/${year}/${month}/${uniqueId}-${sanitizeFilename}`;
+
+        console.log(`📤 Uploading to S3: ${key} (${req.file.size} bytes)`);
+
+        // Stream Upload to S3
+        const parallelUploads3 = new Upload({
+            client: s3Client,
+            params: {
+                Bucket: BUCKET_NAME,
+                Key: key,
+                Body: req.file.buffer,
+                ContentType: req.file.mimetype,
+                // ACL: 'public-read' // MinIO Bucket config handles this usually
+            },
+        });
+
+        await parallelUploads3.done();
+
+        const publicUrl = getPublicUrl(key);
+        console.log(`✅ Upload success: ${publicUrl}`);
+
+        // Save metadata to DB
+        const result = await client.query(
+            `INSERT INTO public.media_files 
+             (user_id, folder_id, filename, file_path, url, type, size_bytes, is_active, external_id) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8) 
+             RETURNING *`,
+            [userId, folderId, req.file.originalname, key, publicUrl, req.file.mimetype, req.file.size, uniqueId]
         );
 
-        if (check.rows.length === 0) {
-            return res.status(404).json({ error: 'Folder not found' });
-        }
+        res.status(201).json(result.rows[0]);
 
-        // Move files in this folder to root (folder_id = NULL) or delete them?
-        // Let's move to root for safety.
-        await pool.query(
-            `UPDATE public.media_files SET folder_id = NULL WHERE folder_id = $1 AND user_id = $2`,
-            [folderId, userId]
-        );
-
-        // Delete folder
-        await pool.query(`DELETE FROM public.media_folders WHERE id = $1`, [folderId]);
-
-        res.json({ message: 'Folder deleted, files moved to root' });
     } catch (error) {
-        console.error('Error deleting folder:', error);
-        res.status(500).json({ error: 'Failed to delete folder' });
+        console.error('Upload Error:', error);
+        res.status(500).json({ error: 'Upload failed', details: error.message });
+    } finally {
+        client.release();
     }
 });
 
-// PUT /api/media/:id/move - Move file to folder
-router.put('/:id/move', authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const fileId = req.params.id;
-        const { folderId } = req.body; // Can be null for root
-
-        // Verify file ownership
-        const fileCheck = await pool.query(
-            `SELECT * FROM public.media_files WHERE id = $1 AND user_id = $2`,
-            [fileId, userId]
-        );
-        if (fileCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'File not found' });
-        }
-
-        // If folderId is provided, verify folder ownership
-        if (folderId) {
-            const folderCheck = await pool.query(
-                `SELECT * FROM public.media_folders WHERE id = $1 AND user_id = $2`,
-                [folderId, userId]
-            );
-            if (folderCheck.rows.length === 0) {
-                return res.status(404).json({ error: 'Folder not found' });
-            }
-        }
-
-        const result = await pool.query(
-            `UPDATE public.media_files SET folder_id = $1 WHERE id = $2 AND user_id = $3 RETURNING *`,
-            [folderId || null, fileId, userId]
-        );
-
-        res.json(result.rows[0]);
-    } catch (error) {
-        console.error('Error moving file:', error);
-        res.status(500).json({ error: 'Failed to move file' });
-    }
-});
-
-// DELETE /api/media/:id - Delete media file (RESTORED)
+/**
+ * 🗑️ DELETE /api/media/:id
+ * Delete file from S3 and DB
+ */
 router.delete('/:id', authenticateToken, async (req, res) => {
+    const client = await pool.connect();
     try {
         const userId = req.user.userId;
         const fileId = req.params.id;
 
         // Get file info first
-        const fileResult = await pool.query(
-            `SELECT * FROM public.media_files WHERE id = $1 AND user_id = $2`,
+        const fileResult = await client.query(
+            'SELECT * FROM public.media_files WHERE id = $1 AND user_id = $2',
             [fileId, userId]
         );
 
@@ -238,22 +175,95 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         }
 
         const file = fileResult.rows[0];
-        const relativePath = file.external_id;
+        const s3Key = file.file_path; // We stored S3 Key in file_path or constructed it
 
-        await pool.query('DELETE FROM public.media_files WHERE id = $1', [fileId]);
-
-        if (relativePath) {
-            const filePath = path.join(UPLOAD_ROOT, relativePath);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-                console.log(`🗑️ Deleted file: ${filePath}`);
+        // Delete from S3
+        if (s3Key) {
+            try {
+                await s3Client.send(new DeleteObjectCommand({
+                    Bucket: BUCKET_NAME,
+                    Key: s3Key
+                }));
+                console.log(`🗑️ Deleted from S3: ${s3Key}`);
+            } catch (s3Err) {
+                console.error('S3 Delete Warning:', s3Err.message);
+                // Continue to delete from DB even if S3 fails (orphaned file better than broken UI)
             }
         }
 
+        // Delete from DB (Soft delete or Hard delete? Let's do Soft for safety, or Hard if requested)
+        // User asked for "stable", let's do Hard Delete to keep clean
+        await client.query('DELETE FROM public.media_files WHERE id = $1', [fileId]);
+
         res.json({ message: 'File deleted successfully' });
+
     } catch (error) {
         console.error('Delete Error:', error);
-        res.status(500).json({ error: 'Failed to delete file' });
+        res.status(500).json({ error: 'Delete failed' });
+    } finally {
+        client.release();
+    }
+});
+
+/**
+ * 📁 POST /api/media/folders
+ * Create Folder
+ */
+router.post('/folders', authenticateToken, async (req, res) => {
+    try {
+        const { name } = req.body;
+        const userId = req.user.userId;
+        const result = await pool.query(
+            'INSERT INTO public.media_folders (name, user_id) VALUES ($1, $2) RETURNING *',
+            [name, userId]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create folder' });
+    }
+});
+
+/**
+ * 🗑️ DELETE /api/media/folders/:id
+ * Delete Folder
+ */
+router.delete('/folders/:id', authenticateToken, async (req, res) => {
+    try {
+        const folderId = req.params.id;
+        const userId = req.user.userId;
+        // Move contents to root (folder_id = null)
+        await pool.query(
+            'UPDATE public.media_files SET folder_id = NULL WHERE folder_id = $1 AND user_id = $2',
+            [folderId, userId]
+        );
+        // Delete folder
+        await pool.query(
+            'DELETE FROM public.media_folders WHERE id = $1 AND user_id = $2',
+            [folderId, userId]
+        );
+        res.json({ message: 'Folder deleted, contents moved to root' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete folder' });
+    }
+});
+
+/**
+ * 🔄 PUT /api/media/:id/move
+ * Move file to folder
+ */
+router.put('/:id/move', authenticateToken, async (req, res) => {
+    try {
+        const { folderId } = req.body; // null for root
+        const fileId = req.params.id;
+        const userId = req.user.userId;
+
+        await pool.query(
+            'UPDATE public.media_files SET folder_id = $1 WHERE id = $2 AND user_id = $3',
+            [folderId, fileId, userId]
+        );
+        res.json({ message: 'File moved' });
+    } catch (error) {
+        res.status(500).json({ error: 'Move failed' });
     }
 });
 
