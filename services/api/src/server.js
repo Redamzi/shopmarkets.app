@@ -61,7 +61,7 @@ app.use('/api/upload', authenticateToken, uploadRoutes);
 app.use('/api/billing', authenticateToken, billingRoutes);
 app.use('/api/sync', authenticateToken, syncRoutes);
 app.use('/api/categories', authenticateToken, categoryRoutes);
-app.use('/api/media', mediaRoutes);
+app.use('/api/media', authenticateToken, mediaRoutes);
 app.use('/api/product-wizard', productWizardRoutes);
 
 // Health Check

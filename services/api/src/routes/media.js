@@ -1,11 +1,8 @@
 import express from 'express';
 import multer from 'multer';
-// Import additional commands
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CreateBucketCommand, PutBucketPolicyCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, CreateBucketCommand, PutBucketPolicyCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import pool from '../utils/db.js';
-import { authenticateToken } from '../middleware/authMiddleware.js';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -34,14 +31,13 @@ const s3Client = new S3Client({
 });
 
 /**
- * 🛠️ POST /api/media/setup
- * Manually init bucket and policy
+ * 🛠️ GET /setup
+ * Helper to manually verify/create bucket
  */
 router.get('/setup', async (req, res) => {
     try {
         console.log(`🛠️ Setup: Checking bucket '${BUCKET_NAME}' at ${S3_ENDPOINT}...`);
 
-        // 1. Check if exists
         try {
             await s3Client.send(new HeadBucketCommand({ Bucket: BUCKET_NAME }));
             console.log('✅ Bucket exists.');
@@ -55,7 +51,6 @@ router.get('/setup', async (req, res) => {
             }
         }
 
-        // 2. Set Public Policy
         const policy = {
             Version: "2012-10-17",
             Statement: [
@@ -75,22 +70,20 @@ router.get('/setup', async (req, res) => {
         console.log('✅ Public Policy set.');
 
         res.json({ message: 'MinIO Bucket setup complete!', bucket: BUCKET_NAME });
-
     } catch (error) {
         console.error('❌ Setup Failed:', error);
         res.status(500).json({ error: 'Setup failed', details: error.message });
     }
 });
 
-// Configure Multer (Memory Storage so we can stream to S3)
+// Multer Config (Memory Storage)
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 500 * 1024 * 1024 } // 500MB Limit
+    limits: { fileSize: 500 * 1024 * 1024 } // 500MB
 });
 
-// Helper: Get Public URL
+// Helper: Public URL
 const getPublicUrl = (key) => {
-    // Falls custom domain konfiguriert
     if (S3_PUBLIC_ENDPOINT) {
         return `${S3_PUBLIC_ENDPOINT}/${BUCKET_NAME}/${key}`;
     }
@@ -98,12 +91,13 @@ const getPublicUrl = (key) => {
 };
 
 /**
- * 📂 GET /api/media
- * List files for the specific user/folder
+ * 📂 GET /
+ * List files for the authenticated user
  */
 router.get('/', async (req, res) => {
     try {
-        const userId = '00000000-0000-0000-0000-000000000000';
+        // Authenticated user from middleware
+        const userId = req.user.userId;
 
         const result = await pool.query(
             `SELECT * FROM public.media_files 
@@ -119,12 +113,12 @@ router.get('/', async (req, res) => {
 });
 
 /**
- * 📁 GET /api/media/folders
- * List folders for the user
+ * 📁 GET /folders
+ * List folders for the authenticated user
  */
 router.get('/folders', async (req, res) => {
     try {
-        const userId = '00000000-0000-0000-0000-000000000000';
+        const userId = req.user.userId;
         const result = await pool.query(
             `SELECT * FROM public.media_folders 
              WHERE user_id = $1 
@@ -139,8 +133,8 @@ router.get('/folders', async (req, res) => {
 });
 
 /**
- * 📤 POST /api/media/upload
- * Upload file to S3/MinIO
+ * 📤 POST /upload
+ * Upload file to S3 and save metadata
  */
 router.post('/upload', upload.single('file'), async (req, res) => {
     if (!req.file) {
@@ -150,42 +144,36 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     const client = await pool.connect();
 
     try {
-        // 🔍 FIX: Nutze harte ID, um DB-Fehler zu vermeiden
-        const userId = '00000000-0000-0000-0000-000000000000';
-        console.log('⚠️ Debug-Modus: Benutze statische User-ID:', userId);
-
+        const userId = req.user.userId;
         const folderId = req.body.folderId || null;
 
-        // Generate unique key: userId/year/month/uuid-filename
+        // Path: userId/year/month/uuid-filename
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const uniqueId = uuidv4();
-        const ext = path.extname(req.file.originalname);
         const sanitizeFilename = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
 
         const key = `${userId}/${year}/${month}/${uniqueId}-${sanitizeFilename}`;
 
-        console.log(`📤 Uploading to S3: ${key} (${req.file.size} bytes)`);
+        console.log(`📤 Uploading: ${key}`);
 
-        // Stream Upload to S3
-        const parallelUploads3 = new Upload({
+        // S3 Upload
+        const s3Upload = new Upload({
             client: s3Client,
             params: {
                 Bucket: BUCKET_NAME,
                 Key: key,
                 Body: req.file.buffer,
                 ContentType: req.file.mimetype,
-                // ACL: 'public-read' // MinIO Bucket config handles this usually
             },
         });
 
-        await parallelUploads3.done();
+        await s3Upload.done();
 
         const publicUrl = getPublicUrl(key);
-        console.log(`✅ Upload success: ${publicUrl}`);
 
-        // Save metadata to DB
+        // DB Insert
         const result = await client.query(
             `INSERT INTO public.media_files 
              (user_id, folder_id, filename, file_path, url, type, size_bytes, is_active, external_id) 
@@ -197,12 +185,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         res.status(201).json(result.rows[0]);
 
     } catch (error) {
-        console.error('❌ Upload Error Details:', error);
-        console.error('❌ S3 Config:', {
-            bucket: BUCKET_NAME,
-            region: S3_REGION,
-            endpoint: S3_ENDPOINT
-        });
+        console.error('❌ Upload Error:', error);
         res.status(500).json({ error: 'Upload failed', details: error.message });
     } finally {
         client.release();
@@ -210,16 +193,15 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 /**
- * 🗑️ DELETE /api/media/:id
- * Delete file from S3 and DB
+ * 🗑️ DELETE /:id
+ * Hard delete file
  */
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', async (req, res) => {
     const client = await pool.connect();
     try {
         const userId = req.user.userId;
         const fileId = req.params.id;
 
-        // Get file info first
         const fileResult = await client.query(
             'SELECT * FROM public.media_files WHERE id = $1 AND user_id = $2',
             [fileId, userId]
@@ -230,27 +212,23 @@ router.delete('/:id', authenticateToken, async (req, res) => {
         }
 
         const file = fileResult.rows[0];
-        const s3Key = file.file_path; // We stored S3 Key in file_path or constructed it
 
-        // Delete from S3
-        if (s3Key) {
+        // S3 Delete
+        if (file.file_path) {
             try {
                 await s3Client.send(new DeleteObjectCommand({
                     Bucket: BUCKET_NAME,
-                    Key: s3Key
+                    Key: file.file_path
                 }));
-                console.log(`🗑️ Deleted from S3: ${s3Key}`);
-            } catch (s3Err) {
-                console.error('S3 Delete Warning:', s3Err.message);
-                // Continue to delete from DB even if S3 fails (orphaned file better than broken UI)
+            } catch (err) {
+                console.warn('S3 Delete Warning:', err.message);
             }
         }
 
-        // Delete from DB (Soft delete or Hard delete? Let's do Soft for safety, or Hard if requested)
-        // User asked for "stable", let's do Hard Delete to keep clean
+        // DB Delete
         await client.query('DELETE FROM public.media_files WHERE id = $1', [fileId]);
 
-        res.json({ message: 'File deleted successfully' });
+        res.json({ message: 'File deleted' });
 
     } catch (error) {
         console.error('Delete Error:', error);
@@ -261,10 +239,9 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 });
 
 /**
- * 📁 POST /api/media/folders
- * Create Folder
+ * � POST /folders
  */
-router.post('/folders', authenticateToken, async (req, res) => {
+router.post('/folders', async (req, res) => {
     try {
         const { name } = req.body;
         const userId = req.user.userId;
@@ -279,39 +256,28 @@ router.post('/folders', authenticateToken, async (req, res) => {
 });
 
 /**
- * 🗑️ DELETE /api/media/folders/:id
- * Delete Folder
+ * 🗑️ DELETE /folders/:id
  */
-router.delete('/folders/:id', authenticateToken, async (req, res) => {
+router.delete('/folders/:id', async (req, res) => {
     try {
         const folderId = req.params.id;
         const userId = req.user.userId;
-        // Move contents to root (folder_id = null)
-        await pool.query(
-            'UPDATE public.media_files SET folder_id = NULL WHERE folder_id = $1 AND user_id = $2',
-            [folderId, userId]
-        );
-        // Delete folder
-        await pool.query(
-            'DELETE FROM public.media_folders WHERE id = $1 AND user_id = $2',
-            [folderId, userId]
-        );
-        res.json({ message: 'Folder deleted, contents moved to root' });
+        await pool.query('UPDATE public.media_files SET folder_id = NULL WHERE folder_id = $1 AND user_id = $2', [folderId, userId]);
+        await pool.query('DELETE FROM public.media_folders WHERE id = $1 AND user_id = $2', [folderId, userId]);
+        res.json({ message: 'Folder deleted' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete folder' });
     }
 });
 
 /**
- * 🔄 PUT /api/media/:id/move
- * Move file to folder
+ * 🔄 PUT /:id/move
  */
-router.put('/:id/move', authenticateToken, async (req, res) => {
+router.put('/:id/move', async (req, res) => {
     try {
-        const { folderId } = req.body; // null for root
+        const { folderId } = req.body;
         const fileId = req.params.id;
         const userId = req.user.userId;
-
         await pool.query(
             'UPDATE public.media_files SET folder_id = $1 WHERE id = $2 AND user_id = $3',
             [folderId, fileId, userId]
