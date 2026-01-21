@@ -237,9 +237,15 @@ export const ProductWizard: React.FC = () => {
         console.log('✅ All validations passed, sending API request...');
 
         try {
-            const response = await fetch('/api/product-wizard', {
+            const API_URL = import.meta.env.VITE_API_URL || 'https://api.shopmarkets.app';
+            const token = localStorage.getItem('token');
+
+            const response = await fetch(`${API_URL}/api/product-wizard`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')} ` },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
 
