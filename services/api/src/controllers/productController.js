@@ -2,7 +2,15 @@ import pool from '../utils/db.js';
 
 export const getProducts = async (req, res) => {
     try {
-        const userId = req.user.userId;
+        // Fallback for different JWT payload structures
+        const userId = req.user.id || req.user.userId || req.user.sub;
+        console.log(`[ProductController] getProducts for UserID: ${userId} (from keys: ${Object.keys(req.user).join(',')})`);
+
+        if (!userId) {
+            console.error('[ProductController] No User ID found in token!');
+            return res.status(403).json({ error: 'User ID missing in token' });
+        }
+
         const result = await pool.query('SELECT * FROM products WHERE user_id = $1 ORDER BY created_at DESC', [userId]);
 
         // Convert price and stock to numbers for frontend
