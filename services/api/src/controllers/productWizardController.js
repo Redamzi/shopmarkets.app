@@ -34,7 +34,13 @@ export const createProduct = async (req, res) => {
     } = req.body;
 
     // Auth middleware ensures user exists
-    const user_id = req.user.id;
+    // Robust extraction: id (standard), userId (custom), sub (JWT standard)
+    const user_id = req.user.id || req.user.userId || req.user.sub;
+
+    if (!user_id) {
+        console.error('[ProductWiz] Error: No User ID found in token payload:', req.user);
+        return res.status(403).json({ error: 'User ID missing in token' });
+    }
 
     try {
         // --- Credit Calculation (Server Side Validation) ---
