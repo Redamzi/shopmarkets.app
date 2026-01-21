@@ -238,7 +238,7 @@ export const ProductWizard: React.FC = () => {
 
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'https://api.shopmarkets.app';
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('auth_token');
 
             const response = await fetch(`${API_URL}/api/product-wizard`, {
                 method: 'POST',
